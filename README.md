@@ -1,1 +1,1 @@
-echo "# Mi Proyecto" > README.md
+echo "# Mi Proyecto" > Mi_Papita_Proyecto.md
