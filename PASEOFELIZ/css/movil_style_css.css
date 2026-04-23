@@ -1,27 +1,253 @@
-div{
-    border: 1px solid black;
-    background-color: antiquewhite;
-}
-body{
-    background-color: yellowgreen;
-}
-#contenedor_general{
-    position: relative;
-    display: grid;
-    flex-direction: row;
-    grid-template-columns: 1fr 1fr 1fr ;
+/* --- Reseteo Básico --- */
+:root {
+    --primary-blue: #3E72A6;
+    --active-green: #25D366; /* Ajustado para parecerse al verde de la imagen */
+    --text-dark: #333;
+    --text-light: #777;
+    --bg-light: #F5F7FA;
+    --border-color: #E0E0E0;
+    --header-height: 60px;
 }
 
-@media screen and (min-device-width: 300px)and (max-device-width:500px){
-    div{
-        border:none;
-        background-color: blue;
-    }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Tipografía limpia */
+}
 
-    #contenedor_general{
-        display: flex;
-        flex-direction: column;
-    }
+body {
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
 
-    
+/* --- Contenedor Principal (Layout de 2 columnas) --- */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- BARRA LATERAL (Sidebar) --- */
+.sidebar {
+    width: 90px; /* Ancho estrecho para los iconos */
+    background-color: var(--primary-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    flex-shrink: 0;
+}
+
+.profile-section {
+    margin-bottom: 30px;
+}
+
+.profile-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+}
+
+.nav-links {
+    list-style: none;
+    width: 100%;
+}
+
+.nav-links li {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 0.8rem;
+    transition: background 0.3s;
+}
+
+.nav-links li i {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+/* Estilo para el elemento ACTIVO (Verde con bordes redondeados) */
+.nav-links li.active a {
+    background-color: var(--active-green);
+    color: black; /* Texto negro sobre fondo verde en la imagen */
+    font-weight: bold;
+    border-radius: 12px;
+    width: 80%; /* Más estrecho que la barra */
+    margin: 0 auto; /* Centrado */
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- HEADER (Barra de direcciones simulada) --- */
+.header {
+    height: var(--header-height);
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.back-icon {
+    font-size: 1.2rem;
+    color: #666;
+    cursor: pointer;
+}
+
+.search-bar {
+    flex-grow: 1;
+    max-width: 60%;
+    background-color: #F0F2F5;
+    padding: 10px 15px;
+    border-radius: 20px;
+    color: #888;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #666;
+}
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    background-color: var(--primary-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* --- SECCIÓN DEL BANNER --- */
+.banner-section {
+    width: 100%;
+}
+
+.banner-container {
+    width: 100%;
+    height: 350px; /* Altura estimada de la imagen */
+    background-color: #EAEAEA; /* Gris de fondo si no carga la imagen */
+    overflow: hidden;
+}
+
+.banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Asegura que la imagen cubra el área */
+}
+
+.section-title {
+    background-color: #E2E2E2; /* Fondo gris debajo de la imagen */
+    padding: 15px 40px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-title h2 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: #444;
+}
+
+/* --- SECCIÓN DE LISTADO DE SERVICIOS --- */
+.services-list {
+    background-color: white;
+    padding: 10px 0;
+    flex-grow: 1;
+}
+
+.service-card {
+    display: flex;
+    padding: 20px 40px;
+    align-items: flex-start;
+}
+
+.service-icon-container {
+    width: 80px;
+    height: 80px;
+    background-color: #C1E1C1; /* Tono verde muy claro de fondo del icono */
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.service-icon-container img {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.service-details {
+    flex-grow: 1;
+}
+
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.card-header-row h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.ratings-and-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stars {
+    color: #666; /* Gris en tu imagen, no amarillo */
+    font-size: 0.9rem;
+}
+
+.heart-icon {
+    color: #888;
+    cursor: pointer;
+}
+
+.metadata {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.description {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Divisor horizontal */
+.divider {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 0 40px; /* Alineado con el padding de las tarjetas */
 }
