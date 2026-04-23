@@ -1,0 +1,27 @@
+div{
+    border: 1px solid black;
+    background-color: antiquewhite;
+}
+body{
+    background-color: yellowgreen;
+}
+#contenedor_general{
+    position: relative;
+    display: grid;
+    flex-direction: row;
+    grid-template-columns: 1fr 1fr 1fr ;
+}
+
+@media screen and (min-device-width: 300px)and (max-device-width:500px){
+    div{
+        border:none;
+        background-color: blue;
+    }
+
+    #contenedor_general{
+        display: flex;
+        flex-direction: column;
+    }
+
+    
+}
