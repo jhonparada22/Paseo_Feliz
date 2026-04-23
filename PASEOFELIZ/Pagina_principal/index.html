@@ -1,19 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <link href="css/movil_style_css.css" rel="stylesheet" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Paseo Feliz - Servicios</title>
+
+    <link rel="stylesheet" href="../css/movil_style_css.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div id="contenedor_general">
-        <div>encabezado</div>
-        <div>menu</div>
-        <div>seccion izquierda</div>
-        <div>seccion central</div>
-        <div>seccion derecha</div>
-        <div>pie de pagina</div>
+
+    <div id="contenedor_general" class="app-container">
+        
+        <nav class="sidebar">
+            <div class="profile-section">
+                <div class="profile-circle"></div>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="#">
+                        <i class="fas fa-paw"></i>
+                        <span>Servicios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="far fa-comment-alt"></i>
+                        <span>Chat</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Mapa</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-bone"></i>
+                        <span>Adopción</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            
+            <header class="header">
+                <i class="fas fa-chevron-left back-icon"></i>
+                <div class="search-bar">
+                    www.url.com
+                </div>
+                <div class="header-right">
+                    <i class="far fa-star"></i>
+                    <div class="user-avatar">M</div>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </header>
+
+            <section class="banner-section">
+                <div class="banner-container">
+                    <img src="../images/parque_perros.png" alt="Paseo Feliz" class="banner-image">
+                </div>
+                <div class="section-title">
+                    <h2>Nuestros productos y servicios</h2>
+                </div>
+            </section>
+
+            <section class="services-list">
+                
+                <article class="service-card">
+                    <div class="service-icon-container">
+                        <img src="../images/icon_paseos.png" alt="Paseos">
+                    </div>
+                    <div class="service-details">
+                        <div class="card-header-row">
+                            <h3>Paseos</h3>
+                            <div class="ratings-and-actions">
+                                <div class="stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <i class="far fa-heart heart-icon"></i>
+                            </div>
+                        </div>
+                        <p class="metadata">Category • $$ • 1.2 miles away</p>
+                        <p class="description">Servicio profesional de paseos diarios para que tu mascota se mantenga activa y feliz.</p>
+                    </div>
+                </article>
+
+                <hr class="divider">
+
+                <article class="service-card">
+                    <div class="service-icon-container">
+                        <img src="../images/icon_adiestramiento.png" alt="Adiestramiento">
+                    </div>
+                    <div class="service-details">
+                        <div class="card-header-row">
+                            <h3>Adiestramiento canino</h3>
+                            <div class="ratings-and-actions">
+                                <div class="stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <i class="far fa-heart heart-icon"></i>
+                            </div>
+                        </div>
+                        <p class="metadata">Category • $$ • 1.2 miles away</p>
+                        <p class="description">Mejora el comportamiento de tu perro con técnicas positivas y personalizadas.</p>
+                    </div>
+                </article>
+
+            </section>
+        </main>
     </div>
+
 </body>
 </html>
