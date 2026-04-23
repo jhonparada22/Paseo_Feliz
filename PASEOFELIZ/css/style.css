@@ -3830,10 +3830,11 @@ a:focus {
 .navigation ul li:nth-child(7).active ~ .indicator { transform: translateX(calc(80px * 6)); }
 
 
-/* Contenedor botón WhatsApp (para alineación) */
+/* Contenedor botón WhatsApp (para alineación) 
 .whatsapp_button_container {
-    /* Puedes ajustar márgenes si es necesario */
-}
+  
+     Puedes ajustar márgenes si es necesario 
+}*/
 
 /* Ocultar la navegación animada en pantallas pequeñas y mostrar el toggler */
 @media (max-width: 991px) { /* Ajusta este breakpoint si es necesario */
