@@ -16,8 +16,7 @@ body {
   position: relative;
 }
 
-/* ===== ESTILOS PARA VIDEO DE FONDO ===== */
-#background-video {
+#background-image {
   position: fixed; 
   top: 0;
   left: 0;
@@ -26,8 +25,6 @@ body {
   width: 50%;
   height: auto;
   z-index: -1; 
-  /* CAMBIO REALIZADO: object-fit: contain; asegura que todo el video se vea. */
-  /* NOTA: Esto podría introducir franjas negras si la proporción del video no coincide con la pantalla. */
   object-fit: contain; 
 }
 
@@ -489,3 +486,49 @@ body::before {
   transform: scale(1.05);
   color: #023b48;
 }
+/* Usamos el ID para asegurar que se aplique el estilo */
+#notification-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000; /* Un número alto para que no lo tape nada */
+    transition: opacity 0.5s ease;
+}
+
+.notification-box {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    max-width: 90%;
+    width: 400px;
+    animation: fadeIn 0.3s ease; /* Un efecto suave al aparecer */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.notification-box p {
+    margin-bottom: 0; /* Quitamos el margen inferior ya que no hay botón debajo */
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    padding: 10px;
+}
+
+/* ESTO ES LO MÁS IMPORTANTE: para que empiece oculto */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
