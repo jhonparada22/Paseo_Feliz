@@ -234,10 +234,11 @@ captchaVerifyBtn.addEventListener('click', () => {
         setTimeout(() => {
             hideCaptcha();
             limpiarTodo();
-            // --- CÓDIGO AÑADIDO: Vuelve al apartado de "Iniciar Sesión" ---
-            container.classList.remove("toggle"); 
             // -------------------------------------------------------------
-            alert("¡Registro exitoso! Ahora puede iniciar sesión con su nueva cuenta.");
+            mostrarAlertaPersonalizada("¡Registro exitoso! Ahora puede iniciar sesión con su nueva cuenta.");
+            setTimeout(() => {
+                window.location.href = "Pagina_principal/index.html";
+            }, 2000); 
         }, 1000);
         
     } else {
@@ -347,7 +348,7 @@ function proceedToSendCode() {
     downloadCodeFile(verificationCode, resetEmail);
     
     // 2. Informar al usuario 
-    alert(`Se ha generado y **descargado un archivo .txt** con el código de verificación para ${resetEmail}. Por favor, revísalo en tu carpeta de descargas para obtener el código.`);
+    mostrarAlertaPersonalizada(`Se ha generado y descargado un archivo .txt con el código de verificación para ${resetEmail}. Por favor, revísalo en tu carpeta de descargas para obtener el código.`);
     
     // 3. Iniciar el contador
     startResendTimer();
@@ -504,8 +505,12 @@ document.getElementById("btn-login").addEventListener("click", () => {
   }
   else {
     // Login exitoso
-    alert(`Bienvenido de nuevo, ${foundUser.nombre}! 👋`);
+    mostrarAlertaPersonalizada(`Bienvenido A Paseo Feliz, ${foundUser.nombre}! 👋`);
     limpiarTodo();
+
+setTimeout(() => {
+        window.location.href = "Pagina_principal/index.html";
+    }, 2000);
   }
 });
 
@@ -615,7 +620,7 @@ btnChangePassword.addEventListener("click", () => {
     const success = updatePassword(resetEmail, newPassword);
 
     if (success) {
-        alert("¡Contraseña cambiada exitosamente! Ahora puede iniciar sesión con su nueva contraseña.");
+        mostrarAlertaPersonalizada("¡Contraseña cambiada exitosamente! Ahora puede iniciar sesión con su nueva contraseña.");
         hideResetModal();
         limpiarTodo(); // Limpiar formularios, incluyendo el login
     } else {
@@ -633,4 +638,21 @@ function limpiarTodo() {
   document.querySelectorAll(".container-input").forEach(container => container.style.border = 'none');
   document.querySelectorAll(".password-field input").forEach(input => input.setAttribute("type", "password"));
   document.querySelectorAll(".toggle-password").forEach(icon => icon.setAttribute("name", "eye-outline"));
+}
+
+// Función para sustituir los alert nativos por el modal del HTML
+function mostrarAlertaPersonalizada(mensaje) {
+    const notificationOverlay = document.getElementById("notification-overlay");
+    const notificationMessage = document.getElementById("notification-message");
+
+    if (notificationOverlay && notificationMessage) {
+        // 1. Ponemos el mensaje y lo hacemos visible
+        notificationMessage.textContent = mensaje;
+        notificationOverlay.classList.remove("hidden");
+
+        // 2. Se cerrará automáticamente tras 2 segundos (2000ms)
+        setTimeout(() => {
+            notificationOverlay.classList.add("hidden");
+        }, 2000); 
+    }
 }
