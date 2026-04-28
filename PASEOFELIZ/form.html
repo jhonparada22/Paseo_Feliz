@@ -7,10 +7,9 @@
   <link rel="stylesheet" href="form.css" />
 </head>
 <body>
-  <video autoplay muted loop id="background-video">
-    <source src="recursos del formulario/videos del formulario/fondo.mp4" type="video/mp4">
-    Tu navegador no soporta la etiqueta de video.
-  </video>
+  <img src="recursos del formulario/Imagenes del formulario/fondo.png" 
+     id="background-image" 
+     alt="Fondo del formulario">
 
   <a href="index.html" class="back-button">
     <ion-icon name="arrow-back-outline"></ion-icon>
@@ -105,7 +104,7 @@
       <div class="welcome-sign-up welcome custom-welcome-in">
         <h4>BIENVENIDOS A PASEO FELIZ</h4>
         <div class="welcome-image-container">
-          <img src="recursos del formulario/Imagenes del formulario/logo.png" alt="Logo de Paseo Feliz">
+          <img src="recursos del formulario/Imagenes del formulario/ del formulario/logo.png" alt="Logo de Paseo Feliz">
         </div>
         <p>Ingrese sus datos personales para usar todas las funciones del sitio</p>
         <button class="button" id="btn-sign-up">Registrarse</button>
@@ -113,7 +112,7 @@
       <div class="welcome-sign-in welcome custom-welcome-in">
         <h4>BIENVENIDOS A PASEO FELIZ</h4>
         <div class="welcome-image-container">
-          <img src="recursos del formulario/Imagenes del formulario/logo.png" alt="Logo de Paseo Feliz">
+          <img src="recursos del formulario/Imagenes del formulario/ del formulario/logo.png" alt="Logo de Paseo Feliz">
         </div>
         <p>Regístrese con sus datos personales para usar todas las funciones del sitio</p>
         <button class="button" id="btn-sign-in">Iniciar Sesión</button>
@@ -134,7 +133,7 @@
         </div>
 
         <div id="captcha-input-container">
-            <input type="text" id="captcha-input" placeholder="Introduce el código aquí" maxlength="6" autocomplete="off" style="text-align: center; text-transform: uppercase;">
+            <input type="text" id="captcha-input" placeholder="           " maxlength="6" autocomplete="off" style="text-align: center; text-transform: uppercase;">
             <button class="button" id="captcha-verify-btn" type="button">Verificar</button>
         </div>
         
@@ -203,13 +202,13 @@
     </div>
   </div>
 
-  <div class="notification-overlay hidden" id="notification-overlay" role="status" aria-live="polite" style="z-index: 1003;">
+<div class="notification-overlay hidden" id="notification-overlay" role="status" aria-live="polite">
     <div class="notification-box">
-      <ion-icon name="checkmark-circle-outline" class="notification-icon"></ion-icon>
+      <ion-icon name="checkmark-circle-outline" style="font-size: 50px; color: #28a745;"></ion-icon>
       <p id="notification-message">Mensaje de prueba</p>
-      <button class="button" id="notification-accept-btn" type="button">Aceptar</button>
-    </div>
-  </div>
+      </div>
+</div>
+
   <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
   <script src="form.js"></script>
