@@ -251,3 +251,65 @@ body {
     border-top: 1px solid var(--border-color);
     margin: 0 40px; /* Alineado con el padding de las tarjetas */
 }
+/* Contenedor relativo para posicionar el menú */
+.menu-hamburguesa-container {
+    position: relative;
+    padding: 20px;
+}
+
+/* Estilo del círculo/botón */
+.profile-circle {
+    width: 50px;
+    height: 50px;
+    background-color: #3E72A6; /* Color azul de tu barra */
+    border: 2px solid #5D8AB5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+}
+
+/* Menú oculto por defecto */
+.menu-desplegable {
+    display: none; /* Se oculta */
+    position: absolute;
+    top: 20px;
+    left: 80px; /* Se despliega a la derecha de la sidebar */
+    width: 200px;
+    background-color: #3E72A6;
+    border-radius: 0 10px 10px 0;
+    z-index: 1000;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+}
+
+/* Clase que activaremos con JavaScript */
+.menu-desplegable.show {
+    display: block;
+}
+
+/* Estilos de la lista (basado en tu imagen) */
+.menu-desplegable ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-desplegable ul li {
+    padding: 15px 20px;
+    color: #000; /* Texto oscuro según tu captura */
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+}
+
+.menu-desplegable ul li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Estilo para la opción "Configuración" resaltada */
+.active-config {
+    background-color: #00CCEE; /* El color cyan de tu imagen */
+}
