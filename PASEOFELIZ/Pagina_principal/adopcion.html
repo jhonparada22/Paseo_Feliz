@@ -1,23 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Adopción</title>
     <link rel="stylesheet" href="./principal_css/adopcion.css">
     <link rel="stylesheet" href="./principal_css/global.css">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
 
     <div id="contenedor_general" class="app-container">
-        
+
         <nav class="sidebar">
-            <div class="profile-section">
-                <div class="profile-circle"></div>
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <li><i class="fas fa-camera"></i> <span>Conocenos</span></li>
+                        <li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li>
+                        <li><i class="fas fa-sliders-h"></i> <span>Centro de Ayuda</span></li>
+                        <li><i class="fas fa-gear"></i> <span>Configuracion</span></li>
+                        <li><i class="fas fa-user-minus"></i> <span>Cerrar sesion</span></li>
+                    </ul>
+                </nav>
             </div>
-            
+
             <ul class="nav-links">
                 <li>
                     <a href="index.html">
@@ -52,74 +66,91 @@
         </nav>
 
         <main class="main-content">
-            
+
             <section class="section-title adoption-header">
                 <h2>¡Adóptame!</h2>
             </section>
 
             <section class="adoption-grid">
-    <a href="adopcion_info.html?id=1" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/RomeoYJuli.png" alt="Romeo y July" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Romeo y July</h3>
-                <p>4 y 3 años | Grandes</p>
-            </div>
-        </article>
-    </a>
+                <a href="adopcion_info.html?id=1" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/RomeoYJuli.png" alt="Romeo y July" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Romeo y July</h3>
+                            <p>4 y 3 años | Grandes</p>
+                        </div>
+                    </article>
+                </a>
 
-    <a href="adopcion_info.html?id=2" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/Toby.png" alt="Toby" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Toby</h3>
-                <p>2 años | Mediano</p>
-            </div>
-        </article>
-    </a>
+                <a href="adopcion_info.html?id=2" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/Toby.png" alt="Toby" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Toby</h3>
+                            <p>2 años | Mediano</p>
+                        </div>
+                    </article>
+                </a>
 
-    <a href="adopcion_info.html?id=3" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/Luna.png" alt="Luna" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Luna</h3>
-                <p>6 meses | Pequeña</p>
-            </div>
-        </article>
-    </a>
+                <a href="adopcion_info.html?id=3" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/Luna.png" alt="Luna" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Luna</h3>
+                            <p>6 meses | Pequeña</p>
+                        </div>
+                    </article>
+                </a>
 
-    <a href="adopcion_info.html?id=4" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/Max.png" alt="Max" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Max</h3>
-                <p>1 año | Mediano</p>
-            </div>
-        </article>
-    </a>
+                <a href="adopcion_info.html?id=4" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/Max.png" alt="Max" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Max</h3>
+                            <p>1 año | Mediano</p>
+                        </div>
+                    </article>
+                </a>
 
-    <a href="adopcion_info.html?id=5" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/Rocky.png" alt="Rocky" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Rocky</h3>
-                <p>5 años | Grande</p>
-            </div>
-        </article>
-    </a>
+                <a href="adopcion_info.html?id=5" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/Rocky.png" alt="Rocky" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Rocky</h3>
+                            <p>5 años | Grande</p>
+                        </div>
+                    </article>
+                </a>
 
-    <a href="adopcion_info.html?id=6" class="card-link">
-        <article class="adoption-card">
-            <img src="adopcion_imagenes/Bella.png" alt="Bella" class="adoption-image">
-            <div class="adoption-info-panel">
-                <h3>Bella</h3>
-                <p>2 años | Grande</p>
-            </div>
-        </article>
-    </a>
-</section>
-     </main>
+                <a href="adopcion_info.html?id=6" class="card-link">
+                    <article class="adoption-card">
+                        <img src="adopcion_imagenes/Bella.png" alt="Bella" class="adoption-image">
+                        <div class="adoption-info-panel">
+                            <h3>Bella</h3>
+                            <p>2 años | Grande</p>
+                        </div>
+                    </article>
+                </a>
+            </section>
+        </main>
     </div>
 
 </body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+
 </html>
