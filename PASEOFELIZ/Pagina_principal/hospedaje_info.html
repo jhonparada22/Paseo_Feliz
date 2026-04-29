@@ -13,8 +13,20 @@
     <div class="app-container">
         
         <nav class="sidebar">
-            <div class="profile-section">
-                <div class="profile-circle"></div>
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <li><i class="fas fa-camera"></i> <span>Conocenos</span></li>
+                        <li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li>
+                        <li><i class="fas fa-sliders-h"></i> <span>Centro de Ayuda</span></li>
+                        <li><i class="fas fa-gear"></i> <span>Configuracion</span></li>
+                        <li><i class="fas fa-user-minus"></i> <span>Cerrar sesion</span></li>
+                    </ul>
+                </nav>
             </div>
             
             <ul class="nav-links">
@@ -105,4 +117,20 @@
     </div>
 
 </body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
 </html>
