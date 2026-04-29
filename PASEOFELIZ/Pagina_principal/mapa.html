@@ -1,23 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Servicios</title>
-
     <link rel="stylesheet" href="./principal_css/global.css">
-    
+    <link rel="stylesheet" href="./principal_css/mapa.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- En el <head> añade los estilos del mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
+
 <body>
 
     <div id="contenedor_general" class="app-container">
-        
+
         <nav class="sidebar">
-            <div class="profile-section">
-                <div class="profile-circle"></div>
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <li><i class="fas fa-camera"></i> <span>Conocenos</span></li>
+                        <li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li>
+                        <li><i class="fas fa-sliders-h"></i> <span>Centro de Ayuda</span></li>
+                        <li><i class="fas fa-gear"></i> <span>Configuracion</span></li>
+                        <li><i class="fas fa-user-minus"></i> <span>Cerrar sesion</span></li>
+                    </ul>
+                </nav>
             </div>
-            
+
             <ul class="nav-links">
                 <li>
                     <a href="index.html">
@@ -51,7 +66,45 @@
                 </li>
             </ul>
         </nav>
+        <!-- Dentro de <div id="contenedor_general"> -->
+        <main class="main-content-mapa" style="flex: 1; position: relative;">
+            <div id="map"></div>
+
+            <!-- Botones interactivos para el Admin/Paseador -->
+            <div class="controles-mapa">
+                <button class="btn-accion-mapa" onclick="empezarRuta()">
+                    <i class="fas fa-play"></i> Iniciar Paseo
+                </button>
+                <button class="btn-accion-mapa" id="btn-guardar-punto" style="background: #28a745;">
+                    <i class="fas fa-save"></i> Guardar Punto
+                </button>
+            </div>
+        </main>
     </div>
 
+    <!-- Scripts de Leaflet al final del body -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Scripts de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- TU ARCHIVO PERSONALIZADO (Asegúrate de que la ruta sea correcta) -->
+    <script src="./js/mapa_interactivo.js"></script>
+
 </body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+
 </html>
