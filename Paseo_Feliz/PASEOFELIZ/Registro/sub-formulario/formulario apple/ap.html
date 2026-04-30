@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión con la cuenta de Apple</title>
+    <link rel="stylesheet" href="ap.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
+</head>
+<body>
+    <a href="../../form.html" class="back-arrow-link" aria-label="Volver al formulario principal">&lt;</a>
+    
+    <div class="login-container">
+        <div class="login-box">
+            
+            <div id="step-identifier">
+                <div class="apple-logo-container">
+                    <div class="apple-logo-effect"></div>
+                    <span class="apple-icon"></span> </div>
+
+                <h1>Iniciar sesión con la cuenta de Apple</h1>
+                
+                <form id="identifierForm">
+                    <div class="input-container">
+                        <input type="text" id="identifier" placeholder="Correo o número de teléfono" required>
+                        <button type="submit" class="arrow-btn" aria-label="Próximo"></button>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="keep-signed-in">
+                        <label for="keep-signed-in">Mantener sesión iniciada</label>
+                    </div>
+                    
+                    <a href="#" class="forgot-link">¿Has olvidado la contraseña?</a>
+                    <a href="#" class="create-link" onclick="handleCreateAccount()">Crear cuenta de Apple</a>
+                </form>
+            </div>
+            
+            <div id="step-password" class="hidden">
+                <div class="apple-logo-container">
+                    <div class="apple-logo-effect"></div>
+                    <span class="apple-icon"></span> </div>
+                
+                <h1 id="welcome-message">Iniciar sesión con la cuenta de Apple</h1>
+                
+                <p class="account-display" id="user-identifier-display">usuario@ejemplo.com</p>
+
+                <form id="passwordForm">
+                    <div class="input-container">
+                        <input type="password" id="password" placeholder="Contraseña" required>
+                        <button type="submit" class="arrow-btn" aria-label="Iniciar sesión"></button>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="keep-signed-in-2" checked>
+                        <label for="keep-signed-in-2">Mantener sesión iniciada</label>
+                    </div>
+                    
+                    <a href="#" class="forgot-link">¿Has olvidado la contraseña?</a>
+                    <a href="#" class="create-link" onclick="goBackToIdentifier()">Volver</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="ap.js"></script>
+</body>
+</html>

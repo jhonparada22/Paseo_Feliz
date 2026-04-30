@@ -1,0 +1,196 @@
+/* Este bloque asegura que los estilos solo se apliquen en pantallas menores a 768px */
+@media screen and (max-width: 768px) {
+    /* 1. Fondo y Base */
+    body {
+        background-color: #10f3ba !important; /* Fondo específico para móvil */
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Ocultar elementos de escritorio que no se usan en móvil */
+    #background-image, 
+    body::before, 
+    .container-welcome, 
+    .back-button {
+        display: none !important;
+    }
+
+    /* 2. El Contenedor como Tarjeta Central */
+    .container {
+        width: 90% !important;
+        height: 85% !important;
+        max-width: 400px;
+        margin: auto;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        position: relative;
+        overflow: hidden;
+        background: #ffffff !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 3. Animación de Deslizamiento Lateral */
+    .container-form {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+    }
+
+    /* Login por defecto visible */
+    #form-login {
+        transform: translateX(0);
+        opacity: 1;
+        z-index: 2;
+    }
+
+    /* Registro oculto a la derecha */
+    #form-register {
+        transform: translateX(100%);
+        opacity: 0;
+        z-index: 1;
+    }
+
+    /* Estados cuando se activa el registro (clase controlada por JS) */
+    .container.active-register #form-login {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    .container.active-register #form-register {
+        transform: translateX(0);
+        opacity: 1;
+        z-index: 2;
+    }
+
+    /* 4. Estética de los elementos internos */
+    h2 {
+        font-size: 1.6rem;
+        color: #023b48;
+        margin-bottom: 25px;
+    }
+
+    .container-input {
+        width: 100% !important;
+        background-color: #f5f5f5 !important;
+        border-radius: 12px !important;
+        margin-bottom: 12px;
+        border: 1px solid #eee !important;
+    }
+
+    .button {
+        width: 100% !important;
+        border-radius: 12px !important;
+        padding: 14px !important;
+        font-weight: 600;
+        background-color: #023b48 !important;
+        color: white;
+        margin-top: 15px;
+    }
+
+    /* Redes sociales */
+    .social-networks {
+        margin: 15px 0;
+        display: flex;
+        gap: 15px;
+    }
+
+    .social-networks a {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #333;
+    }
+
+    /* 5. Estilo de los Botones Flotantes Inferiores */
+    #btn-sign-up-mobile, 
+    #btn-sign-in-mobile {
+        position: fixed !important;
+        bottom: 25px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 70% !important;
+        max-width: 250px;
+        height: 50px;
+        background-color: #023b48 !important;
+        color: #ffffff !important;
+        border: none;
+        border-radius: 25px;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1rem;
+        z-index: 9999 !important;
+        cursor: pointer;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Lógica de visibilidad para los botones móviles */
+    #btn-sign-in-mobile { 
+        display: none !important; 
+    } 
+
+    .container.active-register ~ #btn-sign-in-mobile { 
+        display: flex !important; 
+    }
+
+    .container.active-register ~ #btn-sign-up-mobile { 
+        display: none !important; 
+    }
+}
+
+/* REGLA PARA ESCRITORIO: Asegura que nada del diseño móvil se filtre en PC */
+@media screen and (min-width: 769px) {
+    #btn-sign-up-mobile, 
+    #btn-sign-in-mobile {
+        display: none !important;
+    }
+}
+
+/* Estilos base para los botones en móvil */
+.mobile-toggle {
+    display: flex !important; /* Lo hacemos visible solo en móvil */
+    position: absolute !important;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70% !important;
+    background-color: #a129fd !important; /* Verde llamativo del diseño original */
+    color: #000 !important;
+    font-weight: 700;
+    z-index: 100;
+    border-radius: 25px !important;
+}
+
+/* Lógica de intercambio: */
+
+/* 1. Por defecto (estando en Login), ocultamos el botón de 'Iniciar Sesión' 
+      y dejamos que se vea el de 'Registrarse' */
+#btn-sign-in-mobile { display: none !important; }
+
+/* 2. Cuando activamos el registro (clase active-register), 
+      mostramos el de 'Iniciar Sesión' y ocultamos el de 'Registrarse' */
+.container.active-register #btn-sign-in-mobile { 
+    display: flex !important; 
+}
+.container.active-register #btn-sign-up-mobile { 
+    display: none !important; 
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paseo Feliz - Detalles de Hospedaje</title>
+    <link rel="stylesheet" href="./principal_css/global.css">
+    <link rel="stylesheet" href="./principal_css/paseos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <li><i class="fas fa-camera"></i> <span>Conocenos</span></li>
+                        <li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li>
+                        <li><i class="fas fa-sliders-h"></i> <span>Centro de Ayuda</span></li>
+                        <li><i class="fas fa-gear"></i> <span>Configuracion</span></li>
+                        <li><i class="fas fa-user-minus"></i> <span>Cerrar sesion</span></li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="index.html">
+                        <i class="fas fa-paw"></i>
+                        <span>Servicios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="chat.html">
+                        <i class="far fa-comment-alt"></i>
+                        <span>Chat</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Mapa</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="adopcion.html">
+                        <i class="fas fa-bone"></i>
+                        <span>Adopción</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="usuario.html">
+                        <i class="fas fa-user"></i>
+                        <span>Usuario</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            
+            <header class="details-header">
+                <a href="index.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </header>
+
+            <div class="content-padding">
+                <section class="service-hero">
+                    <div class="hero-image-container">
+                        <img src="./recursos_pagina_principal/iconhospedaje.png" alt="Hospedaje Canino" class="hero-image">
+                    </div>
+                    
+                    <div class="hero-text-content">
+                        <div class="title-row">
+                            <h1>Hospedaje canino</h1>
+                            <i class="far fa-heart heart-icon"></i>
+                        </div>
+                        
+                        <ul class="specs-list">
+                            <li><strong>Ambiente:</strong> Espacios 100% familiares y libres de jaulas.</li>
+                            <li><strong>Atención:</strong> Cuidado y vigilancia las 24 horas del día.</li>
+                            <li><strong>Requisitos:</strong> Carnet de vacunación y desparasitación al día.</li>
+                            <li><strong>Seguimiento:</strong> Envío de fotos y videos diarios de tu mascota.</li>
+                        </ul>
+
+                        <button class="btn-reserva">Reserva ahora</button>
+                    </div>
+                </section>
+
+                <hr class="divider-full">
+
+                <section class="info-details">
+                    <article class="info-block">
+                        <h3>Un segundo hogar para tu mejor amigo</h3>
+                        <p>Cuidamos de tu mascota en todo momento y velamos por su salud en cada instante. Nuestro hospedaje ofrece un ambiente cálido donde tu perro se sentirá como en casa, sin el estrés de los caniles tradicionales.</p>
+                    </article>
+
+                    <article class="info-block">
+                        <h3>Socialización y Recreación</h3>
+                        <p>Durante su estadía, tu mascota podrá interactuar con otros perros bajo supervisión constante, participando en actividades recreativas que mantendrán su mente y cuerpo activos.</p>
+                    </article>
+
+                    <article class="info-block">
+                        <h3>Seguridad y Tranquilidad</h3>
+                        <p>Contamos con protocolos de emergencia y comunicación directa con veterinarios. Al igual que en nuestros otros servicios, la seguridad es nuestra prioridad para que puedas viajar con total tranquilidad.</p>
+                    </article>
+                </section>
+            </div>
+        </main>
+    </div>
+
+</body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+</html>
