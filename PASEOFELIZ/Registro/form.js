@@ -1,3 +1,20 @@
+// Nuevas referencias para móvil
+const btnSignUpMobile = document.getElementById("btn-sign-up-mobile");
+const btnSignInMobile = document.getElementById("btn-sign-in-mobile");
+
+// Configuración de eventos para los botones de móvil[cite: 3, 4]
+btnSignUpMobile.addEventListener("click", () => {
+  container.classList.add("toggle"); // Acción para PC[cite: 3]
+  container.classList.add("active-register"); // Acción para móvil
+  limpiarTodo();
+});
+
+btnSignInMobile.addEventListener("click", () => {
+  container.classList.remove("toggle"); // Acción para PC[cite: 3]
+  container.classList.remove("active-register"); // Acción para móvil
+  limpiarTodo();
+});
+
 const container = document.querySelector(".container");
 const btnSignIn = document.getElementById("btn-sign-in");
 const btnSignUp = document.getElementById("btn-sign-up");
@@ -662,3 +679,13 @@ function mostrarAlertaPersonalizada(mensaje) {
         }, 2000); 
     }
 }
+
+// Ejemplo de función para alternar pantallas en móvil
+function toggleMobileForms() {
+    const loginForm = document.getElementById('form-login');
+    const registerForm = document.getElementById('form-register');
+    
+    loginForm.classList.toggle('hidden-mobile');
+    registerForm.classList.toggle('hidden-mobile');
+}
+
