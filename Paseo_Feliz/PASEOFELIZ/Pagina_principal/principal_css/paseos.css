@@ -1,0 +1,145 @@
+/* ESTILOS PARA EL APARTADO DE PASEOS EN EL INDEX*/
+/* Estilos para la página de Detalles */
+.details-page {
+    background-color: white;
+    padding: 20px;
+    max-width: auto;
+    margin: 0 auto;
+}
+
+.details-header {
+    margin-bottom: 20px;
+}
+
+.back-link {
+    color: #333;
+    font-size: 1.2rem;
+    text-decoration: none;
+}
+
+/* Hero Section (Imagen + Datos) */
+.service-hero {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 30px;
+    align-items: flex-start;
+}
+
+.hero-image-container {
+    flex: 0 0 300px;
+}
+
+.hero-image {
+    width: 100%;
+    border-radius: 15px;
+    border: 8px solid #E6F2F5; /* El borde azul claro de tu imagen */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.hero-text-content {
+    flex: 1;
+}
+
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.title-row h1 {
+    font-size: 1.8rem;
+    color: #333;
+}
+
+.specs-list {
+    list-style: none;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Botón de Reserva */
+.btn-reserva {
+    background-color: #2E75B6; /* Azul del botón */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.divider-full {
+    border: 0;
+    border-top: 1px solid #EEE;
+    margin: 20px 0;
+}
+
+/* Bloques de texto informativos */
+.info-details {
+    padding-top: 10px;
+}
+
+.info-block {
+    margin-bottom: 25px;
+}
+
+.info-block h3 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.info-block p {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+/* Ajuste para móviles */
+@media (max-width: 600px) {
+    .service-hero {
+        flex-direction: column;
+    }
+    .hero-image-container {
+        flex: 1;
+        width: 100%;
+    }
+}
+
+/*ESTILOS PARA EL BOTON DE VER MAS EN EL INDEX*/
+/* Estilo para el botón Ver más */
+.btn-ver-mas {
+    background-color: #3E72A6; /* El azul que usas en el sidebar */
+    color: white;
+    text-decoration: none; /* Quita el subrayado del enlace */
+    padding: 6px 15px;
+    border-radius: 20px; /* Bordes redondeados como tu diseño */
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-ver-mas:hover {
+    background-color: #2c5580; /* Un azul un poco más oscuro al pasar el mouse */
+    transform: scale(1.05); /* Efecto sutil de crecimiento */
+}
+
+.ratings-and-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Espacio entre el botón y el corazón */
+}
+
+.heart-icon {
+    font-size: 1.1rem;
+    color: #888;
+    cursor: pointer;
+}
