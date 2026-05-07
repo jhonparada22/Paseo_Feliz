@@ -2934,7 +2934,7 @@ a:focus {
 }
 
 .custom_nav-container .nav_search-btn {
-  background-image: url(../images/search-icon.png);
+  background-image: url(../assets/images/search-icon.png);
   background-size: 22px;
   background-repeat: no-repeat;
   background-position-y: 7px;
@@ -2979,7 +2979,7 @@ a:focus {
 }
 
 .custom_nav-container .navbar-toggler .navbar-toggler-icon {
-  background-image: url(../images/menu.png);
+  background-image: url(../assets/images/menu.png);
   background-size: 55px;
 }
 
@@ -3068,7 +3068,7 @@ a:focus {
 }
 
 .about_section {
-  background-image: url(../images/about-bg.png);
+  background-image: url(../assets/images/about-bg.png);
   background-size: cover;
 }
 
@@ -3375,15 +3375,15 @@ a:focus {
 }
 
 .info_items .item .img-box.box-1 {
-  background-image: url(../images/location-white.png);
+  background-image: url(../assets/images/location-white.png);
 }
 
 .info_items .item .img-box.box-2 {
-  background-image: url(../images/telephone-white.png);
+  background-image: url(../assets/images/telephone-white.png);
 }
 
 .info_items .item .img-box.box-3 {
-  background-image: url(../images/envelope-white.png);
+  background-image: url(../assets/images/envelope-white.png);
 }
 
 /* footer section*/
@@ -4150,23 +4150,23 @@ a:focus {
 
 /* Diapositiva 1: Paseos (usando la imagen que subiste) */
 .slider_section .carousel-item.slide-1 {
-  background-image: url('../images/slider-bg-paseos1.jpg'); 
+  background-image: url('../assets/images/slider-bg-paseos1.jpg'); 
 }
 
 /* Diapositiva 2: Hospedaje (DEBES CAMBIAR ESTA IMAGEN) */
 .slider_section .carousel-item.slide-2 {
-  background-image: url('../images/slider-bg-hospedaje1.jpg'); /* REEMPLAZA ESTA RUTA */
+  background-image: url('../assets/images/slider-bg-hospedaje1.jpg'); /* REEMPLAZA ESTA RUTA */
   background-position: center bottom; /* Ejemplo de ajuste de posición */
 }
 
 /* Diapositiva 3: Colegio (DEBES CAMBIAR ESTA IMAGEN) */
 .slider_section .carousel-item.slide-3 {
-  background-image: url('../images/slider-bg-colegio1.jpg'); /* REEMPLAZA ESTA RUTA */
+  background-image: url('../assets/images/slider-bg-colegio1.jpg'); /* REEMPLAZA ESTA RUTA */
 }
 
 /* Diapositiva 4: Eventos (DEBES CAMBIAR ESTA IMAGEN) */
 .slider_section .carousel-item.slide-4 {
-  background-image: url('../images/slider-bg-eventos1.jpg'); /* REEMPLAZA ESTA RUTA */
+  background-image: url('../assets/images/slider-bg-eventos1.jpg'); /* REEMPLAZA ESTA RUTA */
 }
 
 
