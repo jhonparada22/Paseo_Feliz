@@ -3846,29 +3846,32 @@ a:focus {
   }
   .navbar-toggler {
       display: block; /* Asegúrate que el botón hamburguesa sea visible */
+      background-color: #023b48;
+      border-color: #000000;
   }
    /* Estilos básicos para el menú móvil desplegable */
   #mobileNav {
-      background-color: #f8f9fa; /* Fondo similar al header */
+      background-color: #faf8f8; /* Fondo similar al header */
       position: absolute;
       top: 100%; /* Debajo del header */
       left: 0;
       width: 100%;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
       z-index: 1000;
   }
-   #mobileNav .navbar-nav {
+  #mobileNav .navbar-nav {
       padding: 15px;
+
   }
-   #mobileNav .nav-link {
-       text-align: center;
-       padding: 10px;
-       border-bottom: 1px solid #ddd;
-       color: #023b48;
-   }
-   #mobileNav .nav-item:last-child .nav-link {
-       border-bottom: none;
-   }
+  #mobileNav .nav-link {
+      text-align: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      color: #023b48;
+  }
+  #mobileNav .nav-item:last-child .nav-link {
+      border-bottom: none;
+  }
 }
 
 /* Mostrar navegación animada y ocultar toggler en pantallas grandes */

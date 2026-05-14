@@ -27,6 +27,40 @@
 }
 
 @media (max-width: 768px) {
+  /* Dentro de @media (max-width: 768px) */
+.slider_section .row {
+  flex-direction: column-reverse; /* Esto pone el texto arriba y la imagen abajo */
+  text-align: center;
+}
+
+.slider_img-box {
+  width: 100%;
+  margin-bottom: 20px; /* Separa la imagen del texto */
+}
+
+.slider_img-box img {
+  width: 60%; /* Reduce un poco más el tamaño del perrito en móvil */
+  margin: 0 auto;
+}
+  #mainNavigation {
+    width: 90%; /* Que no ocupe todo el ancho */
+    height: 60px; /* Un poco más delgado */
+    bottom: 10px; /* Separarlo un poco del borde inferior */
+  }
+  
+  #mainNavigation ul li a .icon {
+    font-size: 1.2rem; /* Iconos un poco más pequeños */
+  }
+  
+  #mainNavigation ul li a .text {
+    font-size: 0.7rem; /* Texto más pequeño */
+  }
+  .slider_img-box img {
+    max-width: 80%; /* Que no sea tan gigante en el cel */
+    margin: 0 auto;
+    display: block;
+  }
+  
   .slider_detail-box {
     text-align: center;
   }
@@ -71,9 +105,25 @@
     margin: 40px 0;
     text-align: center;
   }
+  
 }
 
 @media (max-width: 576px) {
+  .slider_detail-box h1 {
+    font-size: 2.5rem; /* Reducir el tamaño del título principal */
+    line-height: 1.2;
+    margin-bottom: 20px;
+  }
+
+  .slider_detail-box p {
+    font-size: 1rem;
+    margin-bottom: 25px;
+  }
+
+  .slider_detail-box .btn-box {
+    display: flex;
+    justify-content: center; /* Centrar el botón en móviles */
+  }
   .client_section .client_container {
     flex-direction: column;
     align-items: center;

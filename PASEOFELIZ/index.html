@@ -28,7 +28,7 @@
     <header class="header_section">
       <div class="container-fluid">
         <div class="navigation_wrapper">
-          <a class="navbar-brand-logo" href="index.html">
+          <a class="navbar-brand-logo" href="./index.html">
             <img src="./view/assets/images/logo.png" alt="Logo Paseo Feliz" style="width: 60px; height: auto;">
             <span>Paseo Feliz</span>
           </a>
@@ -90,7 +90,7 @@
 
           <div class="collapse navbar-collapse" id="mobileNav">
             <ul class="navbar-nav ml-auto">
-              <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+              <li class="nav-item"><a class="nav-link" href="./index.html">Inicio</a></li>
               <li class="nav-item"><a class="nav-link" href="./view/service.html">Servicios</a></li>
               <li class="nav-item"><a class="nav-link" href="./view/pet.html">Paseos</a></li>
               <li class="nav-item"><a class="nav-link" href="./view/clinic.html">Hospedaje</a></li>
@@ -98,7 +98,7 @@
               <li class="nav-item"><a class="nav-link" href="./view/contact.html">Contacto</a></li>
             </ul>
             <div class="mobile_action_buttons">
-              <a href="../PASEOFELIZ/Registro/form.html" class="btn btn-outline-primary my-2 d-block">Acceder</a>
+              <a href="./view/registro/form.html" class="btn btn-outline-primary my-2 d-block">Acceder</a>
               <a href="https://wa.me/+573143971465" target="_blank" rel="noopener noreferrer"
                 class="btn btn-success d-block">
                 <i class="fab fa-whatsapp"></i> Enviar WhatsApp
@@ -132,7 +132,7 @@
                       "un mundo sin perros es un mundo sin sonrisas"
                     </p>
                     <div class="btn-box">
-                      <a href="pet.html" class="btn-1"> Paseos
+                      <a href="./view/pet.html" class="btn-1"> Paseos
                       </a>
                     </div>
                   </div>
@@ -158,7 +158,7 @@
                       Cuidamos a tu mascota como en casa
                     </p>
                     <div class="btn-box">
-                      <a href="clinic.html" class="btn-1"> Hospedaje
+                      <a href="./view/clinic.html" class="btn-1"> Hospedaje
                       </a>
                     </div>
                   </div>
@@ -187,7 +187,7 @@
                       Adiestramiento profesional para tu mascota
                     </p>
                     <div class="btn-box">
-                      <a href="buy.html" class="btn-1"> Colegio Canino
+                      <a href="./view/buy.html" class="btn-1"> Colegio Canino
                       </a>
                     </div>
                   </div>
@@ -216,7 +216,7 @@
                       Celebra con tu mascota en nuestro espacio pet friendly
                     </p>
                     <div class="btn-box">
-                      <a href="service.html" class="btn-1"> Ver Eventos
+                      <a href="./view/service.html" class="btn-1"> Ver Eventos
                       </a>
                     </div>
                   </div>
@@ -604,7 +604,7 @@
   });
 
   let foundActive = false;
-  if (currentPage === "" || currentPage === "index.html") {
+  if (currentPage === "" || currentPage === "./index.html") {
     document.querySelector('#mainNavigation ul li:nth-child(1)').classList.add('active');
     foundActive = true;
   } else {
