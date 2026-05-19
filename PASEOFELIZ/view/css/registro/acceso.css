@@ -1,0 +1,534 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+
+body {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* CAMBIO: Se remueve el color de fondo y se añade position: relative */
+  /* background-color: #F0F4F3; */
+  position: relative;
+}
+
+#background-image {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  min-width: 100%; 
+  min-height: 100%;
+  width: 50%;
+  height: auto;
+  z-index: -1; 
+  object-fit: contain; 
+}
+
+/* Capa de oscurecimiento opcional */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(0, 0, 0);
+  z-index: -1; 
+}
+
+/* ===== CONTENEDOR ===== */
+.container {
+  width: 800px;
+  height: 500px;
+  display: flex;
+  position: relative;
+  background-color: rgb(226, 226, 226);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* ===== CAMPOS (GENERAL) ===== */
+.container-input {
+  width: 300px;
+  height: 40px;
+  /* REDUCCIÓN PARA JUNTAR CON EL ERROR */
+  margin-bottom: 0px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  background-color: #EEEEEE;
+  border-radius: 6px;
+  position: relative;
+}
+
+/* MODIFICACIÓN: Aplicar estilos a input y select */
+.container-input input,
+.container-input select {
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  background-color: inherit;
+  /* APLICAR EL COLOR DE TEXTO IGUAL QUE EL INPUT */
+  color: #5e5e5e; 
+}
+
+/* Opcional: Estilos para el select */
+.container-input select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    padding: 0; /* Asegurar que no haya padding extra */
+}
+/* Estilo para las opciones que por defecto podrían tener un color distinto en algunos navegadores */
+.container-input select option {
+    color: #000; 
+    background-color: #fff;
+}
+
+/* NUEVO: Estilos para la flecha del select */
+.container-input .select-arrow {
+    position: absolute;
+    right: 15px; /* Posicionar al final del cuadro */
+    pointer-events: none; /* Asegurar que no interfiera con el click en el select */
+    color: #555; /* Color similar al icono de contraseña */
+    font-size: 20px;
+}
+
+
+/* ===== MENSAJES DE ERROR (GENERAL) ===== */
+.error-msg {
+  color: #d62828;
+  font-size: 11px;
+  /* REDUCCIÓN PARA JUNTAR CON EL SIGUIENTE ELEMENTO */
+  margin-bottom: 2px; 
+  text-align: left;
+  width: 300px;
+  min-height: 14px; 
+  padding-left: 15px; 
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Resto del CSS sin cambios */
+.container-form span {
+  font-size: 12px;
+  margin-bottom: 15px;
+}
+.container-form a {
+  color: rgb(0, 0, 0);
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+.container-form a:hover {
+  text-decoration: underline;
+}
+.button {
+  width: 170px;
+  height: 45px;
+  font-size: 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  /* MODIFICADO: Se ajusta a 0px para subir más el botón de registro */
+  margin-top: -10px; 
+  background-color: #0a4e63;
+  color: rgb(255, 255, 255);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.button:hover {
+  background-color: #2e8d78;
+  transform: scale(1.03);
+}
+.sign-up {
+  transform: translateX(-100%);
+}
+.container.toggle .sign-in {
+  transform: translateX(100%);
+}
+.container.toggle .sign-up {
+  transform: translateX(0);
+}
+.container-welcome {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transform: translateX(100%);
+  background-color: #226daa;
+  transition: transform 0.5s ease-in-out, border-radius 0.5s ease-in-out;
+  overflow: hidden;
+  border-radius: 50% 0 0 50%;
+}
+.container.toggle .container-welcome {
+  transform: translateX(0);
+  border-radius: 0 50% 50% 0;
+  background-color: #226daa;
+}
+.container-welcome .welcome {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 50px;
+  color: #0e161f;
+  transition: transform 0.5s ease-in-out;
+}
+.welcome-sign-in {
+  transform: translateX(100%);
+}
+
+/* CLASE PARA AJUSTAR EL CONTENIDO DE BIENVENIDA (Más centrado verticalmente) */
+.container-welcome .welcome.custom-welcome-in {
+  /* Aumentar el padding superior a 60px para bajar el contenido y centrar más el h3 */
+  padding: center 60px 50px 0 50px;     
+  /* Asegura la alineación central */
+  justify-content: center;
+  gap: 20px;
+}
+
+/* ESTILOS PARA EL CONTENEDOR DE LA IMAGEN (SIN BORDE NI RECORTE) */
+.welcome-image-container {
+  width: 150px;
+  height: 150px;
+  /* ELIMINACIÓN DE BORDE Y RECORTE */
+  border-radius: 0; 
+  overflow: visible; 
+  border: none;
+  margin-bottom: 5px; 
+  background-color: transparent; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome-image-container img {
+  width: 100%;
+  height: 100%;
+  /* Asegura que toda la imagen sea visible sin recorte */
+  object-fit: contain; 
+}
+
+/* ESTILOS PARA EL H3 (MAYÚSCULAS) */
+.container-welcome h3 {
+  font-size: 40px;
+  /* FUERZA EL TEXTO A MAYÚSCULAS */
+  text-transform: uppercase;
+  /* Margen inferior para separarlo de la imagen */
+  margin-bottom: 20px; 
+}
+
+.container-welcome p {
+  font-size: 16px;
+  text-align: center;
+}
+.container-welcome .button {
+  border: 2px solid #154164;
+  background-color: #29fd53; 
+  color: black; 
+}
+
+.container.toggle .welcome-sign-in {
+  transform: translateX(0);
+}
+.container.toggle .welcome-sign-up {
+  transform: translateX(-100%);
+}
+.password-field {
+  position: relative;
+}
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.3s ease;
+}
+.toggle-password:hover {
+  color: #000;
+}
+.hidden {
+  display: none !important;
+}
+
+/* ================================================= */
+/* ESTILOS PARA CAPTCHA DE TEXTO / MODAL DE RESET (REUTILIZADOS) */
+/* ================================================= */
+
+#captcha-overlay, #password-reset-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 💥 CAMBIO: Fondo negro semitransparente para oscurecer el fondo */
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; 
+}
+
+#captcha-modal, #password-reset-modal {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    /* Se mantienen los tamaños pequeños */
+    max-width: 300px; 
+    width: 300px;
+}
+
+/* Nota: En el HTML, se usa .notification-box en lugar de #captcha-modal/#password-reset-modal,
+   pero en el CSS original se apuntaba a estos IDs. Se mantienen los IDs.
+   Si el HTML usa .notification-box, el estilo se aplica en el inline de form.html */
+/* Por si acaso, si se usa .notification-box en lugar de los IDs: */
+.notification-box {
+    background-color: white;
+    /* Los estilos de tamaño y padding están en el HTML con style="max-width: 350px;" y style="max-width: 400px;" */
+}
+
+
+#captcha-modal h3, #password-reset-modal h3 {
+    margin-bottom: 10px;
+    color: #0a4e63;
+}
+
+#captcha-modal p, #password-reset-modal p {
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* Estilos específicos del CAPTCHA */
+#captcha-display-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+#captcha-display {
+    /* Ajustado para caber en la ventana de 300px */
+    width: 180px; 
+    height: 60px;
+    background-color: #eee;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 5px;
+    color: #333;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    transform: rotate(-1deg);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    font-family: cursive, sans-serif;
+}
+
+/* Efecto de ruido y líneas para dificultar la lectura */
+#captcha-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Simular ruido de fondo */
+    background-image: linear-gradient(0deg, transparent 24%, rgba(0, 0, 0, 0.1) 25%, rgba(0, 0, 0, 0.1) 26%, transparent 27%, transparent 74%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0.1) 76%, transparent 77%);
+    background-size: 100% 5px;
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+#captcha-refresh-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 30px;
+    color: #0a4e63;
+    transition: color 0.2s, transform 0.2s;
+}
+#captcha-refresh-btn:hover {
+    color: #2e8d78;
+    transform: rotate(15deg);
+}
+
+#captcha-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#captcha-input {
+    padding: 10px;
+    /* Ajustado para caber */
+    width: 150px; 
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+#captcha-verify-btn {
+    width: 120px;
+    margin-top: 0;
+}
+
+#captcha-message {
+    font-weight: bold;
+    min-height: 20px;
+    margin-bottom: 15px;
+}
+/* Fin de estilos CAPTCHA */
+
+/* ================================================= */
+/* ESTILOS ESPECÍFICOS PARA EL CONTADOR DE RECUPERACIÓN DE CONTRASEÑA (NUEVO) */
+/* ================================================= */
+
+#resend-timer {
+    /* Hace el texto más pequeño */
+    font-size: 12px;
+    /* Reduce la negrita, usando un peso 500 */
+    font-weight: 500;
+    color: #d62828;
+    /* Espacio arriba para separarlo del botón */
+    margin-top: 5px; 
+    /* Asegura que el span sea visible como bloque */
+    display: block;
+}
+
+
+.container-form h2 {
+  font-size: 30px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.social-networks {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+.social-networks ion-icon {
+  font-size: 24px;
+  border: 1px solid #C9CCCB;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.social-networks ion-icon:hover {
+  background-color: #3AB397;
+  color: white;
+  border-color: #3AB397;
+}
+.container-form {
+  width: 100%;
+  overflow: hidden;
+}
+.container-form form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.5s ease-in;
+}
+.back-button {
+  position: fixed; /* Lo fija en la pantalla */
+  top: 20px;
+  left: 20px;
+  z-index: 110; /* Encima de todo */
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semi-transparente */
+  color: #0a4e63; /* Color oscuro del tema */
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+.back-button ion-icon {
+  font-size: 1.2rem;
+  margin-right: 5px;
+}
+.back-button:hover {
+  background-color: #fff;
+  transform: scale(1.05);
+  color: #023b48;
+}
+/* Usamos el ID para asegurar que se aplique el estilo */
+#notification-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000; /* Un número alto para que no lo tape nada */
+    transition: opacity 0.5s ease;
+}
+
+.notification-box {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    max-width: 90%;
+    width: 400px;
+    animation: fadeIn 0.3s ease; /* Un efecto suave al aparecer */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.notification-box p {
+    margin-bottom: 0; /* Quitamos el margen inferior ya que no hay botón debajo */
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    padding: 10px;
+}
+
+/* ESTO ES LO MÁS IMPORTANTE: para que empiece oculto */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
