@@ -1,25 +1,25 @@
 <?php
-// Configuración de la base de datos para XAMPP
+// Configuración de la base de datos para PostgreSQL (pgAdmin 4)
 $host = 'localhost';
-$db   = 'paseo_feliz'; // El nombre que pusiste en phpMyAdmin
-$user = 'root';        // Usuario por defecto de XAMPP
-$pass = '';            // Contraseña por defecto (vacía)
-$charset = 'utf8mb4';  // Importante para aceptar tildes y emojis en el chat
+$port = '5432'; 
+$db   = 'paseo_feliz'; 
+$user = 'Usuarios_Paseo_Feliz'; 
+$pass = 'feliz';      
 
 // Configuración de opciones de PDO
 $options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Lanza errores si algo falla
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Devuelve los datos como arreglos asociativos
-    PDO::ATTR_EMULATE_PREPARES   => false,                  // Desactiva emulación para mayor seguridad
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, 
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       
+    PDO::ATTR_EMULATE_PREPARES   => false,                  
 ];
 
-$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$dsn = "pgsql:host=$host;port=$port;dbname=$db";
 
 try {
     // Creamos la instancia de la conexión
     $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
-    // Si hay un error, lo atrapamos y mostramos qué pasó
+    // Si hay un error, se muestra un mensaje de error y se detiene la ejecución
     die("Error de conexión a la base de datos: " . $e->getMessage());
 }
 ?>
