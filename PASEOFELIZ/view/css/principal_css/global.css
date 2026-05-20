@@ -313,3 +313,220 @@ body {
 .active-config {
     background-color: #00CCEE; /* El color cyan de tu imagen */
 }
+
+/* ============================================================ */
+/*  RESPONSIVE - PAGINA PRINCIPAL (APP INTERNA)                 */
+/*  Ajustes para sidebar, cards y banner en móvil/tablet        */
+/* ============================================================ */
+
+/* ======= TABLET (max-width: 900px) ======= */
+@media (max-width: 900px) {
+
+  /* Sidebar más delgada, solo íconos */
+  .sidebar {
+    width: 65px;
+    padding-top: 15px;
+  }
+
+  .nav-links li a span {
+    display: none;
+  }
+
+  .nav-links li i {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+  }
+
+  .nav-links li.active a {
+    width: 70%;
+    border-radius: 10px;
+    padding: 8px 0;
+  }
+
+  /* Cards de servicio */
+  .service-card {
+    padding: 15px 20px;
+  }
+
+  .section-title {
+    padding: 12px 20px;
+  }
+
+  .divider {
+    margin: 0 20px;
+  }
+
+  /* Banner */
+  .banner-container {
+    height: 250px;
+  }
+
+  /* Menú desplegable */
+  .menu-desplegable {
+    left: 65px;
+  }
+}
+
+/* ======= MÓVIL (max-width: 540px) ======= */
+@media (max-width: 540px) {
+
+  /* Layout vertical: sidebar pasa a barra inferior */
+  .app-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    order: 2; /* La sidebar va al fondo */
+    width: 100%;
+    height: 58px;
+    flex-direction: row;
+    padding: 0;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .menu-hamburguesa-container {
+    padding: 5px;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    gap: 0;
+  }
+
+  .nav-links li {
+    margin-bottom: 0;
+    width: auto;
+  }
+
+  .nav-links li a {
+    padding: 5px 8px;
+    font-size: 0.62rem;
+  }
+
+  .nav-links li a span {
+    display: block;
+    font-size: 0.6rem;
+  }
+
+  .nav-links li i {
+    font-size: 1rem;
+    margin-bottom: 2px;
+  }
+
+  .nav-links li.active a {
+    width: auto;
+    padding: 5px 8px;
+    border-radius: 8px;
+  }
+
+  /* El menú desplegable sube desde la barra inferior */
+  .menu-desplegable {
+    top: auto;
+    bottom: 58px;
+    left: 0;
+    border-radius: 0 10px 0 0;
+    width: 200px;
+  }
+
+  /* Contenido principal ocupa el resto */
+  .main-content {
+    order: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 58px);
+    flex: 1;
+  }
+
+  /* Banner */
+  .banner-container {
+    height: 160px;
+  }
+
+  .section-title {
+    padding: 10px 15px;
+  }
+
+  .section-title h2 {
+    font-size: 1rem;
+  }
+
+  /* Cards */
+  .service-card {
+    padding: 12px 15px;
+  }
+
+  .service-icon-container {
+    width: 60px;
+    height: 60px;
+    margin-right: 12px;
+  }
+
+  .card-header-row h3 {
+    font-size: 0.95rem;
+  }
+
+  .description {
+    font-size: 0.8rem;
+  }
+
+  .metadata {
+    font-size: 0.75rem;
+  }
+
+  .divider {
+    margin: 0 15px;
+  }
+
+  /* Menú hamburguesa — botón circular más pequeño */
+  .profile-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  /* Card header puede hacer salto si el título es largo */
+  .card-header-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ratings-and-actions {
+    gap: 8px;
+  }
+
+  .btn-ver-mas {
+    font-size: 0.78rem;
+    padding: 5px 12px;
+  }
+}
+
+/* ======= MÓVIL MUY PEQUEÑO (max-width: 360px) ======= */
+@media (max-width: 360px) {
+
+  .nav-links li a {
+    padding: 4px 5px;
+  }
+
+  .nav-links li i {
+    font-size: 0.9rem;
+  }
+
+  .nav-links li a span {
+    font-size: 0.55rem;
+  }
+
+  .service-card {
+    padding: 10px 12px;
+  }
+
+  .service-icon-container {
+    width: 50px;
+    height: 50px;
+  }
+
+  .banner-container {
+    height: 130px;
+  }
+}
