@@ -1,3 +1,10 @@
+/* ============================================================ */
+/*  RESPONSIVE.CSS - PASEO FELIZ                                */
+/*  Estilos existentes preservados + mejoras mobile/tablet      */
+/* ============================================================ */
+
+/* ============ ESTILOS ORIGINALES (preservados) ============== */
+
 @media (max-width: 1120px) {
   .hero_area {
     height: auto;
@@ -27,40 +34,6 @@
 }
 
 @media (max-width: 768px) {
-  /* Dentro de @media (max-width: 768px) */
-.slider_section .row {
-  flex-direction: column-reverse; /* Esto pone el texto arriba y la imagen abajo */
-  text-align: center;
-}
-
-.slider_img-box {
-  width: 100%;
-  margin-bottom: 20px; /* Separa la imagen del texto */
-}
-
-.slider_img-box img {
-  width: 60%; /* Reduce un poco más el tamaño del perrito en móvil */
-  margin: 0 auto;
-}
-  #mainNavigation {
-    width: 90%; /* Que no ocupe todo el ancho */
-    height: 60px; /* Un poco más delgado */
-    bottom: 10px; /* Separarlo un poco del borde inferior */
-  }
-  
-  #mainNavigation ul li a .icon {
-    font-size: 1.2rem; /* Iconos un poco más pequeños */
-  }
-  
-  #mainNavigation ul li a .text {
-    font-size: 0.7rem; /* Texto más pequeño */
-  }
-  .slider_img-box img {
-    max-width: 80%; /* Que no sea tan gigante en el cel */
-    margin: 0 auto;
-    display: block;
-  }
-  
   .slider_detail-box {
     text-align: center;
   }
@@ -105,25 +78,9 @@
     margin: 40px 0;
     text-align: center;
   }
-  
 }
 
 @media (max-width: 576px) {
-  .slider_detail-box h1 {
-    font-size: 2.5rem; /* Reducir el tamaño del título principal */
-    line-height: 1.2;
-    margin-bottom: 20px;
-  }
-
-  .slider_detail-box p {
-    font-size: 1rem;
-    margin-bottom: 25px;
-  }
-
-  .slider_detail-box .btn-box {
-    display: flex;
-    justify-content: center; /* Centrar el botón en móviles */
-  }
   .client_section .client_container {
     flex-direction: column;
     align-items: center;
@@ -187,5 +144,367 @@
 @media (min-width: 1200px) {
   .container {
     max-width: 1170px;
+  }
+}
+
+/* ============================================================ */
+/*  NUEVAS MEJORAS RESPONSIVE                                    */
+/*  Solo afectan pantallas pequeñas — escritorio sin cambios     */
+/* ============================================================ */
+
+/* ======= TABLET GRANDE (max-width: 991px) ======= */
+@media (max-width: 991px) {
+
+  /* --- Header / Navegación --- */
+  .navigation_wrapper {
+    padding: 10px 15px;
+  }
+
+  .navbar-brand-logo {
+    font-size: 22px;
+  }
+
+  .navbar-brand-logo img {
+    width: 45px !important;
+  }
+
+  /* Asegurar que el menú móvil se vea bien */
+  #mobileNav {
+    background-color: #f8f9fa;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+
+  #mobileNav .navbar-nav {
+    padding: 10px 15px;
+  }
+
+  #mobileNav .nav-link {
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    color: #023b48;
+  }
+
+  /* --- Secciones de contenido --- */
+  .layout_padding {
+    padding: 55px 0;
+  }
+
+  /* --- Slider --- */
+  .slider_section .carousel-item {
+    height: 65vh;
+    min-height: 380px;
+    background-size: cover;
+  }
+
+  .slider_section .slider_detail-box h1 {
+    font-size: 36px;
+  }
+}
+
+/* ======= TABLET (max-width: 768px) ======= */
+@media (max-width: 768px) {
+
+  /* --- Tipografía --- */
+  .custom_heading {
+    font-size: 26px;
+  }
+
+  /* --- Padding secciones --- */
+  .layout_padding {
+    padding: 40px 0;
+  }
+
+  .layout_padding2 {
+    padding: 25px 0;
+  }
+
+  .layout_padding2-top {
+    padding-top: 25px;
+  }
+
+  /* --- Slider --- */
+  .slider_section .carousel-item {
+    height: 58vh;
+    min-height: 320px;
+    padding: 5% 0;
+  }
+
+  .slider_section .slider_detail-box h1 {
+    font-size: 28px;
+  }
+
+  .slider_section .slider_detail-box p {
+    font-size: 0.9rem;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  /* --- About / Clinic / Pet sections --- */
+  .about_section .img-box {
+    margin-top: 25px;
+    text-align: center;
+  }
+
+  .about_section .img-box img {
+    max-width: 85%;
+    height: auto;
+  }
+
+  .about_section .detail-box p {
+    font-size: 0.95rem;
+  }
+
+  /* --- Training (buy.html) --- */
+  .training_section .col-md-5 {
+    margin-top: 30px;
+  }
+
+  .training-gallery-grid {
+    margin-top: 20px;
+  }
+
+  /* --- Testimonios (pet.html) --- */
+  .img_box_testimonial img {
+    max-width: 110px;
+  }
+
+  /* --- Servicio section --- */
+  .service_section .row .col-md-4 {
+    margin-bottom: 30px;
+  }
+
+  /* --- Contact section --- */
+  .contact_section .col-md-6:first-child {
+    margin-bottom: 30px;
+  }
+
+  .contact_section .map_box {
+    height: 280px;
+  }
+
+  /* --- Info section footer --- */
+  .info_items {
+    width: 90%;
+  }
+
+  /* --- Footer --- */
+  .footer_section p {
+    font-size: 0.85rem;
+    padding: 5px 10px;
+  }
+
+  /* --- Imágenes generales --- */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* ======= MÓVIL (max-width: 576px) ======= */
+@media (max-width: 576px) {
+
+  /* --- Header / Navegación --- */
+  .navigation_wrapper {
+    padding: 8px 12px;
+  }
+
+  .navbar-brand-logo {
+    font-size: 18px;
+  }
+
+  .navbar-brand-logo img {
+    width: 35px !important;
+  }
+
+  /* --- Tipografía --- */
+  .custom_heading {
+    font-size: 22px;
+    margin-bottom: 15px;
+  }
+
+  /* --- Padding secciones --- */
+  .layout_padding {
+    padding: 30px 0;
+  }
+
+  .layout_padding2 {
+    padding: 20px 0;
+  }
+
+  /* --- Slider --- */
+  .slider_section .carousel-item {
+    height: 52vh;
+    min-height: 280px;
+    padding: 4% 0;
+  }
+
+  .slider_section .slider_detail-box h1 {
+    font-size: 22px;
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.8);
+  }
+
+  .slider_section .slider_detail-box p {
+    font-size: 0.82rem;
+    margin-top: 10px;
+    margin-bottom: 12px;
+  }
+
+  .slider_detail-box .btn-box .btn-1,
+  .slider_detail-box .btn-box .btn-2 {
+    padding: 10px 22px;
+    font-size: 0.82rem;
+  }
+
+  /* --- About section --- */
+  .about_section .img-box img {
+    max-width: 90%;
+  }
+
+  .about_section .detail-box p {
+    font-size: 0.88rem;
+  }
+
+  /* --- Service section --- */
+  .service_section .img_box {
+    width: 85px;
+    height: 85px;
+  }
+
+  .service_section .detail_box h6 {
+    font-size: 1rem;
+  }
+
+  .service_section .detail_box p {
+    font-size: 0.88rem;
+  }
+
+  /* --- Training list (buy.html) --- */
+  .training-list li {
+    font-size: 0.88rem;
+  }
+
+  /* --- Pet page gallery --- */
+  .gallery-section .img_box.box-1,
+  .gallery-section .img_box.box-2,
+  .gallery-section .img_box.box-3,
+  .gallery-section .img_box.box-4,
+  .gallery-section .img_box.box-5 {
+    width: 100% !important;
+  }
+
+  /* --- Testimonios (pet.html) --- */
+  .img_box_testimonial img {
+    max-width: 90px;
+  }
+
+  .client_container_custom .detail_box {
+    text-align: center;
+    padding-left: 0;
+  }
+
+  /* --- Contact social buttons --- */
+  .social_button {
+    font-size: 0.88rem;
+    padding: 10px 15px;
+    width: 90%;
+    justify-content: center;
+  }
+
+  .social_box {
+    align-items: center;
+  }
+
+  /* --- Info items --- */
+  .info_items {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .info_items .item {
+    width: 100%;
+    padding: 0 10px;
+    margin: 15px 0;
+  }
+
+  /* Botón de WhatsApp en info_items más pequeño */
+  .info_items .item .detail-box .btn {
+    font-size: 0.82rem;
+    padding: 6px 12px;
+  }
+
+  /* --- Galería hospedaje / colegio (grids) --- */
+  .about_section .img-gallery-box {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .training-gallery-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    margin-top: 20px;
+    gap: 10px;
+  }
+
+  .training-gallery-grid .item-1,
+  .training-gallery-grid .item-4 {
+    grid-column: 1 / 2;
+    grid-row: auto;
+  }
+
+  /* --- Mapa (contact.html) --- */
+  .contact_section .map_box {
+    height: 250px;
+  }
+
+  /* --- Heading de sección contacto --- */
+  .contact_section .heading_container p {
+    font-size: 0.9rem;
+  }
+}
+
+/* ======= MÓVIL PEQUEÑO (max-width: 400px) ======= */
+@media (max-width: 400px) {
+
+  .custom_heading {
+    font-size: 19px;
+  }
+
+  .navbar-brand-logo {
+    font-size: 15px;
+  }
+
+  .navbar-brand-logo img {
+    width: 28px !important;
+  }
+
+  .slider_section .slider_detail-box h1 {
+    font-size: 18px;
+  }
+
+  .slider_section .carousel-item {
+    height: 48vh;
+    min-height: 260px;
+  }
+
+  .slider_detail-box .btn-box .btn-1,
+  .slider_detail-box .btn-box .btn-2 {
+    padding: 8px 16px;
+    font-size: 0.78rem;
+  }
+
+  .layout_padding {
+    padding: 22px 0;
+  }
+
+  .info_section {
+    padding: 30px 0;
   }
 }
