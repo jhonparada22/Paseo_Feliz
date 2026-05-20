@@ -2,15 +2,15 @@
 const btnSignUpMobile = document.getElementById("btn-sign-up-mobile");
 const btnSignInMobile = document.getElementById("btn-sign-in-mobile");
 
-// Configuración de eventos para los botones de móvil[cite: 3, 4]
+// Configuración de eventos para los botones de móvil
 btnSignUpMobile.addEventListener("click", () => {
-  container.classList.add("toggle"); // Acción para PC[cite: 3]
+  container.classList.add("toggle"); // Acción para PC
   container.classList.add("active-register"); // Acción para móvil
   limpiarTodo();
 });
 
 btnSignInMobile.addEventListener("click", () => {
-  container.classList.remove("toggle"); // Acción para PC[cite: 3]
+  container.classList.remove("toggle"); // Acción para PC
   container.classList.remove("active-register"); // Acción para móvil
   limpiarTodo();
 });
@@ -251,7 +251,6 @@ captchaVerifyBtn.addEventListener('click', () => {
         setTimeout(() => {
             hideCaptcha();
             limpiarTodo();
-            // -------------------------------------------------------------
             mostrarAlertaPersonalizada("¡Registro exitoso! Ahora puede iniciar sesión con su nueva cuenta.");
             setTimeout(() => {
                 window.location.href = "../pagina_principal/inicio.html";
@@ -465,15 +464,11 @@ if (todoValido) {
 }
 });
 
-// ===== LOGIN (NO MODIFICADO) =====
+// ===== LOGIN (MODIFICADO ÚNICAMENTE AQUÍ PARA CONECTAR AL PHP) =====
 document.getElementById("btn-login").addEventListener("click", () => {
-  // 1. Validar campo Nombre de Usuario
+  // 1. Validar campos vacíos utilizando tu misma lógica nativa
   let nombreValid = validarCampo("login-nombre", "login-nombre-error", "Debe llenar este campo");
-
-  // 2. Validar campo Email
   let emailValid = validarCampo("login-email", "login-email-error", "Debe llenar este campo");
-
-  // 3. Validar campo Contraseña
   let passwordValid = validarCampo("login-password", "login-password-error", "Debe llenar este campo");
 
   const nombreInput = document.getElementById("login-nombre");
@@ -492,7 +487,7 @@ document.getElementById("btn-login").addEventListener("click", () => {
   const email = emailInput.value.trim().toLowerCase(); 
   const password = passwordInput.value.trim();
   
-  // Si no está vacío, validar formato de email
+  // Validar formato de email local antes de enviar
   if (email && !esCorreoValido(email)) {
     emailErrorSpan.textContent = "Solo se permiten correos de Gmail, Hotmail o Outlook.";
     emailContainer.style.border = '1px solid #d62828';
@@ -501,11 +496,7 @@ document.getElementById("btn-login").addEventListener("click", () => {
 
   if (!nombreValid || !emailValid || !passwordValid) return;
 
-  // Lógica de autenticación
-  const usuarios = getUsuarios(); 
-  const foundUser = usuarios.find(u => u.email === email); 
-  
-  // Limpiar mensajes de error previos antes de la nueva validación de credenciales
+  // Limpiar mensajes de error previos
   nombreErrorSpan.textContent = "";
   nombreContainer.style.border = 'none';
   emailErrorSpan.textContent = "";
@@ -513,28 +504,40 @@ document.getElementById("btn-login").addEventListener("click", () => {
   passwordErrorSpan.textContent = "";
   passwordContainer.style.border = 'none';
 
-  if (!foundUser) {
-    // Error: Correo no registrado
-    emailErrorSpan.textContent = "Este correo no está registrado";
-    emailContainer.style.border = '1px solid #d62828';
-  } else if (foundUser.password !== password) {
-    // Error: Contraseña incorrecta
-    passwordErrorSpan.textContent = "Contraseña incorrecta";
-    passwordContainer.style.border = '1px solid #d62828';
-  } else if (foundUser.nombre !== nombre) {
-    // Error: Nombre de usuario incorrecto (asumiendo que debe coincidir)
-    nombreErrorSpan.textContent = "El nombre de usuario no coincide con el registrado.";
-    nombreContainer.style.border = '1px solid #d62828';
-  }
-  else {
-    // Login exitoso
-    mostrarAlertaPersonalizada(`Bienvenido A Paseo Feliz, ${foundUser.nombre}! 👋`);
-    limpiarTodo();
+  // --- SECCIÓN PHP CONECTADA ---
+  // Empaquetamos los datos en un FormData para recibirlos en PHP vía $_POST
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('password', password);
 
-setTimeout(() => {
-        window.location.href = "../pagina_principal/inicio.html";
-    }, 2000);
-  }
+  // Usamos los dos puntos relativos (../../) para subir niveles correctamente desde view/js/
+  fetch('../../model/php pagina principal/login_proceso.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+        mostrarAlertaPersonalizada(`¡Bienvenido A Paseo Feliz, ${nombre}! 👋`);
+        limpiarTodo();
+        setTimeout(() => {
+            window.location.href = data.redirect; // Redirecciona a la URL enviada por PostgreSQL
+        }, 2000);
+    } else {
+        // Si el PHP devuelve error, pintamos el mensaje en la interfaz
+        if (data.message.includes("Correo")) {
+            emailErrorSpan.textContent = data.message;
+            emailContainer.style.border = '1px solid #d62828';
+        } else {
+            passwordErrorSpan.textContent = data.message;
+            passwordContainer.style.border = '1px solid #d62828';
+        }
+    }
+  })
+  .catch(error => {
+    console.error("Error en la solicitud:", error);
+    mostrarAlertaPersonalizada("Error de conexión con el servidor de la base de datos.");
+  });
 });
 
 // ===== EVENTOS DEL MODAL DE RECUPERACIÓN DE CONTRASEÑA (NO MODIFICADOS) =====
