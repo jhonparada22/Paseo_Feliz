@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Servicios</title>
-    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+    <link rel="icon" href="../assets/images/logo.png" type="image/png">
 
     <link rel="stylesheet" href="../../css/principal_css/global.css">
     <link rel="stylesheet" href="../../css/principal_css/paseos.css">
@@ -25,53 +22,107 @@
                 <div class="profile-circle" id="btn-menu">
                     <i class="fas fa-bars"></i>
                 </div>
-
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <li><i class="fas fa-camera"></i> <span>Conocenos</span></li>
-                        <li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li>
-                        <li><i class="fas fa-sliders-h"></i> <span>Centro de Ayuda</span></li>
-                        <li><i class="fas fa-gear"></i> <span>Configuracion</span></li>
-                        <li><i class="fas fa-user-minus"></i> <span>Cerrar sesion</span></li>
+                        <a href="./conocenos.html">
+                            <li>
+                                <i class="fas fa-camera"></i>
+                                <span>Conocenos</span>
+                            </li>
+                        </a>
+
+                        <a href="./direccion_oficial.html">
+                            <li>
+                                <i class="fas fa-book-open"></i>
+                                <span>Direccion oficial</span>
+                            </li>
+                        </a>
+
+                        <a href="./centro_de_ayuda.html">
+                            <li>
+                                <i class="fas fa-sliders-h"></i>
+                                <span>Centro de ayuda</span>
+                            </li>
+                        </a>
+
+                        <a href="#">
+                            <li>
+                                <i class="fas fa-gear"></i>
+                                <span>Configuracion</span>
+                            </li>
+                        </a>
+
+                        <a href="../../../index.html">
+                            <li>
+                                <i class="fas fa-gear"></i>
+                                <span>Cerrar sesion</span>
+                            </li>
+                        </a>
                     </ul>
                 </nav>
             </div>
 
             <ul class="nav-links">
-                <li class="active">
-                    <a href="#">
+                <li>
+                    <a href="../inicio.html">
                         <i class="fas fa-paw"></i>
                         <span>Servicios</span>
                     </a>
                 </li>
                 <li>
-                    <a href="chat.html">
+                <li> <a href="../chat.html">
                         <i class="far fa-comment-alt"></i>
                         <span>Chat</span>
                     </a>
                 </li>
                 <li>
-                    <a href="mapa.html">
+                    <a href="../mapa.html">
                         <i class="fas fa-map-marker-alt"></i>
                         <span>Mapa</span>
                     </a>
                 </li>
                 <li>
-                    <a href="adopcion.html">
+                    <a href="../adopcion.html">
                         <i class="fas fa-bone"></i>
                         <span>Adopción</span>
                     </a>
                 </li>
                 <li>
-                    <a href="usuario.html">
+                    <a href="../usuario.html">
                         <i class="fas fa-user"></i>
                         <span>Usuario</span>
                     </a>
                 </li>
             </ul>
         </nav>
-</head>
-<body>
-    
+        <main class="main-content">
+
+
+            <header style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <a href="inicio.html" style="color: #333; font-size: 1.2rem; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </header>
+        </main>
+
+    </div>
+
 </body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+
 </html>
