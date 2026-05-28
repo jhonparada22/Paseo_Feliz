@@ -1,21 +1,3 @@
-<?php
-// vistas/admin/index.php
-include '../../Pagina_principal/php/conexion.php';
-session_start();
-
-// Seguridad: Solo tú (el Admin) puedes estar aquí
-// Reemplaza '1092XXXXXX' por tu cédula real para la validación maestra
-$admin_master_cc = "1092XXXXXX"; 
-
-if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_id'] != $admin_master_cc) {
-    header("Location: ../../Registro/form.html");
-    exit();
-}
-
-// Consultar todos los usuarios menos a ti mismo
-$query = $pdo->query("SELECT cc, nombre, email, id_rol FROM usuarios WHERE cc != '$admin_master_cc'");
-$usuarios = $query->fetchAll(PDO::FETCH_ASSOC);
-?>
 
 <!DOCTYPE html>
 <html lang="es">
@@ -40,29 +22,7 @@ $usuarios = $query->fetchAll(PDO::FETCH_ASSOC);
                 <th>Acción</th>
             </tr>
         </thead>
-        <tbody>
-            <?php foreach ($usuarios as $user): ?>
-            <tr>
-                <td><?php echo $user['cc']; ?></td>
-                <td><?php echo $user['nombre']; ?></td>
-                <td><?php echo $user['email']; ?></td>
-                <td>
-                    <span class="badge <?php echo ($user['id_rol'] == 2) ? 'badge-paseador' : 'badge-cliente'; ?>">
-                        <?php echo ($user['id_rol'] == 2) ? 'PASEADOR' : 'CLIENTE'; ?>
-                    </span>
-                </td>
-                <td>
-                    <?php if ($user['id_rol'] != 2): ?>
-                        <button class="btn-promote" onclick="promoverUsuario('<?php echo $user['cc']; ?>')">
-                            Ascender a Paseador
-                        </button>
-                    <?php else: ?>
-                        <span style="color: #2e8d78; font-size: 14px;">Ya es parte del equipo</span>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
+        
     </table>
     
     <a href="../../Pagina_principal/sub_menu/cerrar_sesion.html" class="button" style="display:inline-block; margin-top:30px; text-decoration:none; line-height:45px; text-align:center;">Cerrar Sesión</a>

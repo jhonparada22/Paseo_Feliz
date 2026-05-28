@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>/* /view/css/chat.css */
+.chat-container { width: 400px; height: 500px; border: 1px solid #ccc; display: flex; flex-direction: column; background: #f9f9f9; }
+.chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+
+.message { padding: 10px 15px; margin: 5px; border-radius: 15px; max-width: 70%; }
+.sent { background: #0a4e63; color: white; align-self: flex-end; }
+.received { background: #e0e0e0; color: black; align-self: flex-start; }
+
+.chat-input { display: flex; padding: 10px; border-top: 1px solid #ccc; }
+.chat-input input { flex: 1; padding: 8px; }</style>
+</head>
+<body>
+    
+<div class="chat-container">
+    <div class="chat-header">Chat con Paseador</div>
+    
+    <div class="chat-messages" id="chat-messages">
+        <div class="message received">Hola, ¿cómo estás?</div>
+        <div class="message sent">¡Hola! Todo bien, listo para el paseo.</div>
+    </div>
+
+    <div class="chat-input">
+        <input type="text" id="mensaje" placeholder="Escribe un mensaje...">
+        <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+</div>
+</body>
+<script>// /view/js/chat.js
+function enviarMensaje() {
+    const texto = document.getElementById('mensaje').value;
+    
+    // Llamamos al controlador de chat
+    fetch('../../controller/ChatController.php', {
+        method: 'POST',
+        body: new URLSearchParams({ accion: 'enviar', contenido: texto })
+    })
+    .then(() => {
+        document.getElementById('mensaje').value = '';
+        cargarMensajes(); // Refrescar la lista
+    });
+}</script>
+
+
+</html>
