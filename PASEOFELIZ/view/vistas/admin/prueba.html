@@ -1,97 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Paseo Feliz – Panel de Administración</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="../../css/admin.css">
-    
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Paseo Feliz</title>
+    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
 
+    <!-- Tus estilos globales -->
+    <link rel="stylesheet" href="../../css/principal_css/global.css">
+    <link rel="stylesheet" href="../../css/principal_css/paseos.css">
+    
+    <!-- Estilos específicos del dashboard que crearemos abajo -->
+    <link rel="stylesheet" href="../../css/admin.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Fuente de la plantilla -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
 <body>
 
-    <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <div class="paw"><i class="fas fa-paw"></i></div>
-            <div class="brand">
-                <span class="name">Paseo Feliz</span>
-                <span class="sub">Panel de Administración</span>
+    <div id="contenedor_general" class="app-container">
+
+        <!-- TU BARRA LATERAL ORIGINAL -->
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <a href="./sub_menu/conocenos.html"><li><i class="fas fa-camera"></i><span>Conócenos</span></li></a>
+                        <a href="./sub_menu/direccion_oficial.html"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
+                        <a href="./sub_menu/centro_de_ayuda.html"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
+                        <a href="./sub_menu/configuracion.html"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
+                        <a href="../../index.html"><li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li></a>
+                    </ul>
+                </nav>
             </div>
-        </div>
 
-        <nav class="sidebar-nav">
-            <span class="nav-label">Principal</span>
-            <a href="#" class="nav-item active"><i class="fas fa-house"></i> Inicio</a>
-            <a href="#" class="nav-item"><i class="fas fa-users"></i> Usuarios <span class="nav-badge">12</span></a>
-            <a href="#" class="nav-item"><i class="fas fa-person-walking"></i> Paseadores</a>
-            <a href="#" class="nav-item"><i class="fas fa-dog"></i> Mascotas</a>
-            <a href="#" class="nav-item"><i class="fas fa-route"></i> Paseos</a>
-
-            <span class="nav-label">Finanzas</span>
-            <a href="#" class="nav-item"><i class="fas fa-credit-card"></i> Pagos</a>
-            <a href="#" class="nav-item"><i class="fas fa-chart-bar"></i> Reportes</a>
-
-            <span class="nav-label">Sistema</span>
-            <a href="#" class="nav-item"><i class="fas fa-headset"></i> Soporte <span class="nav-badge"
-                    style="background:var(--orange)">3</span></a>
-            <a href="#" class="nav-item"><i class="fas fa-comment-alt"></i> Chat</a>
-            <a href="#" class="nav-item"><i class="fas fa-gear"></i> Configuración</a>
-            <a href="#" class="nav-item"><i class="fas fa-shield-halved"></i> Seguridad</a>
-            <a href="#" class="nav-item"><i class="fas fa-calendar-days"></i> Calendario</a>
-            <a href="#" class="nav-item"><i class="fas fa-chart-line"></i> Estadísticas</a>
+            <ul class="nav-links">
+                <li class="active"><a href="#"><i class="fas fa-paw"></i><span>Tareas</span></a></li>
+                <li><a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_admin.html"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
+                <li><a href="adopcion_admin.html"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
+                <li><a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a></li>
+            </ul>
         </nav>
 
-        <div class="sidebar-user">
-            <div class="avatar">A</div>
-            <div class="info">
-                <div class="uname">Admin Paseo Feliz</div>
-                <div class="urole">Administrador</div>
-            </div>
-            <i class="fas fa-chevron-up chevron"></i>
-        </div>
-    </aside>
-
-    <!-- ══ MAIN WRAPPER ═════════════════════════════════════════════ -->
-    <div class="main-wrapper">
-
-        <!-- TOPBAR -->
-        <header class="topbar">
-            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Buscar usuarios, paseos, mascotas..." />
-            </div>
-
-            <div class="topbar-right">
-                <button class="topbar-icon-btn">
-                    <i class="fas fa-bell"></i>
-                    <span class="badge">5</span>
-                </button>
-                <button class="topbar-icon-btn">
-                    <i class="fas fa-comment-alt"></i>
-                    <span class="badge green">3</span>
-                </button>
-                <div class="topbar-profile">
-                    <div class="av">A</div>
-                    <div class="tp-info">
-                        <div class="tp-name">Admin</div>
-                        <div class="tp-role">Administrador</div>
-                    </div>
-                    <i class="fas fa-chevron-down tp-chev"></i>
-                </div>
-            </div>
-        </header>
-
-        <!-- PAGE CONTENT -->
-        <main class="page-content">
-
-            <!-- Header -->
+        <!-- CONTENIDO PRINCIPAL ADAPTADO -->
+        <main class="main-content dashboard-content">
+            
             <div class="page-header">
                 <div>
                     <div class="greeting">¡Bienvenido, Admin! 👋</div>
@@ -99,19 +57,17 @@
                 </div>
                 <div class="date-pill">
                     <i class="fas fa-calendar-alt"></i>
-                    <span id="dateLabel">25 de mayo, 2025</span>
-                    <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--muted)"></i>
+                    <span id="dateLabel"></span>
                 </div>
             </div>
 
-            <!-- Stat Cards -->
+            <!-- Tarjetas de Estadísticas -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-icon blue"><i class="fas fa-person-walking-luggage"></i></div>
                     <div class="stat-info">
                         <div class="label">Paseos Activos</div>
                         <div class="value">24</div>
-                        <div class="delta up"><i class="fas fa-arrow-up"></i>+12% desde ayer</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -119,7 +75,6 @@
                     <div class="stat-info">
                         <div class="label">Usuarios Registrados</div>
                         <div class="value">1,248</div>
-                        <div class="delta up"><i class="fas fa-arrow-up"></i>+18% desde la semana pasada</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -127,7 +82,6 @@
                     <div class="stat-info">
                         <div class="label">Paseadores Disponibles</div>
                         <div class="value">86</div>
-                        <div class="delta up"><i class="fas fa-arrow-up"></i>+7% desde ayer</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -135,30 +89,21 @@
                     <div class="stat-info">
                         <div class="label">Ingresos Totales</div>
                         <div class="value">$12,540</div>
-                        <div class="delta up"><i class="fas fa-arrow-up"></i>+15% desde la semana pasada</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Middle Row: Line Chart + Donut + Calendar -->
+            <!-- Gráficos -->
             <div class="mid-row">
-
-                <!-- Line Chart -->
-                <div class="card">
+                <div class="card" style="grid-column: span 2;">
                     <div class="card-head">
                         <span class="title">Resumen de Paseos</span>
-                        <select class="chart-select">
-                            <option>Últimos 7 días</option>
-                            <option>Últimos 30 días</option>
-                            <option>Este mes</option>
-                        </select>
                     </div>
                     <div class="chart-container">
                         <canvas id="lineChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Donut Chart -->
                 <div class="card">
                     <div class="card-head">
                         <span class="title">Paseos por Estado</span>
@@ -171,100 +116,13 @@
                                 <div class="lbl">Total</div>
                             </div>
                         </div>
-                        <div class="legend">
-                            <div class="legend-item">
-                                <div class="legend-label">
-                                    <div class="legend-dot" style="background:#22c55e"></div>Completados
-                                </div>
-                                <div class="legend-pct">58%</div>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-label">
-                                    <div class="legend-dot" style="background:#3b82f6"></div>En Proceso
-                                </div>
-                                <div class="legend-pct">25%</div>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-label">
-                                    <div class="legend-dot" style="background:#f97316"></div>Programados
-                                </div>
-                                <div class="legend-pct">12%</div>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-label">
-                                    <div class="legend-dot" style="background:#ef4444"></div>Cancelados
-                                </div>
-                                <div class="legend-pct">5%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Calendar + Recent Reports -->
-                <div style="display:flex;flex-direction:column;gap:16px">
-                    <div class="card">
-                        <div class="card-head">
-                            <span class="title"><i class="fas fa-calendar"
-                                    style="color:var(--blue);margin-right:6px"></i>Calendario</span>
-                            <button style="color:var(--blue);font-size:.75rem;font-weight:700"><i
-                                    class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="card-body">
-                            <div class="cal-nav">
-                                <button><i class="fas fa-chevron-left"></i></button>
-                                <span class="cal-month" id="calMonth">Mayo 2025</span>
-                                <button><i class="fas fa-chevron-right"></i></button>
-                            </div>
-                            <div class="cal-grid" id="calGrid"></div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-head">
-                            <span class="title">Reportes Recientes</span>
-                            <a href="#" class="ver-todos">Ver todos</a>
-                        </div>
-                        <div class="card-body" style="padding-top:4px;padding-bottom:4px">
-                            <div class="report-item">
-                                <div class="report-icon green"><i class="fas fa-route"></i></div>
-                                <div class="report-info">
-                                    <div class="rname">Paseos completados</div>
-                                    <div class="rdate">25 may, 2025</div>
-                                </div>
-                                <i class="fas fa-chevron-right report-arrow"></i>
-                            </div>
-                            <div class="report-item">
-                                <div class="report-icon blue"><i class="fas fa-dollar-sign"></i></div>
-                                <div class="report-info">
-                                    <div class="rname">Ingresos semanales</div>
-                                    <div class="rdate">25 may, 2025</div>
-                                </div>
-                                <i class="fas fa-chevron-right report-arrow"></i>
-                            </div>
-                            <div class="report-item">
-                                <div class="report-icon red"><i class="fas fa-user-plus"></i></div>
-                                <div class="report-info">
-                                    <div class="rname">Usuarios nuevos</div>
-                                    <div class="rdate">24 may, 2025</div>
-                                </div>
-                                <i class="fas fa-chevron-right report-arrow"></i>
-                            </div>
-                            <div class="report-item">
-                                <div class="report-icon orange"><i class="fas fa-person-walking"></i></div>
-                                <div class="report-info">
-                                    <div class="rname">Paseadores activos</div>
-                                    <div class="rdate">24 may, 2025</div>
-                                </div>
-                                <i class="fas fa-chevron-right report-arrow"></i>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bottom Row: Table + Status widget -->
+            <!-- Tabla de Actividad -->
             <div class="bottom-row">
-                <div class="card">
+                <div class="card" style="width: 100%;">
                     <div class="card-head">
                         <span class="title">Paseos Recientes</span>
                         <a href="#" class="ver-todos">Ver todos</a>
@@ -279,21 +137,10 @@
                                     <th>Paseador</th>
                                     <th>Fecha</th>
                                     <th>Estado</th>
-                                    <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody"></tbody>
                         </table>
-                    </div>
-                </div>
-
-                <div style="display:flex;flex-direction:column;gap:16px">
-                    <div class="status-ok">
-                        <div class="ok-title">¡Todo en orden! 🐾</div>
-                        <div class="ok-sub">Tu plataforma está funcionando correctamente.</div>
-                        <a href="#" class="ok-btn">Ver estadísticas completas</a>
-                        <img class="dog-img" src="https://images.dog.ceo/breeds/retriever-golden/n02099601_3004.jpg"
-                            alt="perro feliz" onerror="this.style.display='none'" />
                     </div>
                 </div>
             </div>
@@ -301,146 +148,73 @@
         </main>
     </div>
 
-    <!-- ══ SCRIPTS ═══════════════════════════════════════════════════ -->
+    <!-- Scripts de la plantilla -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
-        // ── SIDEBAR TOGGLE (móvil) ────────────────────────────────────
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('open');
+        // Lógica de Menú
+        const btnMenu = document.getElementById('btn-menu');
+        const menuLatente = document.getElementById('menu-latente');
+        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
+        window.addEventListener('click', (e) => {
+            if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+                menuLatente.classList.remove('show');
+            }
         });
 
-        // ── DATE LABEL ────────────────────────────────────────────────
-        const now = new Date();
-        document.getElementById('dateLabel').textContent =
-            now.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+        // Fecha actual
+        document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        // ── LINE CHART ────────────────────────────────────────────────
+        // Gráfico de Líneas (Ajustado al color corporativo)
         const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const labels = ['19 May', '20 May', '21 May', '22 May', '23 May', '24 May', '25 May'];
-        const data = [22, 28, 24, 32, 30, 38, 33];
-
         const gradient = lineCtx.createLinearGradient(0, 0, 0, 200);
-        gradient.addColorStop(0, 'rgba(37,99,235,.25)');
-        gradient.addColorStop(1, 'rgba(37,99,235,0)');
+        gradient.addColorStop(0, 'rgba(10, 78, 99, 0.25)'); // Tu color azul en RGBA
+        gradient.addColorStop(1, 'rgba(10, 78, 99, 0)');
 
         new Chart(lineCtx, {
             type: 'line',
             data: {
-                labels,
+                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
                 datasets: [{
-                    data,
-                    borderColor: '#2563eb',
+                    data: [12, 19, 15, 25, 22, 30, 28],
+                    borderColor: '#0a4e63', // Tu color principal
                     backgroundColor: gradient,
                     borderWidth: 2.5,
-                    pointBackgroundColor: '#2563eb',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    tension: 0.4,
                     fill: true,
+                    tension: 0.4
                 }]
             },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11, family: "'Plus Jakarta Sans'" }, color: '#94a3b8' } },
-                    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11, family: "'Plus Jakarta Sans'" }, color: '#94a3b8', stepSize: 10 }, beginAtZero: true, max: 50 }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
 
-        // ── DONUT CHART ───────────────────────────────────────────────
-        const donutCtx = document.getElementById('donutChart').getContext('2d');
-        new Chart(donutCtx, {
+        // Gráfico de Donas
+        new Chart(document.getElementById('donutChart'), {
             type: 'doughnut',
             data: {
                 datasets: [{
                     data: [58, 25, 12, 5],
-                    backgroundColor: ['#22c55e', '#3b82f6', '#f97316', '#ef4444'],
-                    borderWidth: 0,
-                    hoverOffset: 6,
+                    backgroundColor: ['#22c55e', '#0a4e63', '#f97316', '#ef4444'],
+                    borderWidth: 0
                 }]
             },
-            options: {
-                cutout: '72%',
-                responsive: false,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } } }
-            }
+            options: { cutout: '72%', plugins: { legend: { display: false } } }
         });
 
-        // ── CALENDAR ──────────────────────────────────────────────────
-        (function buildCalendar() {
-            const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-            const eventDs = [5, 12, 18, 25];
-            const grid = document.getElementById('calGrid');
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth();
-
-            document.getElementById('calMonth').textContent =
-                today.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-                    .replace(/^\w/, c => c.toUpperCase());
-
-            days.forEach(d => {
-                const el = document.createElement('div');
-                el.className = 'cal-day-name'; el.textContent = d;
-                grid.appendChild(el);
-            });
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const offset = firstDay === 0 ? 6 : firstDay - 1;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const prevMonthDays = new Date(year, month, 0).getDate();
-
-            for (let i = offset - 1; i >= 0; i--) {
-                const el = document.createElement('div');
-                el.className = 'cal-day other'; el.textContent = prevMonthDays - i;
-                grid.appendChild(el);
-            }
-            for (let d = 1; d <= daysInMonth; d++) {
-                const el = document.createElement('div');
-                el.className = 'cal-day';
-                if (d === today.getDate()) el.classList.add('today');
-                if (eventDs.includes(d) && d !== today.getDate()) el.classList.add('has-event');
-                el.textContent = d;
-                grid.appendChild(el);
-            }
-            const remaining = 42 - (offset + daysInMonth);
-            for (let d = 1; d <= remaining; d++) {
-                const el = document.createElement('div');
-                el.className = 'cal-day other'; el.textContent = d;
-                grid.appendChild(el);
-            }
-        })();
-
-        // ── TABLE DATA ────────────────────────────────────────────────
+        // Llenar tabla
         const walks = [
-            { id: '#PA-1254', user: 'María González', pet: 'Max', walker: 'Carlos R.', date: '25 May, 10:00 AM', status: 'en-proceso', label: 'En Proceso' },
-            { id: '#PA-1253', user: 'Juan Pérez', pet: 'Luna', walker: 'Ana M.', date: '25 May, 09:30 AM', status: 'completado', label: 'Completado' },
-            { id: '#PA-1252', user: 'Laura Martínez', pet: 'Rocky', walker: 'Diego T.', date: '25 May, 08:00 AM', status: 'programado', label: 'Programado' },
-            { id: '#PA-1251', user: 'Pedro Ramírez', pet: 'Duki', walker: 'Sofía L.', date: '24 May, 06:00 PM', status: 'completado', label: 'Completado' },
-            { id: '#PA-1250', user: 'Claudia López', pet: 'Toby', walker: 'Carlos R.', date: '24 May, 04:30 PM', status: 'cancelado', label: 'Cancelado' },
+            { id: '#PA-1254', user: 'María González', pet: 'Max', walker: 'Carlos R.', date: '25 May', status: 'en-proceso', label: 'En Proceso' },
+            { id: '#PA-1253', user: 'Juan Pérez', pet: 'Luna', walker: 'Ana M.', date: '25 May', status: 'completado', label: 'Completado' },
         ];
-
         const tbody = document.getElementById('tableBody');
         walks.forEach(w => {
-            const ui = w.user.split(' ').map(p => p[0]).slice(0, 2).join('');
-            const pi = w.pet[0];
-            const wi = w.walker.split(' ').map(p => p[0]).slice(0, 2).join('');
-            tbody.innerHTML += `
-    <tr>
-      <td class="id-cell">${w.id}</td>
-      <td><div class="cell-user"><div class="mini-av">${ui}</div>${w.user}</div></td>
-      <td><div class="cell-pet"><div class="mini-av pet">${pi}</div>${w.pet}</div></td>
-      <td><div class="cell-walker"><div class="mini-av walker">${wi}</div>${w.walker}</div></td>
-      <td>${w.date}</td>
-      <td><span class="badge-status ${w.status}">${w.label}</span></td>
-      <td><button class="action-dots"><i class="fas fa-ellipsis-vertical"></i></button></td>
-    </tr>`;
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold; color:#64748b;">${w.id}</td>
+                <td>${w.user}</td>
+                <td>${w.pet}</td>
+                <td>${w.walker}</td>
+                <td>${w.date}</td>
+                <td><span class="badge-status ${w.status}">${w.label}</span></td>
+            </tr>`;
         });
     </script>
 </body>
-
 </html>
