@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paseo Feliz – Paseadores</title>
+    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #3E72A6;
+            --primary-dk: #2c5282;
+            --green: #25D366;
+            --green-dk: #1a9e4c;
+            --orange: #f97316;
+            --red: #ef4444;
+            --purple: #7c3aed;
+            --bg: #F5F7FA;
+            --card: #ffffff;
+            --border: #E0E0E0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --sidebar-w: 90px;
+            --shadow: 0 2px 14px rgba(0, 0, 0, .08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, .12);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text)
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit
+        }
+
+        ul {
+            list-style: none
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh
+        }
+
+        /* ══ SIDEBAR ══════════════════════════════════════════ */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .2)
+        }
+
+        .menu-hamburguesa-container {
+            position: relative;
+            padding: 10px;
+            margin-bottom: 8px
+        }
+
+        .profile-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, .35);
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.1rem;
+            transition: background .2s;
+        }
+
+        .profile-circle:hover {
+            background: rgba(255, 255, 255, .15)
+        }
+
+        .menu-desplegable {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 70px;
+            width: 210px;
+            background: var(--primary);
+            border-radius: 0 12px 12px 0;
+            z-index: 1000;
+            box-shadow: 5px 0 20px rgba(0, 0, 0, .25);
+        }
+
+        .menu-desplegable.show {
+            display: block
+        }
+
+        .menu-desplegable ul li {
+            padding: 14px 18px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: .85rem;
+            transition: background .2s;
+        }
+
+        .menu-desplegable ul li:hover {
+            background: rgba(255, 255, 255, .12)
+        }
+
+        .nav-links {
+            list-style: none;
+            width: 100%
+        }
+
+        .nav-links li {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 6px
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: rgba(255, 255, 255, .75);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 9px 0;
+            font-size: .7rem;
+            gap: 4px;
+            transition: color .2s;
+        }
+
+        .nav-links li a i {
+            font-size: 1.2rem
+        }
+
+        .nav-links li a:hover {
+            color: #fff
+        }
+
+        .nav-links li.active a {
+            background: var(--green);
+            color: #000;
+            font-weight: 700;
+            border-radius: 12px;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .nav-sep {
+            width: 60%;
+            height: 1px;
+            background: rgba(255, 255, 255, .15);
+            margin: 8px auto
+        }
+
+        .sidebar-user {
+            margin-top: auto;
+            padding: 14px 10px;
+            border-top: 1px solid rgba(255, 255, 255, .15);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sidebar-user .av {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: .85rem;
+            border: 2px solid rgba(255, 255, 255, .25);
+        }
+
+        .sidebar-user span {
+            font-size: .62rem;
+            color: rgba(255, 255, 255, .6)
+        }
+
+        /* ══ MAIN ═════════════════════════════════════════════ */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0
+        }
+
+        /* TOPBAR */
+        .topbar {
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 22px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .tb-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 1rem;
+            position: relative;
+            transition: background .15s;
+        }
+
+        .tb-icon-btn:hover {
+            background: var(--bg)
+        }
+
+        .tb-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--red);
+            color: #fff;
+            font-size: .58rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+        }
+
+        .tb-badge.green {
+            background: var(--green)
+        }
+
+        .tb-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .tb-profile:hover {
+            background: var(--bg)
+        }
+
+        .tb-av {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: .8rem;
+        }
+
+        .tb-name {
+            font-size: .82rem;
+            font-weight: 700
+        }
+
+        .tb-role {
+            font-size: .68rem;
+            color: var(--muted)
+        }
+
+        /* PAGE AREA */
+        .page-area {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .page-header h1 {
+            font-size: 1.3rem;
+            font-weight: 800
+        }
+
+        .page-header .sub {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--primary);
+            color: #fff;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 700;
+            transition: background .2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dk)
+        }
+
+        .btn-outline {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #fff;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 700;
+            transition: all .2s;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff
+        }
+
+        /* MINI STATS */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px
+        }
+
+        .mini-stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: transform .15s;
+        }
+
+        .mini-stat:hover {
+            transform: translateY(-1px)
+        }
+
+        .ms-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .ms-blue {
+            background: #dbeafe;
+            color: var(--primary)
+        }
+
+        .ms-green {
+            background: #dcfce7;
+            color: #16a34a
+        }
+
+        .ms-orange {
+            background: #ffedd5;
+            color: #ea580c
+        }
+
+        .ms-red {
+            background: #fee2e2;
+            color: var(--red)
+        }
+
+        .ms-purple {
+            background: #ede9fe;
+            color: var(--purple)
+        }
+
+        .ms-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        .ms-lbl {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        /* SEARCH BAR */
+        .search-bar-wrap {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .search-input-wrap {
+            flex: 1;
+            position: relative
+        }
+
+        .search-input-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bbb;
+            font-size: .85rem
+        }
+
+        .search-input-wrap input {
+            width: 100%;
+            padding: 9px 14px 9px 36px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: .85rem;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            transition: border .2s;
+        }
+
+        .search-input-wrap input:focus {
+            border-color: var(--primary);
+            background: #fff
+        }
+
+        .search-input-wrap input::placeholder {
+            color: #bbb
+        }
+
+        .status-filter-btns {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0
+        }
+
+        .sf-btn {
+            padding: 7px 13px;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--muted);
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .sf-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary)
+        }
+
+        .sf-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary)
+        }
+
+        .sf-btn.active.green-f {
+            background: var(--green);
+            border-color: var(--green);
+            color: #000
+        }
+
+        .sf-btn.active.orange-f {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #fff
+        }
+
+        .sf-btn.active.red-f {
+            background: var(--red);
+            border-color: var(--red);
+            color: #fff
+        }
+
+        /* MAIN GRID */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 18px
+        }
+
+        /* PASEADOR CARDS LIST */
+        .paseadores-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0
+        }
+
+        .paseador-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: background .15s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .paseador-card:first-child {
+            border-radius: 13px 13px 0 0
+        }
+
+        .paseador-card:last-child {
+            border-radius: 0 0 13px 13px
+        }
+
+        .paseador-card:only-child {
+            border-radius: 13px
+        }
+
+        .paseador-card+.paseador-card {
+            border-top: none
+        }
+
+        .paseador-card:hover {
+            background: #fafbff
+        }
+
+        .paseador-card.selected {
+            background: #eff6ff;
+            border-color: var(--primary)
+        }
+
+        .paseador-card.selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 4px 0 0 4px;
+        }
+
+        /* Avatar */
+        .p-avatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #fff;
+            position: relative;
+        }
+
+        .p-online-dot {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .dot-on {
+            background: var(--green)
+        }
+
+        .dot-off {
+            background: #ccc
+        }
+
+        .dot-busy {
+            background: var(--orange)
+        }
+
+        /* Info */
+        .p-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .p-name {
+            font-size: .92rem;
+            font-weight: 700
+        }
+
+        .p-email {
+            font-size: .73rem;
+            color: var(--muted);
+            margin-top: 1px
+        }
+
+        .p-tags {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 6px;
+            flex-wrap: wrap
+        }
+
+        .p-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: .68rem;
+            font-weight: 700;
+        }
+
+        .tag-activo {
+            background: #dcfce7;
+            color: #15803d
+        }
+
+        .tag-pausado {
+            background: #ffedd5;
+            color: #c2410c
+        }
+
+        .tag-inactivo {
+            background: #fee2e2;
+            color: #b91c1c
+        }
+
+        .tag-enruta {
+            background: #dbeafe;
+            color: var(--primary)
+        }
+
+        .tag-rating {
+            background: #fef9c3;
+            color: #854d0e
+        }
+
+        /* Stats inline */
+        .p-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0
+        }
+
+        .p-stat-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .72rem;
+            color: var(--muted)
+        }
+
+        .p-stat-row strong {
+            color: var(--text);
+            font-weight: 700
+        }
+
+        /* Acciones rápidas */
+        .p-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0
+        }
+
+        .p-action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            color: var(--muted);
+            border: 1.5px solid var(--border);
+            background: #fff;
+            transition: all .15s;
+        }
+
+        .p-action-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary)
+        }
+
+        .p-action-btn.chat {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #bbf7d0
+        }
+
+        .p-action-btn.chat:hover {
+            background: var(--green);
+            border-color: var(--green);
+            color: #000
+        }
+
+        .p-action-btn.map {
+            background: #dbeafe;
+            color: var(--primary);
+            border-color: #bfdbfe
+        }
+
+        .p-action-btn.map:hover {
+            background: var(--primary);
+            color: #fff
+        }
+
+        .p-action-btn.route {
+            background: #ede9fe;
+            color: var(--purple);
+            border-color: #ddd6fe
+        }
+
+        .p-action-btn.route:hover {
+            background: var(--purple);
+            color: #fff;
+            border-color: var(--purple)
+        }
+
+        /* PANEL DERECHO */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        /* TARJETA DETALLE */
+        .detail-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .dc-head {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dk));
+            padding: 18px 18px 14px;
+            color: #fff;
+            position: relative;
+        }
+
+        .dc-head-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between
+        }
+
+        .dc-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            border: 3px solid rgba(255, 255, 255, .3);
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .dc-name {
+            font-size: 1rem;
+            font-weight: 800
+        }
+
+        .dc-sub {
+            font-size: .75rem;
+            color: rgba(255, 255, 255, .75);
+            margin-top: 2px
+        }
+
+        .dc-status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+        }
+
+        .dsb-activo {
+            background: rgba(37, 211, 102, .25);
+            color: #4ade80
+        }
+
+        .dsb-pausado {
+            background: rgba(249, 115, 22, .25);
+            color: #fdba74
+        }
+
+        .dsb-inactivo {
+            background: rgba(239, 68, 68, .25);
+            color: #fca5a5
+        }
+
+        .dc-quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dqa-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 8px;
+            border-radius: 10px;
+            font-size: .72rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            transition: all .2s;
+        }
+
+        .dqa-btn i {
+            font-size: 1.1rem
+        }
+
+        .dqa-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
+        }
+
+        .dqa-btn.chat-btn {
+            color: #15803d;
+            border-color: #bbf7d0;
+            background: #f0fdf4
+        }
+
+        .dqa-btn.chat-btn:hover {
+            background: var(--green);
+            color: #000;
+            border-color: var(--green)
+        }
+
+        .dqa-btn.map-btn {
+            color: var(--primary);
+            border-color: #bfdbfe;
+            background: #eff6ff
+        }
+
+        .dqa-btn.map-btn:hover {
+            background: var(--primary);
+            color: #fff
+        }
+
+        .dqa-btn.ruta-btn {
+            color: var(--purple);
+            border-color: #ddd6fe;
+            background: #f5f3ff
+        }
+
+        .dqa-btn.ruta-btn:hover {
+            background: var(--purple);
+            color: #fff;
+            border-color: var(--purple)
+        }
+
+        .dc-body {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .dc-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: .8rem
+        }
+
+        .dc-info-row i {
+            color: var(--primary);
+            width: 16px;
+            text-align: center;
+            margin-top: 1px;
+            flex-shrink: 0
+        }
+
+        .dc-info-row .dci-label {
+            color: var(--muted);
+            font-size: .7rem;
+            margin-bottom: 1px
+        }
+
+        .dc-info-row .dci-val {
+            font-weight: 600
+        }
+
+        .dc-perf {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .dcp-item .dcp-val {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text)
+        }
+
+        .dcp-item .dcp-lbl {
+            font-size: .65rem;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        /* MINI MAPA */
+        .map-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .map-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .map-head .mh-title {
+            font-size: .88rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .mh-title i {
+            color: var(--primary)
+        }
+
+        .map-head .mh-live {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .7rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(1.3)
+            }
+        }
+
+        #minimap {
+            height: 220px;
+            width: 100%
+        }
+
+        .map-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .map-footer .mf-coord {
+            font-size: .72rem;
+            color: var(--muted)
+        }
+
+        .map-footer .mf-btn {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 7px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            transition: all .15s;
+        }
+
+        .map-footer .mf-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary)
+        }
+
+        /* ══ MODAL ASIGNAR RUTA ═══════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            animation: fadeIn .2s ease
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 560px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+            animation: slideUp .2s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1
+            }
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+
+        .modal-head .m-title {
+            font-size: 1rem;
+            font-weight: 800
+        }
+
+        .modal-head .m-sub {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-top: 2px
+        }
+
+        .btn-close-modal {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 1rem;
+            transition: background .15s;
+        }
+
+        .btn-close-modal:hover {
+            background: var(--bg);
+            color: var(--text)
+        }
+
+        .modal-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px
+        }
+
+        .route-section-title {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 8px;
+        }
+
+        /* Rutas disponibles (clientes) */
+        .client-route-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .client-route-item:hover {
+            border-color: var(--primary);
+            background: #eff6ff
+        }
+
+        .client-route-item.selected {
+            border-color: var(--primary);
+            background: #eff6ff
+        }
+
+        .client-route-item.selected .cri-check {
+            display: flex
+        }
+
+        .cri-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .cri-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .cri-name {
+            font-size: .85rem;
+            font-weight: 700
+        }
+
+        .cri-addr {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .cri-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px
+        }
+
+        .cri-tag {
+            font-size: .65rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background: var(--bg);
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .cri-check {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            align-items: center;
+            justify-content: center;
+            font-size: .7rem;
+            flex-shrink: 0;
+        }
+
+        /* Horario */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        .form-field label {
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .04em
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-size: .83rem;
+            font-family: inherit;
+            color: var(--text);
+            background: #fff;
+            outline: none;
+            transition: border .2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: var(--primary)
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 70px
+        }
+
+        .priority-btns {
+            display: flex;
+            gap: 8px
+        }
+
+        .prio-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--muted);
+            transition: all .15s;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .prio-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary)
+        }
+
+        .prio-btn.active.alta {
+            background: #fee2e2;
+            color: var(--red);
+            border-color: #fca5a5
+        }
+
+        .prio-btn.active.media {
+            background: #ffedd5;
+            color: #c2410c;
+            border-color: #fdba74
+        }
+
+        .prio-btn.active.baja {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #86efac
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            position: sticky;
+            bottom: 0;
+            background: #fff;
+        }
+
+        .btn-cancel {
+            padding: 9px 18px;
+            border-radius: 9px;
+            font-size: .82rem;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            transition: border .15s;
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--primary);
+            color: var(--primary)
+        }
+
+        .btn-confirm {
+            padding: 9px 20px;
+            border-radius: 9px;
+            font-size: .82rem;
+            font-weight: 700;
+            background: var(--primary);
+            color: #fff;
+            transition: background .2s;
+        }
+
+        .btn-confirm:hover {
+            background: var(--primary-dk)
+        }
+
+        /* ══ HISTORIAL RUTAS ══════════════════════════════════ */
+        .routes-history {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .rh-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .rh-head .rht {
+            font-size: .88rem;
+            font-weight: 700
+        }
+
+        .rh-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+        }
+
+        .rh-item:last-child {
+            border: none
+        }
+
+        .rh-item:hover {
+            background: #fafbff
+        }
+
+        .rhi-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+            flex-shrink: 0;
+        }
+
+        .rhi-blue {
+            background: #dbeafe;
+            color: var(--primary)
+        }
+
+        .rhi-green {
+            background: #dcfce7;
+            color: #16a34a
+        }
+
+        .rhi-orange {
+            background: #ffedd5;
+            color: #c2410c
+        }
+
+        .rhi-red {
+            background: #fee2e2;
+            color: var(--red)
+        }
+
+        .rhi-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .rhi-name {
+            font-size: .8rem;
+            font-weight: 700
+        }
+
+        .rhi-sub {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-top: 1px
+        }
+
+        .rhi-status {
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: .68rem;
+            font-weight: 700;
+        }
+
+        .rs-completada {
+            background: #dcfce7;
+            color: #15803d
+        }
+
+        .rs-en-ruta {
+            background: #dbeafe;
+            color: var(--primary)
+        }
+
+        .rs-pendiente {
+            background: #ffedd5;
+            color: #c2410c
+        }
+
+        .rs-cancelada {
+            background: #fee2e2;
+            color: var(--red)
+        }
+
+        /* EMPTY */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            gap: 12px;
+            color: var(--muted);
+        }
+
+        .empty-state.visible {
+            display: flex
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            color: #ddd
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all .3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1
+        }
+
+        .toast.success i {
+            color: var(--green)
+        }
+
+        .toast.info i {
+            color: #60a5fa
+        }
+
+        .toast.warning i {
+            color: var(--orange)
+        }
+
+        @media(max-width:1100px) {
+            .main-grid {
+                grid-template-columns: 1fr
+            }
+
+            .mini-stats {
+                grid-template-columns: repeat(3, 1fr)
+            }
+        }
+
+        @media(max-width:900px) {
+            .sidebar {
+                width: 65px
+            }
+
+            .nav-links li a span {
+                display: none
+            }
+
+            .mini-stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media(max-width:640px) {
+            .mini-stats {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .page-area {
+                padding: 14px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+
+        <!-- ══ SIDEBAR ════════════════════════════════════════════ -->
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <a href="./sub_menu/conocenos.html">
+                            <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
+                        </a>
+                        <a href="./sub_menu/direccion_oficial.html">
+                            <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
+                        </a>
+                        <a href="./sub_menu/centro_de_ayuda.html">
+                            <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
+                        </a>
+                        <a href="./sub_menu/configuracion.html">
+                            <li><i class="fas fa-gear"></i><span>Configuración</span></li>
+                        </a>
+                        <a href="../../index.html">
+                            <li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li>
+                        </a>
+                    </ul>
+                </nav>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index_admin.html"><i class="fas fa-house"></i><span>Inicio</span></a></li>
+                <li><a href="usuarios_admin.html"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+                <li class="active"><a href="#"><i class="fas fa-person-walking"></i><span>Paseadores</span></a></li>
+                <li><a href="mascotas_admin.html"><i class="fas fa-dog"></i><span>Mascotas</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="paseos_admin.html"><i class="fas fa-route"></i><span>Paseos</span></a></li>
+                <li><a href="pagos_admin.html"><i class="fas fa-credit-card"></i><span>Pagos</span></a></li>
+                <li><a href="reportes_admin.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_admin.html"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
+                <li><a href="adopcion_admin.html"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
+                <li><a href="calendario_admin.html"><i class="fas fa-calendar-days"></i><span>Calendario</span></a></li>
+                <li><a href="estadisticas_admin.html"><i class="fas fa-chart-line"></i><span>Estadísticas</span></a>
+                </li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="soporte_admin.html"><i class="fas fa-headset"></i><span>Soporte</span></a></li>
+                <li><a href="configuracion_admin.html"><i class="fas fa-gear"></i><span>Config</span></a></li>
+                <li><a href="seguridad_admin.html"><i class="fas fa-shield-halved"></i><span>Seguridad</span></a></li>
+                <li><a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a></li>
+            </ul>
+            <div class="sidebar-user">
+                <div class="av">A</div><span>Admin</span>
+            </div>
+        </nav>
+
+        <!-- ══ MAIN CONTENT ════════════════════════════════════════ -->
+        <div class="main-content">
+            <header class="topbar">
+                <div style="flex:1"></div>
+                <div class="topbar-right">
+                    <button class="tb-icon-btn"><i class="fas fa-bell"></i><span class="tb-badge">5</span></button>
+                    <button class="tb-icon-btn"><i class="fas fa-comment-alt"></i><span
+                            class="tb-badge green">3</span></button>
+                    <div class="tb-profile">
+                        <div class="tb-av">A</div>
+                        <div>
+                            <div class="tb-name">Admin</div>
+                            <div class="tb-role">Administrador</div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--muted);margin-left:4px"></i>
+                    </div>
+                </div>
+            </header>
+
+            <main class="page-area">
+
+                <!-- Header -->
+                <div class="page-header">
+                    <div>
+                        <h1>Gestión de Paseadores</h1>
+                        <div class="sub">Monitorea, asigna rutas y gestiona el equipo de paseadores en tiempo real.
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn-outline" onclick="showToast('Exportando reporte...','info')">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <button class="btn-primary" onclick="showToast('Función próximamente','info')">
+                            <i class="fas fa-user-plus"></i> Nuevo paseador
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mini stats -->
+                <div class="mini-stats">
+                    <div class="mini-stat">
+                        <div class="ms-icon ms-blue"><i class="fas fa-person-walking"></i></div>
+                        <div>
+                            <div class="ms-val" id="statTotal">0</div>
+                            <div class="ms-lbl">Total paseadores</div>
+                        </div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="ms-icon ms-green"><i class="fas fa-circle-check"></i></div>
+                        <div>
+                            <div class="ms-val" id="statActivo">0</div>
+                            <div class="ms-lbl">Activos ahora</div>
+                        </div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="ms-icon ms-orange"><i class="fas fa-route"></i></div>
+                        <div>
+                            <div class="ms-val" id="statEnRuta">0</div>
+                            <div class="ms-lbl">En ruta</div>
+                        </div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="ms-icon ms-red"><i class="fas fa-circle-pause"></i></div>
+                        <div>
+                            <div class="ms-val" id="statPausado">0</div>
+                            <div class="ms-lbl">Pausados</div>
+                        </div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="ms-icon ms-purple"><i class="fas fa-star"></i></div>
+                        <div>
+                            <div class="ms-val" id="statRating">0</div>
+                            <div class="ms-lbl">Rating promedio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Búsqueda -->
+                <div class="search-bar-wrap">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar paseador por nombre, zona o email..." />
+                    </div>
+                    <div class="status-filter-btns">
+                        <button class="sf-btn active" data-filter="todos">Todos</button>
+                        <button class="sf-btn green-f" data-filter="activo">Activos</button>
+                        <button class="sf-btn orange-f" data-filter="en-ruta">En ruta</button>
+                        <button class="sf-btn red-f" data-filter="pausado">Pausados</button>
+                    </div>
+                </div>
+
+                <!-- Grid principal -->
+                <div class="main-grid">
+
+                    <!-- Lista de paseadores -->
+                    <div>
+                        <div class="paseadores-list" id="paseadoresList"></div>
+                        <div class="empty-state" id="emptyState">
+                            <i class="fas fa-person-walking"></i>
+                            <p>No se encontraron paseadores.</p>
+                        </div>
+
+                        <!-- Historial rutas recientes -->
+                        <div class="routes-history" style="margin-top:18px">
+                            <div class="rh-head">
+                                <span class="rht"><i class="fas fa-clock-rotate-left"
+                                        style="color:var(--primary);margin-right:7px"></i>Rutas Recientes</span>
+                                <button class="btn-primary" style="font-size:.72rem;padding:5px 11px"
+                                    onclick="showToast('Ver historial completo','info')">Ver todas</button>
+                            </div>
+                            <div id="rutasRecientes"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel derecho -->
+                    <div class="right-panel">
+
+                        <!-- Detalle paseador -->
+                        <div class="detail-card" id="detailCard">
+                            <div style="padding:32px;text-align:center;color:var(--muted)">
+                                <i class="fas fa-person-walking"
+                                    style="font-size:2.5rem;color:#ddd;display:block;margin-bottom:10px"></i>
+                                <p style="font-size:.85rem">Selecciona un paseador para ver su detalle</p>
+                            </div>
+                        </div>
+
+                        <!-- Mini mapa -->
+                        <div class="map-card">
+                            <div class="map-head">
+                                <div class="mh-title"><i class="fas fa-map-location-dot"></i> Ubicación en tiempo real
+                                </div>
+                                <div class="mh-live">
+                                    <div class="live-dot"></div> EN VIVO
+                                </div>
+                            </div>
+                            <div id="minimap"></div>
+                            <div class="map-footer">
+                                <span class="mf-coord" id="mapCoord">Cúcuta, Norte de Santander</span>
+                                <a href="mapa_admin.html" class="mf-btn">
+                                    <i class="fas fa-expand"></i> Ver mapa completo
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ══ MODAL ASIGNAR RUTA ════════════════════════════════════ -->
+    <div class="modal-overlay" id="routeModal">
+        <div class="modal">
+            <div class="modal-head">
+                <div>
+                    <div class="m-title" id="modalTitle">Asignar Ruta</div>
+                    <div class="m-sub" id="modalSub">Selecciona los clientes y configura el paseo</div>
+                </div>
+                <button class="btn-close-modal" id="closeRouteModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Clientes disponibles -->
+                <div>
+                    <div class="route-section-title"><i class="fas fa-users" style="margin-right:5px"></i>Clientes para
+                        asignar</div>
+                    <div id="clientRouteList" style="display:flex;flex-direction:column;gap:8px"></div>
+                </div>
+
+                <!-- Configuración -->
+                <div>
+                    <div class="route-section-title"><i class="fas fa-sliders-h"
+                            style="margin-right:5px"></i>Configuración del paseo</div>
+                    <div class="schedule-grid">
+                        <div class="form-field">
+                            <label>Fecha</label>
+                            <input type="date" id="routeDate" />
+                        </div>
+                        <div class="form-field">
+                            <label>Hora inicio</label>
+                            <input type="time" id="routeTime" />
+                        </div>
+                        <div class="form-field">
+                            <label>Duración estimada</label>
+                            <select id="routeDuration">
+                                <option value="30">30 minutos</option>
+                                <option value="60" selected>1 hora</option>
+                                <option value="90">1.5 horas</option>
+                                <option value="120">2 horas</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Punto de encuentro</label>
+                            <input type="text" id="routeMeet" placeholder="Ej: Parque Santander" />
+                        </div>
+                    </div>
+                    <div class="form-field" style="margin-top:10px">
+                        <label>Prioridad</label>
+                        <div class="priority-btns">
+                            <div class="prio-btn baja active" data-prio="baja">🟢 Baja</div>
+                            <div class="prio-btn media" data-prio="media">🟡 Media</div>
+                            <div class="prio-btn alta" data-prio="alta">🔴 Alta</div>
+                        </div>
+                    </div>
+                    <div class="form-field" style="margin-top:10px">
+                        <label>Notas para el paseador</label>
+                        <textarea id="routeNotes"
+                            placeholder="Instrucciones especiales, alergias de mascotas, etc..."></textarea>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelRoute">Cancelar</button>
+                <button class="btn-confirm" id="confirmRoute">
+                    <i class="fas fa-route"></i> Asignar ruta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ══════════════════════════════════════════════════════════════
+        // DATOS
+        // ══════════════════════════════════════════════════════════════
+        const PASEADORES = [
+            {
+                id: 1, nombre: 'Carlos Rodríguez', email: 'carlosr@gmail.com',
+                telefono: '315 778 8990', zona: 'Cúcuta Centro / Los Patios',
+                estado: 'activo', rating: 4.8, paseosTotales: 142, paseosMes: 18,
+                rutaActual: null, lat: 7.8939, lng: -72.5078,
+                clientes: ['María González', 'Pedro Ramírez'],
+                color: '#3E72A6',
+                rutasHistorial: [
+                    { cliente: 'María González', mascota: 'Max', fecha: 'Hoy 09:00', estado: 'completada' },
+                    { cliente: 'Pedro Ramírez', mascota: 'Coco', fecha: 'Ayer 08:30', estado: 'completada' },
+                ]
+            },
+            {
+                id: 2, nombre: 'Ana Fernández', email: 'ana.f@hotmail.com',
+                telefono: '312 334 5566', zona: 'Cúcuta Norte / Atalaya',
+                estado: 'en-ruta', rating: 4.9, paseosTotales: 98, paseosMes: 14,
+                rutaActual: 'Calle 7 #0e-94, Motilones → Parque La Flora',
+                lat: 7.9121, lng: -72.5041,
+                clientes: ['Juan Pérez'],
+                color: '#16a34a',
+                rutasHistorial: [
+                    { cliente: 'Juan Pérez', mascota: 'Luna', fecha: 'Hoy 07:00', estado: 'en-ruta' },
+                    { cliente: 'Laura Martínez', mascota: 'Rocky', fecha: 'Ayer 16:00', estado: 'completada' },
+                ]
+            },
+            {
+                id: 3, nombre: 'Diego Torres', email: 'diegot@gmail.com',
+                telefono: '318 445 6677', zona: 'Cúcuta Sur / Comuneros',
+                estado: 'pausado', rating: 4.5, paseosTotales: 67, paseosMes: 8,
+                rutaActual: null, lat: 7.8801, lng: -72.5123,
+                clientes: ['Laura Martínez', 'Ana Fernández', 'Carlos López'],
+                color: '#ea580c',
+                rutasHistorial: [
+                    { cliente: 'Laura Martínez', mascota: 'Rocky', fecha: 'Hace 2 días', estado: 'completada' },
+                ]
+            },
+            {
+                id: 4, nombre: 'Sofía Lozano', email: 'sofia.l@outlook.com',
+                telefono: '317 456 7890', zona: 'Villa del Rosario / El Zulia',
+                estado: 'activo', rating: 5.0, paseosTotales: 213, paseosMes: 24,
+                rutaActual: null, lat: 7.8650, lng: -72.4780,
+                clientes: ['Ana Fernández', 'Claudia López'],
+                color: '#7c3aed',
+                rutasHistorial: [
+                    { cliente: 'Claudia López', mascota: 'Pelusa', fecha: 'Hoy 11:00', estado: 'completada' },
+                    { cliente: 'Ana Fernández', mascota: 'Kira', fecha: 'Ayer 07:30', estado: 'completada' },
+                ]
+            },
+        ];
+
+        const CLIENTES_DISPONIBLES = [
+            { id: 101, nombre: 'María González', mascota: 'Max', addr: 'Av. 0 #5-35, Cúcuta Centro', distancia: '1.2 km', urgente: false },
+            { id: 102, nombre: 'Pedro Ramírez', mascota: 'Coco', addr: 'Calle 7 #0e-94, Motilones', distancia: '0.8 km', urgente: true },
+            { id: 103, nombre: 'Laura Martínez', mascota: 'Rocky', addr: 'Carrera 5 #12-20, Los Patios', distancia: '3.1 km', urgente: false },
+            { id: 104, nombre: 'Carlos López', mascota: 'Toby', addr: 'Urb. La Riviera, Cúcuta Norte', distancia: '2.4 km', urgente: false },
+            { id: 105, nombre: 'Ana Salcedo', mascota: 'Nala', addr: 'Calle 10 #3-15, Atalaya', distancia: '1.8 km', urgente: true },
+        ];
+
+        // ══════════════════════════════════════════════════════════════
+        // ESTADO
+        // ══════════════════════════════════════════════════════════════
+        let filtroActual = 'todos';
+        let paseadorSel = PASEADORES[0];
+        let selectedRouteClients = [];
+        let selectedPriority = 'baja';
+        let mapInstance = null;
+        let mapMarker = null;
+
+        // ══════════════════════════════════════════════════════════════
+        // SIDEBAR
+        // ══════════════════════════════════════════════════════════════
+        const btnMenu = document.getElementById('btn-menu');
+        const menuLatente = document.getElementById('menu-latente');
+        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
+        window.addEventListener('click', e => {
+            if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target))
+                menuLatente.classList.remove('show');
+        });
+
+        // ══════════════════════════════════════════════════════════════
+        // STATS
+        // ══════════════════════════════════════════════════════════════
+        function updateStats() {
+            document.getElementById('statTotal').textContent = PASEADORES.length;
+            document.getElementById('statActivo').textContent = PASEADORES.filter(p => p.estado === 'activo').length;
+            document.getElementById('statEnRuta').textContent = PASEADORES.filter(p => p.estado === 'en-ruta').length;
+            document.getElementById('statPausado').textContent = PASEADORES.filter(p => p.estado === 'pausado').length;
+            const avg = (PASEADORES.reduce((s, p) => s + p.rating, 0) / PASEADORES.length).toFixed(1);
+            document.getElementById('statRating').textContent = avg + '★';
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // RENDER LISTA
+        // ══════════════════════════════════════════════════════════════
+        function renderLista() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const lista = document.getElementById('paseadoresList');
+            const empty = document.getElementById('emptyState');
+            lista.innerHTML = '';
+
+            const filtrados = PASEADORES.filter(p => {
+                const matchQ = !q || p.nombre.toLowerCase().includes(q) || p.zona.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+                const matchE = filtroActual === 'todos' || p.estado === filtroActual;
+                return matchQ && matchE;
+            });
+
+            if (filtrados.length === 0) { empty.classList.add('visible'); return; }
+            empty.classList.remove('visible');
+
+            filtrados.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'paseador-card' + (paseadorSel && paseadorSel.id === p.id ? ' selected' : '');
+                card.dataset.id = p.id;
+                const initials = p.nombre.split(' ').map(x => x[0]).slice(0, 2).join('');
+                const estadoTag = {
+                    'activo': '<span class="p-tag tag-activo"><i class="fas fa-circle" style="font-size:.5rem"></i> Activo</span>',
+                    'en-ruta': '<span class="p-tag tag-enruta"><i class="fas fa-route" style="font-size:.6rem"></i> En ruta</span>',
+                    'pausado': '<span class="p-tag tag-pausado"><i class="fas fa-pause" style="font-size:.6rem"></i> Pausado</span>',
+                }[p.estado] || '';
+                const dotClass = { activo: 'dot-on', 'en-ruta': 'dot-busy', pausado: 'dot-off' }[p.estado] || 'dot-off';
+
+                card.innerHTML = `
+      <div class="p-avatar" style="background:${p.color}">
+        ${initials}
+        <div class="p-online-dot ${dotClass}"></div>
+      </div>
+      <div class="p-info">
+        <div class="p-name">${p.nombre}</div>
+        <div class="p-email">${p.email}</div>
+        <div class="p-tags">
+          ${estadoTag}
+          <span class="p-tag tag-rating">⭐ ${p.rating}</span>
+          <span class="p-tag" style="background:#f1f5f9;color:var(--muted)"><i class="fas fa-map-pin" style="font-size:.6rem"></i> ${p.zona.split('/')[0].trim()}</span>
+        </div>
+      </div>
+      <div class="p-stats">
+        <div class="p-stat-row"><i class="fas fa-route"></i> <strong>${p.paseosMes}</strong>&nbsp;este mes</div>
+        <div class="p-stat-row"><i class="fas fa-check"></i> <strong>${p.paseosTotales}</strong>&nbsp;total</div>
+        <div class="p-stat-row"><i class="fas fa-users"></i> <strong>${p.clientes.length}</strong>&nbsp;clientes</div>
+      </div>
+      <div class="p-actions">
+        <button class="p-action-btn chat" title="Ir al chat" onclick="irAlChat(${p.id},event)"><i class="fas fa-comment-alt"></i></button>
+        <button class="p-action-btn map"  title="Ver en mapa" onclick="verEnMapa(${p.id},event)"><i class="fas fa-map-marker-alt"></i></button>
+        <button class="p-action-btn route" title="Asignar ruta" onclick="abrirModalRuta(${p.id},event)"><i class="fas fa-route"></i></button>
+      </div>
+    `;
+                card.addEventListener('click', () => seleccionar(p.id));
+                lista.appendChild(card);
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // SELECCIONAR PASEADOR
+        // ══════════════════════════════════════════════════════════════
+        function seleccionar(id) {
+            paseadorSel = PASEADORES.find(p => p.id === id);
+            renderLista();
+            renderDetalle();
+            actualizarMapa();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // RENDER DETALLE
+        // ══════════════════════════════════════════════════════════════
+        function renderDetalle() {
+            if (!paseadorSel) return;
+            const p = paseadorSel;
+            const dc = document.getElementById('detailCard');
+            const initials = p.nombre.split(' ').map(x => x[0]).slice(0, 2).join('');
+            const statusClass = { activo: 'dsb-activo', 'en-ruta': 'dsb-activo', pausado: 'dsb-pausado' }[p.estado] || 'dsb-pausado';
+            const statusLabel = { activo: '● Activo', 'en-ruta': '◉ En Ruta', pausado: '◌ Pausado' }[p.estado] || p.estado;
+
+            dc.innerHTML = `
+    <div class="dc-head">
+      <div class="dc-head-top">
+        <div class="dc-avatar" style="background:${p.color}">${initials}</div>
+        <span class="dc-status-badge ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="dc-name">${p.nombre}</div>
+      <div class="dc-sub">${p.email} · ${p.telefono}</div>
+    </div>
+    <div class="dc-quick-actions">
+      <button class="dqa-btn chat-btn" onclick="irAlChat(${p.id},event)">
+        <i class="fas fa-comment-alt"></i> Chat
+      </button>
+      <button class="dqa-btn map-btn" onclick="verEnMapa(${p.id},event)">
+        <i class="fas fa-map-marker-alt"></i> Mapa
+      </button>
+      <button class="dqa-btn ruta-btn" onclick="abrirModalRuta(${p.id},event)">
+        <i class="fas fa-route"></i> Ruta
+      </button>
+    </div>
+    <div class="dc-body">
+      <div class="dc-info-row">
+        <i class="fas fa-map-pin"></i>
+        <div><div class="dci-label">Zona de trabajo</div><div class="dci-val">${p.zona}</div></div>
+      </div>
+      ${p.rutaActual ? `
+      <div class="dc-info-row">
+        <i class="fas fa-route"></i>
+        <div><div class="dci-label">Ruta actual</div><div class="dci-val" style="color:var(--primary)">${p.rutaActual}</div></div>
+      </div>` : ''}
+      <div class="dc-info-row">
+        <i class="fas fa-users"></i>
+        <div><div class="dci-label">Clientes asignados</div><div class="dci-val">${p.clientes.join(' · ')}</div></div>
+      </div>
+      <div class="dc-perf">
+        <div class="dcp-item"><div class="dcp-val">⭐${p.rating}</div><div class="dcp-lbl">Rating</div></div>
+        <div class="dcp-item"><div class="dcp-val">${p.paseosMes}</div><div class="dcp-lbl">Este mes</div></div>
+        <div class="dcp-item"><div class="dcp-val">${p.paseosTotales}</div><div class="dcp-lbl">Totales</div></div>
+      </div>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="abrirModalRuta(${p.id},event)">
+        <i class="fas fa-plus"></i> Asignar nueva ruta
+      </button>
+      <button class="btn-outline" style="width:100%;justify-content:center" onclick="showToast('Historial de ${p.nombre}','info')">
+        <i class="fas fa-clock-rotate-left"></i> Ver historial completo
+      </button>
+    </div>
+  `;
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // MAPA LEAFLET
+        // ══════════════════════════════════════════════════════════════
+        function initMapa() {
+            mapInstance = L.map('minimap', { zoomControl: true, attributionControl: false }).setView([7.8939, -72.5078], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
+
+            // Marcadores de todos los paseadores
+            PASEADORES.forEach(p => {
+                const color = { activo: '#25D366', 'en-ruta': '#3E72A6', pausado: '#f97316' }[p.estado] || '#ccc';
+                const icon = L.divIcon({
+                    html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.65rem;box-shadow:0 2px 8px rgba(0,0,0,.3)">${p.nombre.split(' ')[0][0]}</div>`,
+                    className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+                });
+                const marker = L.marker([p.lat, p.lng], { icon }).addTo(mapInstance);
+                marker.bindPopup(`<b>${p.nombre}</b><br>${p.estado === 'en-ruta' ? '📍 En ruta: ' + p.rutaActual : '📌 ' + p.zona}`);
+                if (p.id === paseadorSel?.id) marker.openPopup();
+            });
+        }
+
+        function actualizarMapa() {
+            if (!mapInstance || !paseadorSel) return;
+            mapInstance.setView([paseadorSel.lat, paseadorSel.lng], 15);
+            document.getElementById('mapCoord').textContent = `${paseadorSel.nombre} — ${paseadorSel.zona.split('/')[0]}`;
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // HISTORIAL RUTAS
+        // ══════════════════════════════════════════════════════════════
+        function renderHistorial() {
+            const el = document.getElementById('rutasRecientes');
+            el.innerHTML = '';
+            const iconMap = { completada: 'rhi-green', pendiente: 'rhi-orange', 'en-ruta': 'rhi-blue', cancelada: 'rhi-red' };
+            const faMap = { completada: 'fa-check', pendiente: 'fa-clock', 'en-ruta': 'fa-route', cancelada: 'fa-times' };
+
+            PASEADORES.forEach(p => {
+                p.rutasHistorial.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'rh-item';
+                    div.innerHTML = `
+        <div class="rhi-icon ${iconMap[r.estado] || 'rhi-blue'}"><i class="fas ${faMap[r.estado] || 'fa-route'}"></i></div>
+        <div class="rhi-info">
+          <div class="rhi-name">${p.nombre} → ${r.cliente}</div>
+          <div class="rhi-sub"><i class="fas fa-dog" style="margin-right:3px"></i>${r.mascota} · ${r.fecha}</div>
+        </div>
+        <span class="rhi-status rs-${r.estado}">${capitalize(r.estado.replace('-', ' '))}</span>
+      `;
+                    el.appendChild(div);
+                });
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // MODAL RUTA
+        // ══════════════════════════════════════════════════════════════
+        let paseadorParaRuta = null;
+
+        function abrirModalRuta(id, e) {
+            if (e) e.stopPropagation();
+            paseadorParaRuta = PASEADORES.find(p => p.id === id);
+            document.getElementById('modalTitle').textContent = `Asignar ruta a ${paseadorParaRuta.nombre}`;
+            document.getElementById('modalSub').textContent = `Zona: ${paseadorParaRuta.zona}`;
+
+            // Fecha por defecto: hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('routeDate').value = hoy;
+            document.getElementById('routeTime').value = '08:00';
+            document.getElementById('routeNotes').value = '';
+            document.getElementById('routeMeet').value = '';
+
+            selectedRouteClients = [];
+            renderClientesModal();
+            document.getElementById('routeModal').classList.add('open');
+        }
+
+        function renderClientesModal() {
+            const list = document.getElementById('clientRouteList');
+            list.innerHTML = '';
+            CLIENTES_DISPONIBLES.forEach(c => {
+                const sel = selectedRouteClients.includes(c.id);
+                const div = document.createElement('div');
+                div.className = 'client-route-item' + (sel ? ' selected' : '');
+                div.innerHTML = `
+      <div class="cri-avatar" style="background:${['#3E72A6', '#16a34a', '#ea580c', '#7c3aed', '#db2777'][c.id % 5]}">${c.nombre[0]}</div>
+      <div class="cri-info">
+        <div class="cri-name">${c.nombre} ${c.urgente ? '🔴' : ''}</div>
+        <div class="cri-addr"><i class="fas fa-map-pin" style="font-size:.6rem"></i>${c.addr}</div>
+        <div class="cri-meta">
+          <span class="cri-tag">🐕 ${c.mascota}</span>
+          <span class="cri-tag">📍 ${c.distancia}</span>
+          ${c.urgente ? '<span class="cri-tag" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5">⚡ Urgente</span>' : ''}
+        </div>
+      </div>
+      <div class="cri-check"><i class="fas fa-check"></i></div>
+    `;
+                div.addEventListener('click', () => {
+                    if (selectedRouteClients.includes(c.id))
+                        selectedRouteClients = selectedRouteClients.filter(x => x !== c.id);
+                    else
+                        selectedRouteClients.push(c.id);
+                    renderClientesModal();
+                });
+                list.appendChild(div);
+            });
+        }
+
+        // Prioridad
+        document.querySelectorAll('.prio-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.prio-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedPriority = btn.dataset.prio;
+            });
+        });
+
+        document.getElementById('closeRouteModal').addEventListener('click', () =>
+            document.getElementById('routeModal').classList.remove('open'));
+        document.getElementById('cancelRoute').addEventListener('click', () =>
+            document.getElementById('routeModal').classList.remove('open'));
+        document.getElementById('routeModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('routeModal'))
+                document.getElementById('routeModal').classList.remove('open');
+        });
+
+        document.getElementById('confirmRoute').addEventListener('click', () => {
+            if (selectedRouteClients.length === 0) {
+                showToast('Selecciona al menos un cliente', 'warning'); return;
+            }
+            const fecha = document.getElementById('routeDate').value;
+            const hora = document.getElementById('routeTime').value;
+            const nombres = selectedRouteClients.map(id => CLIENTES_DISPONIBLES.find(c => c.id === id)?.nombre).join(', ');
+
+            // Simular asignación
+            if (paseadorParaRuta) {
+                paseadorParaRuta.rutaActual = `${nombres} — ${fecha} ${hora}`;
+                paseadorParaRuta.estado = 'en-ruta';
+                selectedRouteClients.forEach(cid => {
+                    const c = CLIENTES_DISPONIBLES.find(x => x.id === cid);
+                    if (c && !paseadorParaRuta.clientes.includes(c.nombre))
+                        paseadorParaRuta.clientes.push(c.nombre);
+                });
+            }
+
+            document.getElementById('routeModal').classList.remove('open');
+            showToast(`Ruta asignada a ${paseadorParaRuta?.nombre} ✓`, 'success');
+            renderLista();
+            renderDetalle();
+            updateStats();
+        });
+
+        // ══════════════════════════════════════════════════════════════
+        // ACCIONES RÁPIDAS
+        // ══════════════════════════════════════════════════════════════
+        function irAlChat(id, e) {
+            if (e) e.stopPropagation();
+            const p = PASEADORES.find(x => x.id === id);
+            showToast(`Abriendo chat con ${p?.nombre}...`, 'info');
+            setTimeout(() => window.location.href = `Chat_admin.html`, 1200);
+        }
+
+        function verEnMapa(id, e) {
+            if (e) e.stopPropagation();
+            const p = PASEADORES.find(x => x.id === id);
+            seleccionar(id);
+            showToast(`Mostrando ubicación de ${p?.nombre}`, 'info');
+            document.getElementById('minimap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // FILTROS Y BÚSQUEDA
+        // ══════════════════════════════════════════════════════════════
+        document.querySelectorAll('.sf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filtroActual = btn.dataset.filter;
+                renderLista();
+            });
+        });
+        document.getElementById('searchInput').addEventListener('input', renderLista);
+
+        // ══════════════════════════════════════════════════════════════
+        // HELPERS
+        // ══════════════════════════════════════════════════════════════
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        let toastTimer;
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            const ic = t.querySelector('i');
+            document.getElementById('toastMsg').textContent = msg;
+            t.className = `toast ${type}`;
+            ic.className = { success: 'fas fa-check-circle', info: 'fas fa-info-circle', warning: 'fas fa-triangle-exclamation' }[type] || 'fas fa-check-circle';
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // SIMULACIÓN GPS: mover marcadores cada 5s
+        // ══════════════════════════════════════════════════════════════
+        function simularMovimiento() {
+            PASEADORES.filter(p => p.estado === 'en-ruta').forEach(p => {
+                p.lat += (Math.random() - .5) * .0008;
+                p.lng += (Math.random() - .5) * .0008;
+            });
+            if (paseadorSel) actualizarMapa();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════════════════════════
+        updateStats();
+        renderLista();
+        renderDetalle();
+        renderHistorial();
+
+        setTimeout(() => {
+            initMapa();
+            setInterval(simularMovimiento, 5000);
+        }, 300);
+    </script>
+</body>
+
+</html>
