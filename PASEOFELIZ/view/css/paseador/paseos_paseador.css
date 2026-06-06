@@ -1,0 +1,150 @@
+/* css/paseador_paseos.css */
+:root {
+    --blue-corp: #0a4e63;
+    --blue-hover: #147291;
+    --bg-gray: #f4f7f6;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --green-success: #22c55e;
+    --orange-pending: #f97316;
+}
+
+.paseos-container {
+    background-color: var(--bg-gray);
+    padding: 30px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-y: auto;
+}
+
+.page-title { font-size: 1.7rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+.page-sub { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px; }
+
+/* Menú Navegación de Pestañas */
+.tabs-wrapper {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 25px;
+}
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+.tab-btn i { margin-right: 8px; }
+.tab-btn:hover { color: var(--blue-corp); }
+.tab-btn.active {
+    color: var(--blue-corp);
+    border-bottom-color: var(--blue-corp);
+}
+
+/* Control de visibilidad de las pestañas */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Grid de Tarjetas de Paseos */
+.walks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 20px;
+}
+
+/* Tarjeta de Paseo */
+.walk-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+/* Estilo especial si el paseo está activo (En Curso) */
+.walk-card.live {
+    border: 2px solid var(--blue-corp);
+    background: linear-gradient(to bottom right, #ffffff, #f0f9ff);
+}
+
+/* Etiquetas de Estado en las tarjetas */
+.card-status-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.badge-pending { background: #ffedd5; color: #c2410c; }
+.badge-live { background: #e0f2fe; color: var(--blue-corp); display: flex; align-items: center; gap: 6px; }
+
+/* Punto intermitente para paseo en vivo */
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--blue-corp);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.5; }
+    100% { transform: scale(0.9); opacity: 1; }
+}
+
+/* Cabecera Tarjeta */
+.walk-card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.dog-avatar { width: 45px; height: 45px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.dog-details h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+.dog-details p { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Cuerpo Tarjeta */
+.walk-card-body { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.info-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-main); }
+.info-row i { color: var(--text-muted); width: 16px; text-align: center; }
+.info-row.alert-notes { background: #fff7ed; padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--orange-pending); color: #9a3412; font-size: 0.8rem; margin-top: 5px; }
+.info-row.alert-notes i { color: var(--orange-pending); }
+
+/* Botonera de la Tarjeta */
+.walk-card-actions { display: flex; gap: 10px; }
+.btn-card {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: 0.2s;
+}
+.btn-card.primary { background: var(--blue-corp); color: #fff; }
+.btn-card.primary:hover { background: var(--blue-hover); }
+.btn-card.secondary { background: #e2e8f0; color: var(--text-main); }
+.btn-card.secondary:hover { background: #cbd5e1; }
+.btn-card.success { background: var(--green-success); color: #fff; }
+.btn-card.success:hover { background: #16a34a; }
+
+/* Tabla del Historial */
+.history-table-card { background: #fff; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; padding: 10px; }
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 14px 18px; text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid var(--border); font-weight: 700; }
+td { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text-main); }
+.badge-status-done { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
