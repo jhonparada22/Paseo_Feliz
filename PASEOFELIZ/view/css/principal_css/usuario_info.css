@@ -1,0 +1,148 @@
+.edit-main-content {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+    background-color: #f5f7fa;
+}
+
+.edit-header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+.edit-header-title a {
+    color: #7f8c8d;
+    font-size: 20px;
+    transition: 0.3s;
+}
+
+.edit-header-title a:hover {
+    color: #2c3e50;
+    transform: translateX(-3px);
+}
+
+.edit-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.edit-column {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.edit-column-right {
+    border-left: 3px solid #dbeddb;
+}
+
+.edit-column h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-bottom: 2px solid #edf2f7;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group-box {
+    margin-bottom: 20px;
+}
+
+.form-group-box label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 8px;
+}
+
+.form-group-box input[type="text"],
+.form-group-box input[type="date"],
+.form-group-box input[type="tel"],
+.form-group-box textarea,
+.form-group-box select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #fff;
+    color: #2d3748;
+    box-sizing: border-box;
+    transition: all 0.3s;
+}
+
+.form-group-box input:focus, 
+.form-group-box textarea:focus, 
+.form-group-box select:focus {
+    border-color: #a3b899;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(163, 184, 153, 0.2);
+}
+
+.mascota-action-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-tab {
+    padding: 10px;
+    background: #edf2f7;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
+    color: #4a5568;
+    transition: 0.2s;
+}
+
+.btn-tab.active {
+    background: #dbeddb;
+    color: #2b6cb0;
+    border-color: #bee3f8;
+}
+
+.btn-submit-container {
+    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.btn-confirmar-guardar {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-confirmar-guardar:hover {
+    background-color: #219653;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
+}
+
+.hidden-section {
+    display: none;
+}
