@@ -569,7 +569,8 @@ document.getElementById("btn-login").addEventListener("click", () => {
       sessionStorage.setItem("usuario_logeado", JSON.stringify(data.usuario));
       mostrarAlertaPersonalizada(`Bienvenido A Paseo Feliz, ${data.usuario.nombre}! 👋`);
       limpiarTodo();
-      setTimeout(() => { window.location.href = "../pagina_principal/inicio.php"; }, 2000);
+      const destino = data.esAdmin ? "../vistas/admin/index_admin.php" : "../pagina_principal/inicio.php";
+      setTimeout(() => { window.location.href = destino; }, 2000);
     } else {
       mostrarAlertaPersonalizada(data.message, true);
     }
