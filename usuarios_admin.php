@@ -7,7 +7,8 @@
   <title>Paseo Feliz – Usuarios</title>
   <link rel="icon" href="../../assets/images/logo.png" type="image/png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="../../css/admin.css">
+  <link rel="stylesheet" href="../../css/admin/admin.css">
+  <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
   
 </head>
 <body>
@@ -202,7 +203,7 @@
   <span id="toastMsg">Cambio guardado</span>
 </div>
 
-<script src="../../js/usuarios_admin.js">
+<script src="../../js/admin/usuarios_admin.js">
 
 </script>
 </body>
