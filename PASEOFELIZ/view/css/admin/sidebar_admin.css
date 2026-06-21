@@ -1,0 +1,337 @@
+/* =========================================================================
+   SIDEBAR & MENÚ HAMBURGUESA — Paseo Feliz (Admin)
+   Ruta: ../../css/admin/sidebar_admin.css
+   Incluir en TODAS las páginas admin después de global.css / admin.css
+   ========================================================================= */
+
+/* ── VARIABLES (por si esta hoja se carga sola) ──────────────────────────── */
+:root {
+    --primary-blue:  #3E72A6;
+    --active-green:  #25D366;
+    --sidebar-w:     90px;
+    --sidebar-w-sm:  65px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SIDEBAR BASE
+══════════════════════════════════════════════════════════════════════════ */
+.sidebar {
+    width: var(--sidebar-w);
+    background: var(--primary-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.sidebar::-webkit-scrollbar          { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb    { background: rgba(255,255,255,.2); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOTÓN HAMBURGUESA
+══════════════════════════════════════════════════════════════════════════ */
+.menu-hamburguesa-container {
+    position: relative;
+    padding: 10px;
+    margin-bottom: 8px;
+    /* Necesario para que el menú desplegable se posicione respecto a la
+       ventana (position:fixed), no a este contenedor */
+}
+
+.profile-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.35);
+    background: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.1rem;
+    transition: background .2s;
+    /* Garantiza que sea clickeable por encima de cualquier overlay */
+    position: relative;
+    z-index: 101;
+}
+
+.profile-circle:hover {
+    background: rgba(255,255,255,.15);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MENÚ DESPLEGABLE
+══════════════════════════════════════════════════════════════════════════ */
+.menu-desplegable {
+    /* Oculto por defecto */
+    display: none;
+
+    /* Fijo respecto a la ventana, siempre visible sobre todo */
+    position: fixed;
+    top: 10px;
+    left: var(--sidebar-w);      /* se ajusta automáticamente con la variable */
+    width: 210px;
+
+    background: var(--primary-blue);
+    border-radius: 0 10px 10px 0;
+    box-shadow: 5px 0 20px rgba(0,0,0,.25);
+
+    /* Siempre encima del contenido principal */
+    z-index: 9999;
+
+    /* Animación suave de entrada */
+    transform: translateX(-8px);
+    opacity: 0;
+    transition: transform .2s ease, opacity .2s ease;
+    pointer-events: none;
+}
+
+/* Clase activada por JS */
+.menu-desplegable.show {
+    display: block;
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Items del menú */
+.menu-desplegable ul {
+    list-style: none;
+    padding: 6px 0;
+    margin: 0;
+}
+
+.menu-desplegable ul a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.menu-desplegable ul li {
+    padding: 14px 18px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: .85rem;
+    transition: background .15s;
+}
+
+.menu-desplegable ul li:hover {
+    background: rgba(255,255,255,.12);
+}
+
+.menu-desplegable ul li i {
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAV-LINKS (íconos del sidebar)
+══════════════════════════════════════════════════════════════════════════ */
+.nav-links {
+    list-style: none;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-links li {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: rgba(255,255,255,.75);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 9px 0;
+    font-size: .72rem;
+    gap: 4px;
+    transition: color .2s;
+}
+
+.nav-links li a i {
+    font-size: 1.2rem;
+}
+
+.nav-links li a:hover {
+    color: #fff;
+}
+
+/* Ítem activo */
+.nav-links li.active a {
+    background: var(--active-green);
+    color: #000;
+    font-weight: 700;
+    border-radius: 12px;
+    width: 80%;
+    margin: 0 auto;
+}
+
+/* Separador de sección */
+.nav-sep {
+    width: 60%;
+    height: 1px;
+    background: rgba(255,255,255,.15);
+    margin: 8px auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SCRIPT INLINE REQUERIDO — Pegar antes de </body> en cada página
+   -----------------------------------------------------------------------
+   <script>
+     (function () {
+       var btn  = document.getElementById('btn-menu');
+       var menu = document.getElementById('menu-latente');
+       if (!btn || !menu) return;
+       btn.addEventListener('click', function (e) {
+         e.stopPropagation();
+         menu.classList.toggle('show');
+       });
+       document.addEventListener('click', function (e) {
+         if (!menu.contains(e.target) && e.target !== btn) {
+           menu.classList.remove('show');
+         }
+       });
+     })();
+   </script>
+   -----------------------------------------------------------------------
+   Este bloque es necesario porque admin.css no incluye el JS del menú.
+   Solo usuario_admin.php y usuario_info_admin.php lo tenían; las demás
+   páginas (Chat_admin, usuarios_admin, index_admin…) lo necesitan también.
+══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════════════════ */
+
+/* — Tablet (≤ 900 px) — */
+@media (max-width: 900px) {
+    .sidebar {
+        width: var(--sidebar-w-sm);
+    }
+
+    .nav-links li a span {
+        display: none;
+    }
+
+    .nav-links li a i {
+        font-size: 1.4rem;
+        margin-bottom: 0;
+    }
+
+    .nav-links li.active a {
+        width: 70%;
+        border-radius: 10px;
+        padding: 8px 0;
+    }
+
+    /* El menú sale justo después de la sidebar estrecha */
+    .menu-desplegable {
+        left: var(--sidebar-w-sm);
+    }
+}
+
+/* — Móvil (≤ 540 px) — */
+@media (max-width: 540px) {
+    /* Sidebar se convierte en barra inferior */
+    .app-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        order: 2;
+        width: 100%;
+        height: 58px;
+        flex-direction: row;
+        padding: 0;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        z-index: 200;
+    }
+
+    .menu-hamburguesa-container {
+        padding: 5px;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-direction: row;
+        width: auto;
+    }
+
+    .nav-links li {
+        margin-bottom: 0;
+        width: auto;
+    }
+
+    .nav-links li a {
+        padding: 5px 8px;
+        font-size: .62rem;
+    }
+
+    .nav-links li a span {
+        display: block;
+        font-size: .60rem;
+    }
+
+    .nav-links li a i {
+        font-size: 1rem;
+        margin-bottom: 2px;
+    }
+
+    .nav-links li.active a {
+        width: auto;
+        padding: 5px 8px;
+        border-radius: 8px;
+    }
+
+    /* El menú aparece desde abajo */
+    .menu-desplegable {
+        top: auto !important;
+        bottom: 58px;
+        left: 0 !important;
+        border-radius: 0 10px 0 0;
+        width: 200px;
+    }
+
+    /* El contenido principal deja espacio para la barra inferior */
+    .main-content,
+    .chat-main,
+    .profile-main-content,
+    .edit-main-content {
+        order: 1;
+        padding-bottom: 58px;
+    }
+}
+
+/* — Móvil muy pequeño (≤ 360 px) — */
+@media (max-width: 360px) {
+    .nav-links li a {
+        padding: 4px 5px;
+    }
+
+    .nav-links li a i {
+        font-size: .9rem;
+    }
+
+    .nav-links li a span {
+        font-size: .55rem;
+    }
+}
