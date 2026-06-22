@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Adopción</title>
     <link rel="icon" href="../../assets/images/logo.png" type="image/png">
-    <link rel="stylesheet" href="../css/principal_css/adopcion.css">
-    <link rel="stylesheet" href="../css/principal_css/global.css">
+    <link rel="stylesheet" href="../../css/principal_css/adopcion.css">
+    <link rel="stylesheet" href="../../css/admin.css">
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -17,82 +17,44 @@
 
     <div id="contenedor_general" class="app-container">
 
+        <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
         <nav class="sidebar">
             <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
+                <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="./sub_menu/conocenos.html">
-                            <li>
-                                <i class="fas fa-camera"></i>
-                                <span>Conocenos</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/direccion_oficial.html">
-                            <li>
-                                <i class="fas fa-book-open"></i>
-                                <span>Direccion oficial</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/centro_de_ayuda.html">
-                            <li>
-                                <i class="fas fa-sliders-h"></i>
-                                <span>Centro de ayuda</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/configuracion.html">
-                            <li>
-                                <i class="fas fa-gear"></i>
-                                <span>Configuracion</span>
-                            </li>
-                        </a>
-
-                        <a href="../../index.html">
-                            <li>
-                                <i class="fas fa-gear"></i>
-                                <span>Cerrar sesion</span>
-                            </li>
-                        </a>
+                        <li><i class="fas fa-camera"></i>Conócenos</li>
+                        <li><i class="fas fa-book-open"></i>Dirección oficial</li>
+                        <li><i class="fas fa-headset"></i>Centro de ayuda</li>
+                        <li><i class="fas fa-gear"></i>Configuración</li>
+                        <li><i class="fas fa-sign-out-alt"></i>Cerrar sesión</li>
                     </ul>
                 </nav>
             </div>
-
             <ul class="nav-links">
+                <li><a href="index_admin.html"><i class="fas fa-house"></i><span>Inicio</span></a></li>
+                <li><a href="usuarios_admin.html"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+                <li><a href="paseadores_admin.html"><i class="fas fa-person-walking"></i><span>Paseadores</span></a>
+                </li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="paseos_admin.php"><i class="fas fa-route"></i><span>Paseos</span></a></li>
+                <li><a href="pagos_admin.html"><i class="fas fa-credit-card"></i><span>Pagos</span></a></li>
                 <li>
-                    <a href="index_admin.html">
-                        <i class="fas fa-paw"></i>
-                        <span>Servicios</span>
-                    </a>
+                    <div class="nav-sep"></div>
                 </li>
+                <li><a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_admin.html"><i class="fas fa-map-location-dot"></i><span>Mapa</span></a></li>
+                <li class="active"><a href="#"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
                 <li>
-                    <a href="Chat_admin.html">
-                        <i class="far fa-comment-alt"></i>
-                        <span>Chat</span>
-                    </a>
+                    <div class="nav-sep"></div>
                 </li>
-                <li>
-                    <a href="mapa_admin.html">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Mapa</span>
-                    </a>
-                </li>
-                <li class="active"> <a href="#">
-                        <i class="fas fa-bone"></i>
-                        <span>Adopción</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="usuario_admin.html">
-                        <i class="fas fa-user"></i>
-                        <span>Usuario</span>
-                    </a>
-                </li>
+                <li><a href="configuracion_admin.html"><i class="fas fa-gear"></i><span>Config</span></a></li>
+                <li><a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a></li>
             </ul>
+            <div class="sidebar-user">
+                <div class="av">A</div><span>Admin</span>
+            </div>
         </nav>
 
         <main class="main-content">
@@ -104,7 +66,7 @@
             <section class="adoption-grid">
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/RomeoYJuli.png" alt="Romeo y July" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/RomeoYJuli.png" alt="Romeo y July" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Romeo y July</h3>
                             <p>4 y 3 años | Grandes</p>
@@ -114,7 +76,7 @@
 
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Toby.png" alt="Toby" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/Toby.png" alt="Toby" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Toby</h3>
                             <p>2 años | Mediano</p>
@@ -124,7 +86,7 @@
 
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Luna.png" alt="Luna" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/Luna.png" alt="Luna" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Luna</h3>
                             <p>6 meses | Pequeña</p>
@@ -134,7 +96,7 @@
 
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Max.png" alt="Max" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/Max.png" alt="Max" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Max</h3>
                             <p>1 año | Mediano</p>
@@ -144,7 +106,7 @@
 
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Rocky.png" alt="Rocky" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/Rocky.png" alt="Rocky" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Rocky</h3>
                             <p>5 años | Grande</p>
@@ -154,7 +116,7 @@
 
                 <a href="adopcion_info_admin.html" class="card-link">
                     <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Bella.png" alt="Bella" class="adoption-image">
+                        <img src="../../assets/recursos_pagina_principal/adopcion_imagenes/Bella.png" alt="Bella" class="adoption-image">
                         <div class="adoption-info-panel">
                             <h3>Bella</h3>
                             <p>2 años | Grande</p>
