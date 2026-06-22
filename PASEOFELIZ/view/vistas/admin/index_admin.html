@@ -7,7 +7,7 @@
     <title>Paseo Feliz – Panel Admin</title>
     <link rel="icon" href="../../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/admin.css">
+    <link rel="stylesheet" href="../../css/admin/admin_unified.css">
     
 </head>
 
@@ -17,106 +17,40 @@
 
         <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
         <nav class="sidebar">
-
-            <!-- Menú hamburguesa -->
             <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
+                <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="./sub_menu/conocenos.html">
-                            <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
-                        </a>
-                        <a href="./sub_menu/direccion_oficial.html">
-                            <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
-                        </a>
-                        <a href="./sub_menu/centro_de_ayuda.html">
-                            <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
-                        </a>
-                        <a href="./sub_menu/configuracion.html">
-                            <li><i class="fas fa-gear"></i><span>Configuración</span></li>
-                        </a>
-                        <a href="../../index.html">
-                            <li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li>
-                        </a>
+                        <li><i class="fas fa-camera"></i>Conócenos</li>
+                        <li><i class="fas fa-book-open"></i>Dirección oficial</li>
+                        <li><i class="fas fa-headset"></i>Centro de ayuda</li>
+                        <li><i class="fas fa-gear"></i>Configuración</li>
+                        <li><i class="fas fa-sign-out-alt"></i>Cerrar sesión</li>
                     </ul>
                 </nav>
             </div>
-
-            <!-- Navegación principal -->
             <ul class="nav-links">
-                <li class="active">
-                    <a href="#"><i class="fas fa-house"></i><span>Inicio</span></a>
+                <li class="active"><a href="index_admin.html"><i class="fas fa-house"></i><span>Inicio</span></a></li>
+                <li><a href="usuarios_admin.html"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+                <li><a href="paseadores_admin.html"><i class="fas fa-person-walking"></i><span>Paseadores</span></a>
                 </li>
-                <li>
-                    <a href="usuarios_admin.html"><i class="fas fa-users"></i><span>Usuarios</span></a>
+                    <div class="nav-sep"></div>
                 </li>
-                <li>
-                    <a href="paseadores_admin.html"><i class="fas fa-person-walking"></i><span>Paseadores</span></a>
-                </li>
-                <li>
-                    <a href="mascotas_admin.html"><i class="fas fa-dog"></i><span>Mascotas</span></a>
-                </li>
-
+                <li><a href="paseos_admin.html"><i class="fas fa-route"></i><span>Paseos</span></a></li>
+                <li><a href="pagos_admin.html"><i class="fas fa-credit-card"></i><span>Pagos</span></a></li>
                 <li>
                     <div class="nav-sep"></div>
                 </li>
-
-                <li>
-                    <a href="paseos_admin.html"><i class="fas fa-route"></i><span>Paseos</span></a>
-                </li>
-                <li>
-                    <a href="pagos_admin.html"><i class="fas fa-credit-card"></i><span>Pagos</span></a>
-                </li>
-                <li>
-                    <a href="reportes_admin.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a>
-                </li>
-
+                <li><a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_admin.html"><i class="fas fa-map-location-dot"></i><span>Mapa</span></a></li>
+                <li><a href="adopcion_admin.html"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
                 <li>
                     <div class="nav-sep"></div>
                 </li>
-
-                <li>
-                    <a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a>
-                </li>
-                <li>
-                    <a href="mapa_admin.html"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a>
-                </li>
-                <li>
-                    <a href="adopcion_admin.html"><i class="fas fa-bone"></i><span>Adopción</span></a>
-                </li>
-                <li>
-                    <a href="calendario_admin.html"><i class="fas fa-calendar-days"></i><span>Calendario</span></a>
-                </li>
-                <li>
-                    <a href="estadisticas_admin.html"><i class="fas fa-chart-line"></i><span>Estadísticas</span></a>
-                </li>
-
-                <li>
-                    <div class="nav-sep"></div>
-                </li>
-
-                <li>
-                    <a href="soporte_admin.html"><i class="fas fa-headset"></i><span>Soporte</span></a>
-                </li>
-                <li>
-                    <a href="configuracion_admin.html"><i class="fas fa-gear"></i><span>Config</span></a>
-                </li>
-                <li>
-                    <a href="seguridad_admin.html"><i class="fas fa-shield-halved"></i><span>Seguridad</span></a>
-                </li>
-                <li>
-                    <a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a>
-                </li>
+                <li><a href="configuracion_admin.html"><i class="fas fa-gear"></i><span>Config</span></a></li>
+                <li><a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a></li>
             </ul>
-
-            <!-- Usuario al fondo -->
-            <div class="sidebar-user">
-                <div class="av">A</div>
-                <span>Admin</span>
-            </div>
-
+            
         </nav>
 
         <!-- ══ MAIN CONTENT ════════════════════════════════════════ -->
@@ -370,6 +304,7 @@
     <!-- ══ SCRIPTS ════════════════════════════════════════════════ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="../../js/admin.js"></script>
+    <script src="../../js/sidebar.js"></script>
 </body>
 
 </html>
