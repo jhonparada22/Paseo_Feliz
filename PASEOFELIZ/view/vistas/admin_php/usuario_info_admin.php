@@ -41,6 +41,8 @@ if ($id_usuario) {
     <title>Paseo Feliz - Modificar Perfil</title>
     <link class="favicon" rel="icon" href="../../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../../css/principal_css/global.css">
+    <link rel="stylesheet" href="../../css/admin/admin.css">
+    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/principal_css/usuario_info.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -216,7 +218,7 @@ if ($id_usuario) {
         </main>
     </div>
 
-    <script src="../../../js/js pagina principal/usuario_info.js"></script>
+    <script src="../../js/js pagina principal/usuario_info.js"></script>
     <script>
         // Manejo básico de pestañas por si el archivo externo tiene fallas de ruta
         function switchMascotaTab(accion) {
