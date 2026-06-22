@@ -3,21 +3,24 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Si el usuario NO tiene un pase de entrada válido, lo expulsamos
-if (!isset($_SESSION['usuario_logged']) || $_SESSION['usuario_logged'] !== true) {
-    
-    $url_actual = $_SERVER['REQUEST_URI'];
+$url_actual = $_SERVER['REQUEST_URI'];
 
-    // Si está intentando ver un archivo dentro de la carpeta "sub_menu"
+// 1. Si no está logueado, redirigir al login
+if (!isset($_SESSION['usuario_logged']) || $_SESSION['usuario_logged'] !== true) {
     if (strpos($url_actual, '/sub_menu/') !== false) {
-        // Sube dos niveles para salir a la raíz y entra a la vista de login
         header("Location: ../../registro/acceso.html");
     } else {
-        // Si está en la carpeta de páginas principales, solo sube un nivel
         header("Location: ../registro/acceso.html");
     }
-    
-    // Cortamos la carga del HTML inmediatamente por seguridad
     exit();
+}
+
+// 2. Si está en una ruta de admin pero NO es admin, redirigir al inicio de usuario normal
+if (!isset($_SESSION['usuario_admin']) || $_SESSION['usuario_admin'] !== true) {
+    // Detectar si está intentando acceder a una ruta de administrador
+    if (strpos($url_actual, '/vista/admin/') !== false || strpos($url_actual, '/admin/') !== false) {
+        header("Location: ../../registro/acceso.html");
+        exit();
+    }
 }
 ?>
