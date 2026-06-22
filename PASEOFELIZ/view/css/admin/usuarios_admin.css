@@ -1346,7 +1346,7 @@
             }
 
             .menu-desplegable {
-                left: 65px;
+                left: 65px !important;
             }
         }
 
