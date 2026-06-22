@@ -43,7 +43,8 @@ if ($id_usuario) {
     <link class="favicon" rel="icon" href="../../assets/images/logo.png" type="image/png">
     
     <link rel="stylesheet" href="../../css/principal_css/global.css">
-    <link rel="stylesheet" href="../../css/principal_css/admin.css">
+    <link rel="stylesheet" href="../../css/admin/admin.css">
+    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/principal_css/usuario.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
