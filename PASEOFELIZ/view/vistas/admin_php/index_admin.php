@@ -41,7 +41,6 @@
                 <li><a href="usuarios_admin.php"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
                 <li><a href="paseadores_admin.php"><i class="fas fa-person-walking"></i><span>Paseadores</span></a>
                 </li>
-                <li><a href="mascotas_admin.php"><i class="fas fa-dog"></i><span>Mascotas</span></a></li>
                 <li>
                     <div class="nav-sep"></div>
                 </li>

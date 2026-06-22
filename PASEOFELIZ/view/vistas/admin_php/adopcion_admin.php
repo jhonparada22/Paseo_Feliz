@@ -69,7 +69,6 @@ if ($res) {
             <li><a href="index_admin.php"><i class="fas fa-house"></i><span>Inicio</span></a></li>
             <li><a href="usuarios_admin.php"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
             <li><a href="paseadores_admin.php"><i class="fas fa-person-walking"></i><span>Paseadores</span></a></li>
-            <li><a href="mascotas_admin.php"><i class="fas fa-dog"></i><span>Mascotas</span></a></li>
             <li><div class="nav-sep"></div></li>
             <li><a href="paseos_admin.php"><i class="fas fa-route"></i><span>Paseos</span></a></li>
             <li><a href="pagos_admin.php"><i class="fas fa-credit-card"></i><span>Pagos</span></a></li>
