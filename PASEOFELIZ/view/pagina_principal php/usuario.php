@@ -43,28 +43,25 @@ if ($id_usuario) {
 <body>
     <div id="contenedor_general" class="app-container">
         
-        <nav class="sidebar">
+               <nav class="sidebar">
             <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
+                <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <li><a href="./sub_menu/conocenos.php"><i class="fas fa-camera"></i> <span>Conócenos</span></a></li>
-                        <li><a href="./sub_menu/direccion_oficial.php"><i class="fas fa-book-open"></i> <span>Dirección oficial</span></a></li>
-                        <li><a href="./sub_menu/centro_de_ayuda.php"><i class="fas fa-sliders-h"></i> <span>Centro de ayuda</span></a></li>
-                        <li><a href="./sub_menu/configuracion.php"><i class="fas fa-gear"></i> <span>Configuración</span></a></li>
+                        <a href="./sub_menu/conocenos.php"><li><i class="fas fa-camera"></i> <span>Conocenos</span></li></a>
+                        <a href="./sub_menu/direccion_oficial.php"><li><i class="fas fa-book-open"></i> <span>Direccion oficial</span></li></a>
+                        <a href="./sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i> <span>Centro de ayuda</span></li></a>
+                        <a href="./sub_menu/configuracion.php"><li><i class="fas fa-gear"></i> <span>Configuracion</span></li></a>
                         <li><a href="../../controller/logout.php" style="color: #000000;"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></a></li>
                     </ul>
                 </nav>
             </div>
-            
             <ul class="nav-links">
                 <li><a href="inicio.php"><i class="fas fa-paw"></i> <span>Servicios</span></a></li>
                 <li><a href="Chat.php"><i class="far fa-comment-alt"></i> <span>Chat</span></a></li>
                 <li><a href="mapa.php"><i class="fas fa-map-marker-alt"></i> <span>Mapa</span></a></li>
                 <li><a href="adopcion.php"><i class="fas fa-bone"></i> <span>Adopción</span></a></li>
-                <li class="active"><a href="usuario.php"><i class="fas fa-user"></i> <span>Usuario</span></a></li>
+                <li class="active"><a href="#"><i class="fas fa-user"></i> <span>Usuario</span></a></li>
             </ul>
         </nav>
 
@@ -88,15 +85,15 @@ if ($id_usuario) {
             </div>
 
             <div class="profile-grid">
-                
                 <div class="columna-boceto">
+                    <h3 style="color: #000; margin: 15px 0 10px 0; font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 5px;">Sobre Mí</h3>
                     <div class="boceto-caja-datos">
                         <label>Biografía</label>
                         <p><?php echo htmlspecialchars($biografia); ?></p>
                     </div>
 
                     <div class="boceto-caja-datos">
-                        <label>Cumpleaños</label>
+                        <label>Fecha De Nacimiento</label>
                         <p><?php echo htmlspecialchars($cumpleanos); ?></p>
                     </div>
 
@@ -107,6 +104,7 @@ if ($id_usuario) {
                 </div>
 
                 <div class="columna-boceto columna-derecha">
+                    <h3 style="color: #000; margin: 15px 0 10px 0; font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 5px;">Mis Mascotas</h3>
                     <?php 
                     if ($id_usuario) {
                         // 2. Buscamos de forma limpia las mascotas del usuario actual
