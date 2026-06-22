@@ -1,7 +1,18 @@
-<?php include_once '../../controller/control_acceso.php'; ?>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+include_once '../../controller/control_acceso.php';
+include_once '../../model/conexion.php';
+
+$adopciones = [];
+$res = $conn->query("SELECT id_adopcion, nombre, img_adop, edad, tamano FROM adopcion ORDER BY fecha_reg DESC");
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $adopciones[] = $row;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,180 +20,69 @@
     <link rel="icon" href="../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../css/principal_css/adopcion.css">
     <link rel="stylesheet" href="../css/principal_css/global.css">
-
-
+    <link rel="stylesheet" href="../css/principal_css/adopcion_cliente.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
+<div id="contenedor_general" class="app-container">
 
-    <div id="contenedor_general" class="app-container">
+    <nav class="sidebar">
+        <div class="menu-hamburguesa-container">
+            <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
+            <nav class="menu-desplegable" id="menu-latente">
+                <ul>
+                    <a href="./sub_menu/conocenos.php"><li><i class="fas fa-camera"></i><span>Conócenos</span></li></a>
+                    <a href="./sub_menu/direccion_oficial.php"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
+                    <a href="./sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
+                    <a href="./sub_menu/configuracion.php"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
+                    <li><a href="../../controller/logout.php" style="color:#000"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
+                </ul>
+            </nav>
+        </div>
+        <ul class="nav-links">
+            <li><a href="inicio.php"><i class="fas fa-paw"></i><span>Servicios</span></a></li>
+            <li><a href="Chat.php"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+            <li><a href="mapa.php"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
+            <li class="active"><a href="#"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
+            <li><a href="usuario.php"><i class="fas fa-user"></i><span>Usuario</span></a></li>
+        </ul>
+    </nav>
 
-        <nav class="sidebar">
-            <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
+    <main class="main-content">
+        <section class="section-title adoption-header">
+            <h2>¡Adóptame!</h2>
+        </section>
+
+        <div class="adopt-grid-db">
+            <?php if (empty($adopciones)): ?>
+                <div class="adopt-empty">
+                    <i class="fas fa-bone"></i>
+                    <p>No hay animales disponibles para adopción en este momento.</p>
                 </div>
-                <nav class="menu-desplegable" id="menu-latente">
-                    <ul>
-                        <a href="./sub_menu/conocenos.php">
-                            <li>
-                                <i class="fas fa-camera"></i>
-                                <span>Conocenos</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/direccion_oficial.php">
-                            <li>
-                                <i class="fas fa-book-open"></i>
-                                <span>Direccion oficial</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/centro_de_ayuda.php">
-                            <li>
-                                <i class="fas fa-sliders-h"></i>
-                                <span>Centro de ayuda</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/configuracion.php">
-                            <li>
-                                <i class="fas fa-gear"></i>
-                                <span>Configuracion</span>
-                            </li>
-                        </a>
-
-                        <li>
-                             <a href="../../controller/logout.php" style="color: #000000;">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Cerrar Sesión</span>
-                            </a>
-                        </li>
-
-                    </ul>
-                </nav>
-            </div>
-
-            <ul class="nav-links">
-                <li>
-                    <a href="inicio.php">
-                        <i class="fas fa-paw"></i>
-                        <span>Servicios</span>
+            <?php else: ?>
+                <?php foreach ($adopciones as $a): ?>
+                    <a href="adopcion_info.php?id=<?php echo $a['id_adopcion']; ?>" class="adopt-card-db">
+                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/<?php echo htmlspecialchars($a['img_adop']); ?>"
+                             alt="<?php echo htmlspecialchars($a['nombre']); ?>"
+                             onerror="this.src='../assets/images/logo.png'">
+                        <div class="adopt-info-panel">
+                            <h3><?php echo htmlspecialchars($a['nombre']); ?></h3>
+                            <p><?php echo htmlspecialchars($a['edad']); ?> | <?php echo htmlspecialchars($a['tamano']); ?></p>
+                        </div>
                     </a>
-                </li>
-                <li>
-                    <a href="Chat.php">
-                        <i class="far fa-comment-alt"></i>
-                        <span>Chat</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="mapa.php">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Mapa</span>
-                    </a>
-                </li>
-                <li class="active"> <a href="#">
-                        <i class="fas fa-bone"></i>
-                        <span>Adopción</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="usuario.php">
-                        <i class="fas fa-user"></i>
-                        <span>Usuario</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </main>
+</div>
 
-        <main class="main-content">
-
-            <section class="section-title adoption-header">
-                <h2>¡Adóptame!</h2>
-            </section>
-
-            <section class="adoption-grid">
-                <a href="adopcion_info.php?id=1" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/RomeoYJuli.png" alt="Romeo y July" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Romeo y July</h3>
-                            <p>4 y 3 años | Grandes</p>
-                        </div>
-                    </article>
-                </a>
-
-                <a href="adopcion_info.php?id=2" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Toby.png" alt="Toby" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Toby</h3>
-                            <p>2 años | Mediano</p>
-                        </div>
-                    </article>
-                </a>
-
-                <a href="adopcion_info.php?id=3" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Luna.png" alt="Luna" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Luna</h3>
-                            <p>6 meses | Pequeña</p>
-                        </div>
-                    </article>
-                </a>
-
-                <a href="adopcion_info.php?id=4" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Max.png" alt="Max" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Max</h3>
-                            <p>1 año | Mediano</p>
-                        </div>
-                    </article>
-                </a>
-
-                <a href="adopcion_info.php?id=5" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Rocky.png" alt="Rocky" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Rocky</h3>
-                            <p>5 años | Grande</p>
-                        </div>
-                    </article>
-                </a>
-
-                <a href="adopcion_info.php?id=6" class="card-link">
-                    <article class="adoption-card">
-                        <img src="../assets/recursos_pagina_principal/adopcion_imagenes/Bella.png" alt="Bella" class="adoption-image">
-                        <div class="adoption-info-panel">
-                            <h3>Bella</h3>
-                            <p>2 años | Grande</p>
-                        </div>
-                    </article>
-                </a>
-            </section>
-        </main>
-    </div>
-
-</body>
 <script>
     const btnMenu = document.getElementById('btn-menu');
     const menuLatente = document.getElementById('menu-latente');
-
-    btnMenu.addEventListener('click', () => {
-        // Alterna la clase 'show' para mostrar/ocultar
-        menuLatente.classList.toggle('show');
-    });
-
-    // Opcional: Cerrar el menú si haces clic fuera de él
+    btnMenu.addEventListener('click', (e) => { e.stopPropagation(); menuLatente.classList.toggle('show'); });
     window.addEventListener('click', (e) => {
-        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
-            menuLatente.classList.remove('show');
-        }
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) menuLatente.classList.remove('show');
     });
 </script>
-
+</body>
 </html>

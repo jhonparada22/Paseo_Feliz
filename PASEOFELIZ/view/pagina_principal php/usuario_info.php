@@ -106,7 +106,6 @@ if ($id_usuario) {
                             <label for="telefono">Numero Celular</label>
                             <input type="tel" id="telefono"name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" placeholder="Ej: 3123456789"maxlength="10" onkeypress="return soloNumeros(event)" pattern="[0-9]{10,10}" title="Solo se permiten números">
                         </div>
-
                         <div class="form-group-box">
                             <label>Profesión / Ocupación</label>
                             <input type="text" name="profesion" placeholder="Ej: Estudiante" value="<?php echo htmlspecialchars($profesion); ?>">
@@ -153,11 +152,6 @@ if ($id_usuario) {
                             </div>
 
                             <div class="form-group-box">
-                                <label>Cambiar banner de la mascota</label>
-                                <input type="file" name="banner_mascota_edit" accept="image/*">
-                            </div>
-
-                            <div class="form-group-box">
                                 <label>Biografía Canina</label>
                                 <textarea name="biografia_canina_edit" rows="3" placeholder="¿Cómo es su personalidad?"></textarea>
                             </div>
@@ -179,11 +173,6 @@ if ($id_usuario) {
                             <div class="form-group-box">
                                 <label>Subir icono de la mascota</label>
                                 <input type="file" name="avatar_mascota_nuevo" accept="image/*">
-                            </div>
-
-                            <div class="form-group-box">
-                                <label>Subir banner de la mascota</label>
-                                <input type="file" name="banner_mascota_nuevo" accept="image/*">
                             </div>
 
                             <div class="form-group-box">
