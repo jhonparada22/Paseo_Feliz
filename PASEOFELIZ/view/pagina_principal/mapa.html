@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
+    /* ══════════════════════════════════════════════════════
+       TOKENS  (alineados con global.css de Paseo Feliz)
+    ══════════════════════════════════════════════════════ */
     :root {
       --primary:    #3E72A6;
       --primary-dk: #2c5282;
@@ -23,352 +26,463 @@
       --muted:      #64748b;
       --shadow:     0 2px 16px rgba(0,0,0,.10);
       --shadow-lg:  0 8px 32px rgba(0,0,0,.18);
+      --sidebar-w:  90px;
+      --panel-w:    300px;
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;width:100%;overflow:hidden;
+
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body {
+      height:100%; width:100%; overflow:hidden;
       font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-      background:#0f172a;color:var(--text)}
-    button{cursor:pointer;border:none;background:none;font-family:inherit}
-    a{text-decoration:none;color:inherit}
+      background:var(--bg); color:var(--text);
+    }
+    button { cursor:pointer; border:none; background:none; font-family:inherit; }
+    a { text-decoration:none; color:inherit; }
 
-    /* ── MAPA ────────────────────────────────────── */
-    #map{position:fixed;inset:0;z-index:1}
-
-    /* ── SPLASH (pantalla de carga) ──────────────── */
-    .splash{
-      position:fixed;inset:0;z-index:9000;
+    /* ══════════════════════════════════════════════════════
+       SPLASH
+    ══════════════════════════════════════════════════════ */
+    .splash {
+      position:fixed; inset:0; z-index:9000;
       background:linear-gradient(160deg,#0f172a 0%,#1a3a5c 100%);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:18px;transition:opacity .6s ease;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:18px; transition:opacity .6s ease;
     }
-    .splash.hide{opacity:0;pointer-events:none}
-    .splash-logo{font-size:4rem}
-    .splash-title{color:#fff;font-size:1.4rem;font-weight:800}
-    .splash-sub{color:rgba(255,255,255,.6);font-size:.85rem}
-    .splash-spinner{
-      width:40px;height:40px;border-radius:50%;
-      border:3px solid rgba(255,255,255,.15);
-      border-top-color:#fff;
-      animation:spin .8s linear infinite;margin-top:8px;
+    .splash.hide { opacity:0; pointer-events:none; }
+    .splash-logo  { font-size:4rem; }
+    .splash-title { color:#fff; font-size:1.4rem; font-weight:800; }
+    .splash-sub   { color:rgba(255,255,255,.6); font-size:.85rem; }
+    .splash-spinner {
+      width:40px; height:40px; border-radius:50%;
+      border:3px solid rgba(255,255,255,.15); border-top-color:#fff;
+      animation:spin .8s linear infinite; margin-top:8px;
     }
-    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
 
-    /* ── TOP BAR ─────────────────────────────────── */
-    .top-bar{
-      position:fixed;top:0;left:0;right:0;z-index:500;
-      height:60px;
-      background:linear-gradient(135deg,#0f172a,#1e3a5f);
-      display:flex;align-items:center;padding:0 16px;gap:10px;
-      box-shadow:0 2px 20px rgba(0,0,0,.35);
-    }
-    .tb-back{
-      width:36px;height:36px;border-radius:10px;
-      background:rgba(255,255,255,.12);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:.95rem;transition:background .15s;
-    }
-    .tb-back:hover{background:rgba(255,255,255,.2)}
-    .tb-mascota{
-      display:flex;align-items:center;gap:10px;flex:1;
-    }
-    .tb-mascota-emoji{
-      width:38px;height:38px;border-radius:12px;
-      background:rgba(255,255,255,.15);
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.3rem;
-    }
-    .tb-mascota-info .tm-name{font-size:.92rem;font-weight:800;color:#fff}
-    .tb-mascota-info .tm-status{font-size:.7rem;color:rgba(255,255,255,.65);margin-top:1px;
-      display:flex;align-items:center;gap:5px}
-    .live-pulse{
-      width:7px;height:7px;border-radius:50%;background:var(--green);
-      animation:pulse 1.4s infinite;display:inline-block;
-    }
-    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
-    .tb-share{
-      width:36px;height:36px;border-radius:10px;
-      background:rgba(255,255,255,.12);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-size:.9rem;transition:background .15s;
-    }
-    .tb-share:hover{background:rgba(255,255,255,.2)}
-
-    /* ── TARJETA FLOTANTE PASEADOR ───────────────── */
-    .walker-card{
-      position:fixed;top:72px;left:16px;right:16px;z-index:400;
-      background:#fff;border-radius:16px;
-      box-shadow:var(--shadow-lg);
+    /* ══════════════════════════════════════════════════════
+       LAYOUT PRINCIPAL  sidebar | panel | mapa
+    ══════════════════════════════════════════════════════ */
+    .app-shell {
+      display:flex;
+      width:100vw;
+      height:100vh;
       overflow:hidden;
     }
-    .wc-top{
-      display:flex;align-items:center;gap:12px;
-      padding:12px 14px;
-    }
-    .wc-avatar{
-      width:46px;height:46px;border-radius:13px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      font-size:.95rem;font-weight:800;color:#fff;
-      background:linear-gradient(135deg,var(--primary),var(--primary-dk));
-      position:relative;
-    }
-    .wc-status-dot{
-      position:absolute;bottom:0;right:0;
-      width:13px;height:13px;border-radius:50%;
-      border:2px solid #fff;
-    }
-    .wc-info{flex:1;min-width:0}
-    .wc-name{font-size:.88rem;font-weight:800}
-    .wc-sub{font-size:.72rem;color:var(--muted);margin-top:2px;
-      display:flex;align-items:center;gap:5px}
-    .wc-actions{display:flex;gap:7px;flex-shrink:0}
-    .wc-btn{
-      width:38px;height:38px;border-radius:11px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:.95rem;transition:all .15s;
-    }
-    .wc-btn.chat{background:#dcfce7;color:#15803d}
-    .wc-btn.chat:hover{background:var(--green);color:#fff}
-    .wc-btn.call{background:#dbeafe;color:var(--primary)}
-    .wc-btn.call:hover{background:var(--primary);color:#fff}
 
-    /* ETA bar */
-    .wc-eta{
-      padding:10px 14px;border-top:1px solid var(--border);
-      display:flex;align-items:center;gap:12px;
-      background:linear-gradient(90deg,#f0f9ff,#fff);
+    /* ── SIDEBAR (igual que global.css) ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background-color: var(--primary);
+      display:flex; flex-direction:column; align-items:center;
+      padding-top:20px; flex-shrink:0;
+      position:relative; z-index:600;
     }
-    .eta-icon{
-      width:34px;height:34px;border-radius:10px;
-      background:#dbeafe;color:var(--primary);
-      display:flex;align-items:center;justify-content:center;
-      font-size:.9rem;flex-shrink:0;
+    .menu-hamburguesa-container { position:relative; padding:10px; }
+    .profile-circle {
+      width:50px; height:50px; border-radius:50%;
+      border:2px solid rgba(255,255,255,.35);
+      background:var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:#fff; font-size:1rem;
     }
-    .eta-info{flex:1}
-    .eta-label{font-size:.67rem;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.05em}
-    .eta-val{font-size:.88rem;font-weight:800;color:var(--primary);margin-top:2px}
-    .eta-dist{font-size:.7rem;color:var(--muted);margin-top:1px}
+    .menu-desplegable {
+      display:none; position:absolute; top:10px; left:calc(var(--sidebar-w) - 10px);
+      width:200px; background:var(--primary);
+      border-radius:0 10px 10px 0; z-index:1000;
+      box-shadow:5px 0 15px rgba(0,0,0,.2);
+    }
+    .menu-desplegable.show { display:block; }
+    .menu-desplegable ul { list-style:none; padding:0; margin:0; }
+    .menu-desplegable ul li {
+      padding:14px 20px; color:#fff; display:flex;
+      align-items:center; gap:13px; cursor:pointer; font-size:.88rem;
+    }
+    .menu-desplegable ul li:hover { background:rgba(255,255,255,.12); }
+    .menu-desplegable a { color:#fff; }
 
-    /* Barra de progreso viaje */
-    .wc-progress{padding:8px 14px 12px;border-top:1px solid var(--border)}
-    .wp-labels{display:flex;justify-content:space-between;
-      font-size:.67rem;color:var(--muted);margin-bottom:5px}
-    .wp-track{height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden}
-    .wp-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--primary));
-      border-radius:3px;transition:width .5s ease}
+    .nav-links { list-style:none; width:100%; margin-top:10px; }
+    .nav-links li { width:100%; text-align:center; margin-bottom:18px; }
+    .nav-links li a {
+      text-decoration:none; color:#fff;
+      display:flex; flex-direction:column; align-items:center;
+      padding:10px 0; font-size:.75rem; transition:background .25s;
+    }
+    .nav-links li i { font-size:1.3rem; margin-bottom:6px; }
+    .nav-links li.active a {
+      background:var(--green); color:#000; font-weight:700;
+      border-radius:12px; width:80%; margin:0 auto;
+    }
 
-    /* ── TARJETA MASCOTA (bottom) ─────────────────── */
-    .pet-sheet{
-      position:fixed;bottom:0;left:0;right:0;z-index:500;
-      background:#fff;border-radius:20px 20px 0 0;
-      box-shadow:0 -4px 24px rgba(0,0,0,.12);
-      transition:transform .35s cubic-bezier(.4,0,.2,1);
+    /* ── PANEL IZQUIERDO ── */
+    .info-panel {
+      width: var(--panel-w);
+      background:#fff;
+      border-right:1px solid var(--border);
+      display:flex; flex-direction:column;
+      overflow:hidden; flex-shrink:0;
+      box-shadow:2px 0 12px rgba(0,0,0,.06);
+      z-index:500;
     }
-    .pet-sheet.collapsed{transform:translateY(calc(100% - 88px))}
-    .pet-sheet.expanded{transform:translateY(0)}
-    .ps-handle-wrap{padding:12px 0 0;text-align:center;cursor:pointer}
-    .ps-handle{width:40px;height:4px;background:#dee2e6;border-radius:2px;display:inline-block}
-    .ps-peek{padding:8px 18px 0;cursor:pointer}
-    .ps-peek-row{display:flex;align-items:center;gap:12px}
-    .ps-pet-emoji{font-size:1.6rem;flex-shrink:0}
-    .ps-pet-info{flex:1}
-    .ps-pet-name{font-size:.95rem;font-weight:800}
-    .ps-pet-status{font-size:.72rem;color:var(--muted);margin-top:2px;
-      display:flex;align-items:center;gap:5px}
-    .ps-expand-icon{color:var(--muted);font-size:.8rem;transition:transform .3s;flex-shrink:0}
-    .pet-sheet.expanded .ps-expand-icon{transform:rotate(180deg)}
 
-    /* Pet tabs */
-    .ps-tabs{
-      display:flex;border-bottom:1px solid var(--border);
-      margin-top:10px;
+    /* Cabecera del panel */
+    .panel-header {
+      background:linear-gradient(135deg, var(--primary), var(--primary-dk));
+      padding:14px 16px;
+      flex-shrink:0;
     }
-    .ps-tab{
-      flex:1;padding:10px 8px;font-size:.75rem;font-weight:700;
-      color:var(--muted);border-bottom:2px solid transparent;
-      text-align:center;transition:all .15s;cursor:pointer;
+    .ph-top {
+      display:flex; align-items:center; gap:10px; margin-bottom:10px;
     }
-    .ps-tab:hover{color:var(--primary)}
-    .ps-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .ph-back {
+      width:32px; height:32px; border-radius:9px;
+      background:rgba(255,255,255,.15);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:.85rem; cursor:pointer; transition:background .15s;
+    }
+    .ph-back:hover { background:rgba(255,255,255,.25); }
+    .ph-pet-chip {
+      display:flex; align-items:center; gap:8px; flex:1;
+    }
+    .ph-pet-icon {
+      width:34px; height:34px; border-radius:10px;
+      background:rgba(255,255,255,.2);
+      display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+    }
+    .ph-pet-name { font-size:.85rem; font-weight:800; color:#fff; }
+    .ph-pet-live {
+      font-size:.68rem; color:rgba(255,255,255,.75);
+      display:flex; align-items:center; gap:5px; margin-top:2px;
+    }
+    .live-pulse {
+      width:7px; height:7px; border-radius:50%; background:var(--green);
+      animation:pulse 1.4s infinite; display:inline-block;
+    }
+    .ph-share {
+      width:32px; height:32px; border-radius:9px;
+      background:rgba(255,255,255,.15);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:.85rem; cursor:pointer;
+    }
+    .ph-share:hover { background:rgba(255,255,255,.25); }
 
-    .ps-scroll{
-      max-height:42vh;overflow-y:auto;padding:14px 18px 24px;
+    /* Walker row */
+    .walker-row {
+      background:rgba(255,255,255,.12);
+      border-radius:11px; padding:10px 12px;
+      display:flex; align-items:center; gap:10px;
     }
-    .ps-scroll::-webkit-scrollbar{width:3px}
-    .ps-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+    .wr-avatar {
+      width:40px; height:40px; border-radius:11px; flex-shrink:0;
+      background:rgba(255,255,255,.25);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.82rem; font-weight:800; color:#fff; position:relative;
+    }
+    .wr-dot {
+      position:absolute; bottom:-1px; right:-1px;
+      width:11px; height:11px; border-radius:50%;
+      border:2px solid rgba(255,255,255,.5); background:var(--green);
+    }
+    .wr-info { flex:1; min-width:0; }
+    .wr-name { font-size:.82rem; font-weight:800; color:#fff; }
+    .wr-sub  { font-size:.67rem; color:rgba(255,255,255,.7); margin-top:2px; }
+    .wr-actions { display:flex; gap:6px; }
+    .wr-btn {
+      width:32px; height:32px; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.85rem; transition:all .15s;
+    }
+    .wr-btn.chat { background:rgba(37,211,102,.25); color:var(--green); }
+    .wr-btn.chat:hover { background:var(--green); color:#fff; }
+    .wr-btn.call { background:rgba(255,255,255,.2); color:#fff; }
+    .wr-btn.call:hover { background:#fff; color:var(--primary); }
+
+    /* ETA */
+    .eta-block {
+      padding:12px 16px;
+      background:#f0f9ff;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:10px;
+      flex-shrink:0;
+    }
+    .eta-icon {
+      width:32px; height:32px; border-radius:9px;
+      background:#dbeafe; color:var(--primary);
+      display:flex; align-items:center; justify-content:center; font-size:.85rem;
+    }
+    .eta-lbl { font-size:.63rem; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.04em; }
+    .eta-val { font-size:.88rem; font-weight:800; color:var(--primary); margin-top:1px; }
+    .eta-dist { font-size:.7rem; color:var(--muted); margin-top:1px; }
+
+    /* Barra progreso */
+    .progress-block {
+      padding:10px 16px 12px;
+      border-bottom:1px solid var(--border);
+      flex-shrink:0;
+    }
+    .pb-labels {
+      display:flex; justify-content:space-between;
+      font-size:.67rem; color:var(--muted); margin-bottom:5px;
+    }
+    .pb-track {
+      height:5px; background:#e2e8f0; border-radius:3px; overflow:hidden;
+    }
+    .pb-fill {
+      height:100%; border-radius:3px;
+      background:linear-gradient(90deg, var(--green), var(--primary));
+      transition:width .5s ease;
+    }
+
+    /* Tabs mascota */
+    .pet-tabs {
+      display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .pt-tab {
+      flex:1; padding:10px 6px; font-size:.72rem; font-weight:700;
+      color:var(--muted); border-bottom:2px solid transparent;
+      text-align:center; cursor:pointer; transition:all .15s;
+    }
+    .pt-tab:hover { color:var(--primary); }
+    .pt-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+
+    /* Scroll del panel */
+    .panel-scroll {
+      flex:1; overflow-y:auto; padding:14px 16px 20px;
+    }
+    .panel-scroll::-webkit-scrollbar { width:3px; }
+    .panel-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
     /* Stats mascota */
-    .pet-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-    .pet-stat{
-      background:var(--bg);border-radius:11px;padding:10px;text-align:center;
+    .pet-stats {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:14px;
     }
-    .ps-emoji{font-size:1.2rem;margin-bottom:3px}
-    .ps-val{font-size:.88rem;font-weight:800}
-    .ps-lbl{font-size:.63rem;color:var(--muted);margin-top:2px}
+    .pet-stat {
+      background:var(--bg); border-radius:10px; padding:9px 6px; text-align:center;
+    }
+    .ps-emoji { font-size:1.1rem; margin-bottom:3px; }
+    .ps-val   { font-size:.85rem; font-weight:800; }
+    .ps-lbl   { font-size:.62rem; color:var(--muted); margin-top:2px; }
 
-    /* Timeline actividad */
-    .timeline-item{
-      display:flex;align-items:flex-start;gap:11px;margin-bottom:12px;
+    /* Section label */
+    .sec-lbl {
+      font-size:.67rem; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;
     }
-    .tl-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
-    .tl-dot{
-      width:28px;height:28px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      font-size:.75rem;flex-shrink:0;z-index:1;
-    }
-    .tl-line{width:2px;flex:1;min-height:16px;background:var(--border);margin:3px 0}
-    .tl-body{flex:1;padding-bottom:4px}
-    .tl-title{font-size:.82rem;font-weight:700}
-    .tl-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
-    .tl-time{font-size:.65rem;color:var(--muted);margin-top:3px;
-      display:flex;align-items:center;gap:4px}
 
-    /* Mapa mini actividad */
-    .activity-map{
-      height:120px;border-radius:12px;overflow:hidden;
+    /* Recorrido mini */
+    .mini-trail-box {
+      height:90px; border-radius:11px; overflow:hidden;
       background:linear-gradient(135deg,#dbeafe,#eff6ff);
-      display:flex;align-items:center;justify-content:center;
-      font-size:.8rem;color:var(--muted);margin-bottom:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.78rem; color:var(--muted); margin-bottom:14px;
       border:1.5px solid var(--border);
     }
 
-    /* Alertas */
-    .alert-item{
-      display:flex;align-items:flex-start;gap:10px;
-      padding:10px 12px;border-radius:11px;margin-bottom:8px;
+    /* Timeline */
+    .timeline-item {
+      display:flex; align-items:flex-start; gap:10px; margin-bottom:11px;
     }
-    .alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
-    .alert-body .al-title{font-size:.82rem;font-weight:700}
-    .alert-body .al-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+    .tl-left { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+    .tl-dot {
+      width:26px; height:26px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:.72rem;
+    }
+    .tl-line { width:2px; flex:1; min-height:14px; background:var(--border); margin:3px 0; }
+    .tl-title { font-size:.8rem; font-weight:700; }
+    .tl-sub   { font-size:.68rem; color:var(--muted); margin-top:2px; }
+    .tl-time  { font-size:.63rem; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:4px; }
 
-    /* ── NOTIFICACIÓN PUSH (simulada) ─────────────── */
-    .push-notif{
-      position:fixed;top:-100px;left:16px;right:16px;z-index:9000;
-      background:#fff;border-radius:16px;
-      box-shadow:0 8px 32px rgba(0,0,0,.2);
-      overflow:hidden;
+    /* Info mascota */
+    .pet-info-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:12px;
+    }
+    .pig-item {
+      background:var(--bg); border-radius:9px; padding:9px 11px;
+    }
+    .pig-lbl { font-size:.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:3px; }
+    .pig-val { font-size:.85rem; font-weight:800; }
+    .pet-note {
+      background:#fff7ed; border:1.5px solid #fed7aa;
+      border-radius:10px; padding:11px 13px;
+    }
+    .pet-note-title { font-size:.7rem; font-weight:700; color:#c2410c; margin-bottom:5px; }
+    .pet-note-body  { font-size:.78rem; color:var(--text); line-height:1.5; }
+
+    /* Alertas */
+    .alert-item {
+      display:flex; align-items:flex-start; gap:9px;
+      padding:9px 11px; border-radius:10px; margin-bottom:7px;
+    }
+    .alert-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+    .al-title   { font-size:.8rem; font-weight:700; }
+    .al-sub     { font-size:.68rem; color:var(--muted); margin-top:2px; }
+    .al-time    { font-size:.63rem; color:var(--muted); margin-top:3px; }
+
+    /* Demo bar */
+    .demo-bar {
+      display:flex; align-items:center; gap:7px;
+      padding:9px 14px; border-top:1px solid var(--border); flex-shrink:0;
+      background:#fff;
+    }
+    .demo-bar span { font-size:.67rem; font-weight:800; color:var(--muted); text-transform:uppercase; }
+    .demo-btn {
+      padding:6px 11px; border-radius:8px; font-size:.7rem; font-weight:700;
+      transition:all .15s; flex:1; text-align:center;
+    }
+    .demo-btn.warn    { background:#ffedd5; color:#c2410c; border:1.5px solid #fed7aa; }
+    .demo-btn.warn:hover { background:#f97316; color:#fff; }
+    .demo-btn.success { background:#dcfce7; color:#15803d; border:1.5px solid #86efac; }
+    .demo-btn.success:hover { background:var(--green); color:#fff; }
+
+    /* ── MAPA ── */
+    .map-area {
+      flex:1; position:relative; overflow:hidden;
+    }
+    #map { position:absolute; inset:0; z-index:1; }
+
+    /* FABs sobre el mapa */
+    .fab-group {
+      position:absolute; right:14px; top:14px; z-index:400;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .fab-btn {
+      width:42px; height:42px; border-radius:12px;
+      background:#fff; box-shadow:var(--shadow);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--text); font-size:.95rem; transition:all .15s;
+    }
+    .fab-btn:hover  { background:var(--primary); color:#fff; }
+    .fab-btn.active { background:var(--primary); color:#fff; }
+    .fab-locate {
+      position:absolute; right:14px; bottom:24px; z-index:400;
+      width:48px; height:48px; border-radius:50%;
+      background:var(--primary); color:#fff;
+      box-shadow:0 4px 16px rgba(62,114,166,.4);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.05rem; transition:all .2s;
+    }
+    .fab-locate:hover { background:var(--primary-dk); transform:scale(1.06); }
+
+    /* ══════════════════════════════════════════════════════
+       NOTIFICACIÓN PUSH
+    ══════════════════════════════════════════════════════ */
+    .push-notif {
+      position:fixed; top:-120px; left:50%; transform:translateX(-50%);
+      width:360px; max-width:calc(100vw - 32px);
+      z-index:9000; background:#fff; border-radius:16px;
+      box-shadow:0 8px 32px rgba(0,0,0,.2); overflow:hidden;
       transition:top .45s cubic-bezier(.4,0,.2,1);
     }
-    .push-notif.show{top:72px}
-    .pn-accent{height:4px;background:linear-gradient(90deg,var(--green),var(--primary))}
-    .pn-body{padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
-    .pn-icon{
-      width:44px;height:44px;border-radius:13px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.4rem;
+    .push-notif.show { top:16px; }
+    .pn-accent { height:4px; background:linear-gradient(90deg,var(--green),var(--primary)); }
+    .pn-body {
+      padding:13px 15px; display:flex; align-items:flex-start; gap:11px;
     }
-    .pn-icon.arrival{background:#dcfce7}
-    .pn-icon.delivery{background:#ede9fe}
-    .pn-icon.update{background:#dbeafe}
-    .pn-content{flex:1}
-    .pn-app{font-size:.65rem;font-weight:700;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-    .pn-title{font-size:.88rem;font-weight:800;margin-bottom:3px}
-    .pn-msg{font-size:.77rem;color:var(--muted);line-height:1.4}
-    .pn-time{font-size:.65rem;color:var(--muted);margin-top:4px}
-    .pn-close{
-      width:24px;height:24px;border-radius:6px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      color:var(--muted);font-size:.75rem;transition:background .15s;
-      margin-top:-2px;
+    .pn-icon {
+      width:42px; height:42px; border-radius:12px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; font-size:1.3rem;
     }
-    .pn-close:hover{background:var(--bg)}
-    .pn-actions{
-      display:flex;gap:8px;padding:0 16px 12px;
+    .pn-icon.arrival  { background:#dcfce7; }
+    .pn-icon.delivery { background:#ede9fe; }
+    .pn-icon.update   { background:#dbeafe; }
+    .pn-content { flex:1; }
+    .pn-app   { font-size:.63rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
+    .pn-title { font-size:.86rem; font-weight:800; margin-bottom:2px; }
+    .pn-msg   { font-size:.75rem; color:var(--muted); line-height:1.4; }
+    .pn-time  { font-size:.63rem; color:var(--muted); margin-top:3px; }
+    .pn-close {
+      width:22px; height:22px; border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted); font-size:.72rem; cursor:pointer;
     }
-    .pna-btn{
-      flex:1;padding:8px;border-radius:9px;font-size:.77rem;font-weight:700;
-      border:1.5px solid var(--border);background:#fff;color:var(--text);
-      transition:all .15s;text-align:center;cursor:pointer;
+    .pn-close:hover { background:var(--bg); }
+    .pn-actions { display:flex; gap:7px; padding:0 15px 12px; }
+    .pna-btn {
+      flex:1; padding:7px; border-radius:8px; font-size:.75rem; font-weight:700;
+      border:1.5px solid var(--border); background:#fff; color:var(--text);
+      cursor:pointer; text-align:center; transition:all .15s;
     }
-    .pna-btn:hover{border-color:var(--primary);color:var(--primary)}
-    .pna-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .pna-btn.primary:hover{background:var(--primary-dk)}
+    .pna-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .pna-btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .pna-btn.primary:hover { background:var(--primary-dk); }
 
-    /* ── OVERLAY LLEGADA (animación especial) ─────── */
-    .arrival-overlay{
-      position:fixed;inset:0;z-index:8000;
-      background:rgba(15,23,42,.85);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:16px;opacity:0;pointer-events:none;
-      transition:opacity .4s ease;
+    /* ══════════════════════════════════════════════════════
+       OVERLAY LLEGADA
+    ══════════════════════════════════════════════════════ */
+    .arrival-overlay {
+      position:fixed; inset:0; z-index:8000;
+      background:rgba(15,23,42,.82);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .4s ease;
     }
-    .arrival-overlay.show{opacity:1;pointer-events:all}
-    .ao-card{
-      background:#fff;border-radius:24px;padding:28px 32px;
-      text-align:center;max-width:300px;width:90%;
+    .arrival-overlay.show { opacity:1; pointer-events:all; }
+    .ao-card {
+      background:#fff; border-radius:22px; padding:26px 30px;
+      text-align:center; max-width:300px; width:90%;
       box-shadow:0 20px 60px rgba(0,0,0,.3);
       animation:bounceIn .5s cubic-bezier(.4,0,.2,1);
     }
-    @keyframes bounceIn{
-      0%{transform:scale(.7);opacity:0}
-      70%{transform:scale(1.05)}
-      100%{transform:scale(1);opacity:1}
+    @keyframes bounceIn {
+      0%{transform:scale(.7);opacity:0} 70%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1}
     }
-    .ao-emoji{font-size:3.5rem;display:block;margin-bottom:10px}
-    .ao-title{font-size:1.1rem;font-weight:800;margin-bottom:6px}
-    .ao-msg{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:16px}
-    .ao-btn{
-      display:block;width:100%;padding:12px;border-radius:12px;
-      font-size:.88rem;font-weight:800;
+    .ao-emoji { font-size:3rem; display:block; margin-bottom:10px; }
+    .ao-title { font-size:1.05rem; font-weight:800; margin-bottom:6px; }
+    .ao-msg   { font-size:.8rem; color:var(--muted); line-height:1.5; margin-bottom:16px; }
+    .ao-btn {
+      display:block; width:100%; padding:12px; border-radius:11px;
+      font-size:.86rem; font-weight:800;
       background:linear-gradient(135deg,var(--green),var(--green-dk));
-      color:#fff;transition:opacity .15s;cursor:pointer;
+      color:#fff; cursor:pointer; transition:opacity .15s;
     }
-    .ao-btn:hover{opacity:.9}
+    .ao-btn:hover { opacity:.9; }
 
-    /* ── GEOFENCE RADIUS (círculo visual) ────────── */
-    /* Leaflet circle — se controla por JS */
+    /* ══════════════════════════════════════════════════════
+       LEAFLET OVERRIDES
+    ══════════════════════════════════════════════════════ */
+    .leaflet-control-zoom { display:none; }
+    .leaflet-attribution-flag { display:none!important; }
 
-    /* ── FAB ─────────────────────────────────────── */
-    .fab-group{
-      position:fixed;right:16px;z-index:400;
-      display:flex;flex-direction:column;gap:9px;
+    /* ══════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      :root { --panel-w: 250px; --sidebar-w: 65px; }
+      .nav-links li a span { display:none; }
+      .nav-links li i { font-size:1.3rem; margin-bottom:0; }
+      .nav-links li.active a { width:70%; border-radius:10px; padding:8px 0; }
+      .menu-desplegable { left:65px; }
     }
-    .fab-group.top{top:72px}
-    .fab-btn{
-      width:44px;height:44px;border-radius:14px;
-      background:#fff;box-shadow:var(--shadow);
-      display:flex;align-items:center;justify-content:center;
-      color:var(--text);font-size:1rem;transition:all .15s;
-    }
-    .fab-btn:hover{background:var(--primary);color:#fff}
-    .fab-btn.active{background:var(--primary);color:#fff}
-    .fab-locate{
-      position:fixed;right:16px;z-index:400;
-      width:50px;height:50px;border-radius:50%;
-      background:var(--primary);color:#fff;
-      box-shadow:0 4px 16px rgba(62,114,166,.4);
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.1rem;transition:all .2s;
-    }
-    .fab-locate:hover{background:var(--primary-dk);transform:scale(1.05)}
 
-    /* ── TOGGLE DEMO ─────────────────────────────── */
-    .demo-bar{
-      position:fixed;bottom:96px;left:50%;transform:translateX(-50%);
-      z-index:600;
-      background:#1e293b;border-radius:20px;
-      padding:8px 16px;display:flex;gap:8px;align-items:center;
-      box-shadow:0 4px 20px rgba(0,0,0,.3);
-      white-space:nowrap;
-    }
-    .demo-bar span{font-size:.72rem;color:rgba(255,255,255,.7);font-weight:700}
-    .demo-btn{
-      padding:6px 12px;border-radius:10px;font-size:.72rem;font-weight:700;
-      background:rgba(255,255,255,.15);color:#fff;transition:all .15s;
-    }
-    .demo-btn:hover{background:rgba(255,255,255,.25)}
-    .demo-btn.warn{background:rgba(249,115,22,.7)}
-    .demo-btn.success{background:rgba(37,211,102,.7);color:#000}
+    @media (max-width: 660px) {
+      /* Sidebar pasa a bottom bar */
+      .app-shell { flex-direction:column; }
+      .sidebar {
+        order:3; width:100%; height:56px;
+        flex-direction:row; padding:0; justify-content:space-around; align-items:center;
+      }
+      .menu-hamburguesa-container { padding:4px; }
+      .nav-links { display:flex; flex-direction:row; width:auto; }
+      .nav-links li { margin-bottom:0; width:auto; }
+      .nav-links li a { padding:4px 8px; font-size:.6rem; }
+      .nav-links li a span { display:block; font-size:.58rem; }
+      .nav-links li i { font-size:.95rem; margin-bottom:2px; }
+      .nav-links li.active a { width:auto; border-radius:8px; }
+      .menu-desplegable { top:auto; bottom:56px; left:0; border-radius:0 10px 0 0; }
 
-    /* Leaflet overrides */
-    .leaflet-control-zoom{display:none}
-    .leaflet-attribution-flag{display:none!important}
-    .custom-pet-popup .leaflet-popup-content-wrapper{
-      border-radius:14px;box-shadow:var(--shadow-lg);padding:0;overflow:hidden;
+      /* Panel ocupa ancho completo arriba del mapa */
+      .info-panel {
+        order:1; width:100%; height:auto;
+        border-right:none; border-bottom:1px solid var(--border);
+      }
+      .panel-scroll { max-height:38vh; }
+
+      /* Mapa llena el resto */
+      .map-area { order:2; min-height:240px; flex:1; }
+
+      .push-notif { width:calc(100vw - 24px); left:12px; transform:none; }
+      .push-notif.show { top:12px; }
     }
-    .custom-pet-popup .leaflet-popup-content{margin:0;min-width:200px}
-    .custom-pet-popup .leaflet-popup-tip-container{display:none}
   </style>
 </head>
 <body>
@@ -381,204 +495,247 @@
   <div class="splash-spinner"></div>
 </div>
 
-<!-- MAPA -->
-<div id="map"></div>
+<!-- SHELL PRINCIPAL -->
+<div class="app-shell">
 
-<!-- TOP BAR -->
-<header class="top-bar">
-  <button class="tb-back" onclick="window.history.back()">
-    <i class="fas fa-arrow-left"></i>
-  </button>
-  <div class="tb-mascota">
-    <div class="tb-mascota-emoji">🐶</div>
-    <div class="tb-mascota-info">
-      <div class="tm-name">Max está de paseo</div>
-      <div class="tm-status">
-        <span class="live-pulse"></span>
-        Actualizado hace <span id="lastUpdate">3</span>s
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar">
+    <div class="menu-hamburguesa-container">
+      <div class="profile-circle" id="btn-menu">
+        <i class="fas fa-bars"></i>
+      </div>
+      <nav class="menu-desplegable" id="menu-latente">
+        <ul>
+          <a href="./sub_menu/conocenos.html">
+            <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
+          </a>
+          <a href="./sub_menu/direccion_oficial.html">
+            <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
+          </a>
+          <a href="./sub_menu/centro_de_ayuda.html">
+            <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
+          </a>
+          <a href="./sub_menu/configuracion.html">
+            <li><i class="fas fa-gear"></i><span>Configuración</span></li>
+          </a>
+          <a href="../../index.html">
+            <li><i class="fas fa-right-from-bracket"></i><span>Cerrar sesión</span></li>
+          </a>
+        </ul>
+      </nav>
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a href="inicio.html">
+          <i class="fas fa-paw"></i>
+          <span>Servicios</span>
+        </a>
+      </li>
+      <li>
+        <a href="Chat.html">
+          <i class="far fa-comment-alt"></i>
+          <span>Chat</span>
+        </a>
+      </li>
+      <li class="active">
+        <a href="#">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Mapa</span>
+        </a>
+      </li>
+      <li>
+        <a href="adopcion.html">
+          <i class="fas fa-bone"></i>
+          <span>Adopción</span>
+        </a>
+      </li>
+      <li>
+        <a href="usuario.html">
+          <i class="fas fa-user"></i>
+          <span>Usuario</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ══ PANEL DE INFO ══ -->
+  <div class="info-panel">
+
+    <!-- Cabecera con paseador -->
+    <div class="panel-header">
+      <div class="ph-top">
+        <button class="ph-back" onclick="window.history.back()" title="Volver">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="ph-pet-chip">
+          <div class="ph-pet-icon">🐶</div>
+          <div>
+            <div class="ph-pet-name">Max está de paseo</div>
+            <div class="ph-pet-live">
+              <span class="live-pulse"></span>
+              Hace <span id="lastUpdate">3</span>s
+            </div>
+          </div>
+        </div>
+        <button class="ph-share" onclick="showPush('update','¡Comparte el paseo de Max!')" title="Compartir">
+          <i class="fas fa-share-nodes"></i>
+        </button>
+      </div>
+
+      <!-- Walker row -->
+      <div class="walker-row">
+        <div class="wr-avatar">
+          CR
+          <div class="wr-dot"></div>
+        </div>
+        <div class="wr-info">
+          <div class="wr-name">Carlos Rodríguez</div>
+          <div class="wr-sub">
+            <i class="fas fa-person-walking" style="font-size:.62rem"></i>
+            Paseando a Max · ⭐ 4.8 · 142 paseos
+          </div>
+        </div>
+        <div class="wr-actions">
+          <button class="wr-btn chat" title="Chat"
+            onclick="showPush('update','Abriendo chat con Carlos...')">
+            <i class="fas fa-comment-alt"></i>
+          </button>
+          <button class="wr-btn call" title="Llamar"
+            onclick="showPush('update','Llamando a Carlos Rodríguez...')">
+            <i class="fas fa-phone"></i>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <button class="tb-share" onclick="showPush('update','¡Comparte el paseo de Max con tu familia!')">
-    <i class="fas fa-share-nodes"></i>
-  </button>
-</header>
 
-<!-- TARJETA PASEADOR -->
-<div class="walker-card" id="walkerCard">
-  <div class="wc-top">
-    <div class="wc-avatar">
-      CR
-      <div class="wc-status-dot" style="background:var(--green)"></div>
+    <!-- ETA -->
+    <div class="eta-block">
+      <div class="eta-icon"><i class="fas fa-route"></i></div>
+      <div style="flex:1">
+        <div class="eta-lbl">Llega a tu dirección</div>
+        <div class="eta-val" id="etaVal">En aprox. 12 min</div>
+        <div class="eta-dist" id="etaDist">📍 1.4 km de tu casa</div>
+      </div>
+      <div style="font-size:1.3rem">🏠</div>
     </div>
-    <div class="wc-info">
-      <div class="wc-name">Carlos Rodríguez</div>
-      <div class="wc-sub">
-        <i class="fas fa-person-walking" style="font-size:.65rem"></i>
-        Paseando a Max · ⭐ 4.8 · 142 paseos
+
+    <!-- Progreso -->
+    <div class="progress-block">
+      <div class="pb-labels">
+        <span>Inicio del paseo</span>
+        <span id="progPct">35%</span>
+      </div>
+      <div class="pb-track">
+        <div class="pb-fill" id="progressFill" style="width:35%"></div>
       </div>
     </div>
-    <div class="wc-actions">
-      <button class="wc-btn chat" title="Chat" onclick="showPush('update','Abriendo chat con Carlos...')">
-        <i class="fas fa-comment-alt"></i>
+
+    <!-- Tabs mascota -->
+    <div class="pet-tabs">
+      <div class="pt-tab active" data-tab="actividad">📍 Actividad</div>
+      <div class="pt-tab" data-tab="info">🐾 Info</div>
+      <div class="pt-tab" data-tab="alertas">🔔 Alertas</div>
+    </div>
+
+    <!-- Contenido scrollable -->
+    <div class="panel-scroll" id="panelScroll">
+
+      <!-- TAB: ACTIVIDAD -->
+      <div id="tab-actividad">
+        <div class="pet-stats" style="margin-top:4px">
+          <div class="pet-stat">
+            <div class="ps-emoji">⏱️</div>
+            <div class="ps-val" id="statTime">00:00</div>
+            <div class="ps-lbl">Tiempo</div>
+          </div>
+          <div class="pet-stat">
+            <div class="ps-emoji">🏃</div>
+            <div class="ps-val" id="statDist">0.0 km</div>
+            <div class="ps-lbl">Distancia</div>
+          </div>
+          <div class="pet-stat">
+            <div class="ps-emoji">🌡️</div>
+            <div class="ps-val">26°C</div>
+            <div class="ps-lbl">Clima</div>
+          </div>
+        </div>
+
+        <div class="sec-lbl">Recorrido en vivo</div>
+        <div class="mini-trail-box" id="miniTrailInfo">
+          <div style="text-align:center">
+            <div style="font-size:1.3rem;margin-bottom:4px">🗺️</div>
+            <div>Sigue la ruta en el mapa principal</div>
+          </div>
+        </div>
+
+        <div class="sec-lbl">Eventos del paseo</div>
+        <div id="timelineList"></div>
+      </div>
+
+      <!-- TAB: INFO MASCOTA -->
+      <div id="tab-info" style="display:none">
+        <div style="text-align:center;margin-bottom:14px;margin-top:4px">
+          <div style="font-size:2.5rem;margin-bottom:6px">🐶</div>
+          <div style="font-size:1rem;font-weight:800">Max</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:2px">Labrador Dorado · 3 años · Macho</div>
+        </div>
+        <div class="pet-info-grid">
+          <div class="pig-item"><div class="pig-lbl">Peso</div><div class="pig-val">28 kg</div></div>
+          <div class="pig-item"><div class="pig-lbl">Vacunas</div><div class="pig-val">Al día ✅</div></div>
+          <div class="pig-item"><div class="pig-lbl">Raza</div><div class="pig-val">Labrador</div></div>
+          <div class="pig-item"><div class="pig-lbl">Próx. cita</div><div class="pig-val">15 Abr</div></div>
+        </div>
+        <div class="pet-note">
+          <div class="pet-note-title"><i class="fas fa-note-sticky"></i> Notas del paseador</div>
+          <div class="pet-note-body">
+            Max está muy activo hoy. Disfrutó el parque y corrió unos 15 minutos. Come bien y está contento.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: ALERTAS -->
+      <div id="tab-alertas" style="display:none">
+        <div id="alertasList"></div>
+      </div>
+
+    </div><!-- /panel-scroll -->
+
+    <!-- Demo controls -->
+    <div class="demo-bar">
+      <span>DEMO</span>
+      <button class="demo-btn warn" onclick="simularLlegada()">
+        <i class="fas fa-bell"></i> Simular llegada
       </button>
-      <button class="wc-btn call" title="Llamar" onclick="showPush('update','Llamando a Carlos Rodríguez...')">
-        <i class="fas fa-phone"></i>
+      <button class="demo-btn success" onclick="simularEntrega()">
+        <i class="fas fa-dog"></i> Simular entrega
       </button>
     </div>
-  </div>
 
-  <!-- ETA -->
-  <div class="wc-eta" id="etaBar">
-    <div class="eta-icon"><i class="fas fa-route"></i></div>
-    <div class="eta-info">
-      <div class="eta-label">Llega a tu dirección</div>
-      <div class="eta-val" id="etaVal">En aprox. 12 min</div>
-      <div class="eta-dist" id="etaDist">📍 1.4 km de tu casa</div>
+  </div><!-- /info-panel -->
+
+  <!-- ══ ÁREA DEL MAPA ══ -->
+  <div class="map-area">
+    <div id="map"></div>
+
+    <!-- FABs -->
+    <div class="fab-group">
+      <button class="fab-btn" id="btnSat" title="Satélite" onclick="toggleSat()">
+        <i class="fas fa-layer-group"></i>
+      </button>
+      <button class="fab-btn" id="btnGeofence" title="Zona de alerta" onclick="toggleGeofence()">
+        <i class="fas fa-bullseye"></i>
+      </button>
+      <button class="fab-btn" title="Ver ruta completa" onclick="fitAll()">
+        <i class="fas fa-expand"></i>
+      </button>
     </div>
-    <div style="font-size:1.4rem">🏠</div>
-  </div>
+    <button class="fab-locate" id="fabLocate" onclick="centerOnPaseador()" title="Centrar en paseador">
+      <i class="fas fa-location-crosshairs"></i>
+    </button>
+  </div><!-- /map-area -->
 
-  <!-- Progreso ruta -->
-  <div class="wc-progress">
-    <div class="wp-labels">
-      <span>Inicio del paseo</span>
-      <span id="progPct">35%</span>
-    </div>
-    <div class="wp-track">
-      <div class="wp-fill" id="progressFill" style="width:35%"></div>
-    </div>
-  </div>
-</div>
-
-<!-- FABs derecha -->
-<div class="fab-group top" id="fabGroup" style="top:240px">
-  <button class="fab-btn" id="btnSat" title="Satélite" onclick="toggleSat()">
-    <i class="fas fa-layer-group"></i>
-  </button>
-  <button class="fab-btn" id="btnGeofence" title="Zona de alerta" onclick="toggleGeofence()">
-    <i class="fas fa-bullseye"></i>
-  </button>
-  <button class="fab-btn" title="Ver ruta completa" onclick="fitAll()">
-    <i class="fas fa-expand"></i>
-  </button>
-</div>
-<button class="fab-locate" id="fabLocate" style="bottom:220px" onclick="centerOnPaseador()">
-  <i class="fas fa-location-crosshairs"></i>
-</button>
-
-<!-- BOTTOM SHEET MASCOTA -->
-<div class="pet-sheet collapsed" id="petSheet">
-  <div class="ps-handle-wrap" onclick="toggleSheet()" id="sheetHandle">
-    <div class="ps-handle"></div>
-  </div>
-  <div class="ps-peek" onclick="toggleSheet()">
-    <div class="ps-peek-row">
-      <div class="ps-pet-emoji">🐶</div>
-      <div class="ps-pet-info">
-        <div class="ps-pet-name">Max · Labrador Dorado</div>
-        <div class="ps-pet-status">
-          <span class="live-pulse"></span>
-          <span id="petStatusLabel">En movimiento · Parque Santander</span>
-        </div>
-      </div>
-      <i class="fas fa-chevron-up ps-expand-icon"></i>
-    </div>
-  </div>
-
-  <div class="ps-tabs">
-    <div class="ps-tab active" data-tab="actividad">📍 Actividad</div>
-    <div class="ps-tab" data-tab="info">🐾 Info</div>
-    <div class="ps-tab" data-tab="alertas">🔔 Alertas</div>
-  </div>
-
-  <div class="ps-scroll" id="psScroll">
-
-    <!-- TAB ACTIVIDAD -->
-    <div id="tab-actividad">
-      <div class="pet-stats">
-        <div class="pet-stat">
-          <div class="ps-emoji">⏱️</div>
-          <div class="ps-val" id="statTime">00:00</div>
-          <div class="ps-lbl">Tiempo</div>
-        </div>
-        <div class="pet-stat">
-          <div class="ps-emoji">🏃</div>
-          <div class="ps-val" id="statDist">0.0 km</div>
-          <div class="ps-lbl">Distancia</div>
-        </div>
-        <div class="pet-stat">
-          <div class="ps-emoji">🌡️</div>
-          <div class="ps-val">26°C</div>
-          <div class="ps-lbl">Clima</div>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-bottom:8px">Recorrido en vivo</div>
-      <div class="activity-map" id="miniTrailInfo">
-        <div style="text-align:center">
-          <div style="font-size:1.5rem;margin-bottom:4px">🗺️</div>
-          <div>Sigue la ruta en el mapa principal</div>
-        </div>
-      </div>
-
-      <div class="section-label" style="margin-bottom:8px">Eventos del paseo</div>
-      <div id="timelineList"></div>
-    </div>
-
-    <!-- TAB INFO -->
-    <div id="tab-info" style="display:none">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:3rem;margin-bottom:8px">🐶</div>
-        <div style="font-size:1.1rem;font-weight:800">Max</div>
-        <div style="font-size:.8rem;color:var(--muted);margin-top:3px">Labrador Dorado · 3 años · Macho</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px">
-          <div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Peso</div>
-          <div style="font-size:.88rem;font-weight:800">28 kg</div>
-        </div>
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px">
-          <div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Vacunas</div>
-          <div style="font-size:.88rem;font-weight:800">Al día ✅</div>
-        </div>
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px">
-          <div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Raza</div>
-          <div style="font-size:.88rem;font-weight:800">Labrador</div>
-        </div>
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px">
-          <div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px">Próx. cita</div>
-          <div style="font-size:.88rem;font-weight:800">15 Abr</div>
-        </div>
-      </div>
-      <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:11px;padding:12px 14px">
-        <div style="font-size:.72rem;font-weight:700;color:#c2410c;margin-bottom:5px">
-          <i class="fas fa-note-sticky"></i> Notas del paseador
-        </div>
-        <div style="font-size:.8rem;color:var(--text);line-height:1.5">
-          Max está muy activo hoy. Disfrutó el parque y corrió unos 15 minutos. Come bien y está contento.
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB ALERTAS -->
-    <div id="tab-alertas" style="display:none">
-      <div id="alertasList"></div>
-    </div>
-
-  </div>
-</div>
-
-<!-- DEMO CONTROLS -->
-<div class="demo-bar">
-  <span>DEMO</span>
-  <button class="demo-btn warn" onclick="simularLlegada()">
-    <i class="fas fa-bell"></i> Simular llegada
-  </button>
-  <button class="demo-btn success" onclick="simularEntrega()">
-    <i class="fas fa-dog"></i> Simular entrega
-  </button>
-</div>
+</div><!-- /app-shell -->
 
 <!-- NOTIFICACIÓN PUSH -->
 <div class="push-notif" id="pushNotif">
@@ -601,468 +758,347 @@
   <div class="ao-card">
     <span class="ao-emoji" id="aoEmoji">🐾</span>
     <div class="ao-title" id="aoTitle">¡Max está llegando!</div>
-    <div class="ao-msg" id="aoMsg">Carlos está a menos de 200 metros de tu casa. Prepárate para recibir a Max.</div>
+    <div class="ao-msg"   id="aoMsg">Carlos está a menos de 200 metros de tu casa. Prepárate para recibir a Max.</div>
     <button class="ao-btn" onclick="closeArrival()">¡Entendido!</button>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════════
-// DATOS (en producción vienen del backend vía SSE o fetch polling)
-// ═══════════════════════════════════════════════════════════════
-const CLIENTE = {
-  nombre: 'María González',
-  lat: 7.8928, lng: -72.5065,   // casa del cliente
-  addr: 'Calle 7 #0e-94, Motilones',
-};
-const MASCOTA = { nombre:'Max', emoji:'🐶', raza:'Labrador' };
-const PASEADOR = {
-  id:1, nombre:'Carlos Rodríguez',
-  lat:7.8939, lng:-72.5078,      // posición inicial
-  color:'#3E72A6',
-};
-
-// Ruta completa del paseo (solo para dibujar el trayecto)
+/* ══════════════════════════════════════════════════════
+   DATOS
+══════════════════════════════════════════════════════ */
+const CLIENTE  = { lat:7.8928, lng:-72.5065, addr:'Calle 7 #0e-94, Motilones' };
 const RUTA_COORDS = [
-  [7.8928, -72.5065],  // A: casa María
-  [7.8950, -72.5040],  // B: Parque Santander
-  [7.9010, -72.5090],  // C: Av. Libertadores
-  [7.9100, -72.5000],  // D: Parque La Flora
-  [7.8928, -72.5065],  // E: regreso casa María
+  [7.8928,-72.5065],[7.8950,-72.5040],[7.9010,-72.5090],[7.9100,-72.5000],[7.8928,-72.5065],
 ];
-
-// Timeline de eventos simulados
 const TIMELINE_INICIAL = [
   {emoji:'🏠',title:'Carlos recogió a Max',sub:'Casa de María González',time:'08:05',color:'#3E72A6'},
   {emoji:'🌿',title:'Llegaron al Parque Santander',sub:'Max jugó con otros perros',time:'08:22',color:'#16a34a'},
   {emoji:'🏃',title:'Trote en Av. Libertadores',sub:'10 minutos de ejercicio',time:'08:45',color:'#7c3aed'},
 ];
-
-// Alertas
 const ALERTAS_INICIAL = [
-  {tipo:'success', emoji:'✅', title:'Recogida confirmada', msg:'Carlos recogió a Max a las 08:05 AM', time:'08:05'},
-  {tipo:'info',    emoji:'📍', title:'Punto de paseo alcanzado', msg:'Max llegó al Parque Santander', time:'08:22'},
+  {tipo:'success',emoji:'✅',title:'Recogida confirmada',msg:'Carlos recogió a Max a las 08:05 AM',time:'08:05'},
+  {tipo:'info',   emoji:'📍',title:'Punto de paseo alcanzado',msg:'Max llegó al Parque Santander',time:'08:22'},
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// ESTADO
-// ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════════════ */
 let map, baseLayer, satLayer;
-let paseadorMarker, clienteMarker, trailLine, geofenceCircle;
-let usingSat       = false;
-let geofenceActive = true;
-let sheetExpanded  = false;
-let elapsedSec     = 0;
-let distKm         = 0;
-let lastLat        = null, lastLng = null;
-let paseadorLat    = PASEADOR.lat;
-let paseadorLng    = PASEADOR.lng;
-let trailCoords    = [[paseadorLat, paseadorLng]];
-let timeline       = [...TIMELINE_INICIAL];
-let alertas        = [...ALERTAS_INICIAL];
-let progreso       = 35;
-let updateCounter  = 0;
-let arrivalNotified = false;
-let deliveryNotified = false;
+let paseadorMarker, trailLine, geofenceCircle;
+let usingSat = false, geofenceActive = true;
+let elapsedSec = 0, distKm = 0;
+let lastLat = null, lastLng = null;
+let paseadorLat = 7.8939, paseadorLng = -72.5078;
+let trailCoords = [[paseadorLat, paseadorLng]];
+let timeline = [...TIMELINE_INICIAL];
+let alertas  = [...ALERTAS_INICIAL];
+let progreso = 35;
+let updateCounter = 0;
+let arrivalNotified = false, deliveryNotified = false;
 
-// ═══════════════════════════════════════════════════════════════
-// INIT MAPA
-// ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   INIT MAPA
+══════════════════════════════════════════════════════ */
 function initMap() {
-  map = L.map('map', {zoomControl:false, attributionControl:false})
-         .setView([paseadorLat, paseadorLng], 15);
+  map = L.map('map',{zoomControl:false,attributionControl:false})
+         .setView([paseadorLat,paseadorLng],15);
 
-  baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+  baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
   satLayer  = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     {maxZoom:19}
   );
 
-  // Ruta completa (línea tenue de fondo)
-  L.polyline(RUTA_COORDS, {
-    color:'#3E72A6', weight:3, opacity:.25, dashArray:'8 6',
+  L.polyline(RUTA_COORDS,{color:'#3E72A6',weight:3,opacity:.22,dashArray:'8 6'}).addTo(map);
+
+  trailLine = L.polyline(trailCoords,{color:'#25D366',weight:4,opacity:.85}).addTo(map);
+
+  paseadorMarker = L.marker([paseadorLat,paseadorLng],{
+    icon:crearIconoPaseador(), zIndexOffset:1000
   }).addTo(map);
 
-  // Trail en tiempo real (rastro del paseador)
-  trailLine = L.polyline(trailCoords, {
-    color:'#25D366', weight:4, opacity:.8,
-  }).addTo(map);
-
-  // Marcador PASEADOR
-  paseadorMarker = L.marker([paseadorLat, paseadorLng], {
-    icon: crearIconoPaseador(), zIndexOffset:1000
-  }).addTo(map);
-
-  // Marcador CASA CLIENTE
-  clienteMarker = L.marker([CLIENTE.lat, CLIENTE.lng], {
-    icon: L.divIcon({
-      html:`<div style="
-        font-size:1.5rem;
-        filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));
-      ">🏠</div>`,
-      className:'', iconSize:[32,32], iconAnchor:[16,28],
+  L.marker([CLIENTE.lat,CLIENTE.lng],{
+    icon:L.divIcon({
+      html:`<div style="font-size:1.5rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))">🏠</div>`,
+      className:'',iconSize:[32,32],iconAnchor:[16,28],
     })
-  }).addTo(map)
-  .bindPopup(`<b>${CLIENTE.addr}</b><br>Tu dirección`);
+  }).addTo(map).bindPopup(`<b>${CLIENTE.addr}</b><br>Tu dirección`);
 
-  // Círculo geofence 200m
-  geofenceCircle = L.circle([CLIENTE.lat, CLIENTE.lng], {
-    radius:200,
-    color:'#3E72A6', fillColor:'#3E72A6',
-    fillOpacity:.08, weight:2, dashArray:'6 4',
+  geofenceCircle = L.circle([CLIENTE.lat,CLIENTE.lng],{
+    radius:200,color:'#3E72A6',fillColor:'#3E72A6',
+    fillOpacity:.08,weight:2,dashArray:'6 4',
   }).addTo(map);
 
-  // Fit bounds inicial
-  map.fitBounds([
-    [paseadorLat, paseadorLng],
-    [CLIENTE.lat, CLIENTE.lng],
-  ], {padding:[90,60]});
+  map.fitBounds([[paseadorLat,paseadorLng],[CLIENTE.lat,CLIENTE.lng]],{padding:[60,40]});
 }
 
 function crearIconoPaseador() {
   return L.divIcon({
     html:`<div style="
-      width:48px;height:48px;border-radius:50%;
+      width:46px;height:46px;border-radius:50%;
       background:linear-gradient(135deg,#3E72A6,#2c5282);
       border:4px solid #fff;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      box-shadow:0 4px 16px rgba(62,114,166,.5);
-      position:relative;
-    ">
-      <div style="font-size:1.15rem">🚶</div>
-      <div style="
-        position:absolute;bottom:-3px;right:-3px;
-        width:14px;height:14px;border-radius:50%;
-        background:#25D366;border:2px solid #fff;
-      "></div>
+      box-shadow:0 4px 16px rgba(62,114,166,.5);position:relative;">
+      <div style="font-size:1.1rem">🚶</div>
+      <div style="position:absolute;bottom:-2px;right:-2px;
+        width:13px;height:13px;border-radius:50%;
+        background:#25D366;border:2px solid #fff;"></div>
     </div>
-    <div style="
-      background:linear-gradient(135deg,#3E72A6,#2c5282);
-      color:#fff;font-size:.6rem;font-weight:800;
-      padding:2px 7px;border-radius:10px;
+    <div style="background:linear-gradient(135deg,#3E72A6,#2c5282);
+      color:#fff;font-size:.58rem;font-weight:800;
+      padding:2px 6px;border-radius:9px;
       box-shadow:0 2px 6px rgba(0,0,0,.2);
-      margin-top:3px;white-space:nowrap;text-align:center;
-    ">Max 🐶</div>`,
-    className:'', iconSize:[48,56], iconAnchor:[24,56],
+      margin-top:3px;white-space:nowrap;text-align:center;">Max 🐶</div>`,
+    className:'',iconSize:[46,54],iconAnchor:[23,54],
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ACTUALIZACIÓN GPS (simula SSE / polling del backend)
-// ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   GPS SIMULADO
+══════════════════════════════════════════════════════ */
 function actualizarGPS() {
-  // Simular movimiento del paseador hacia el cliente
-  const targetLat = CLIENTE.lat + (Math.random()-.5)*.005;
-  const targetLng = CLIENTE.lng + (Math.random()-.5)*.005;
-  paseadorLat += (targetLat - paseadorLat) * 0.06 + (Math.random()-.5)*.0003;
-  paseadorLng += (targetLng - paseadorLng) * 0.06 + (Math.random()-.5)*.0003;
+  const tLat = CLIENTE.lat+(Math.random()-.5)*.005;
+  const tLng = CLIENTE.lng+(Math.random()-.5)*.005;
+  paseadorLat += (tLat-paseadorLat)*.06+(Math.random()-.5)*.0003;
+  paseadorLng += (tLng-paseadorLng)*.06+(Math.random()-.5)*.0003;
 
-  // Acumular rastro
-  trailCoords.push([paseadorLat, paseadorLng]);
-  if (trailCoords.length > 80) trailCoords.shift(); // limitar longitud
+  trailCoords.push([paseadorLat,paseadorLng]);
+  if(trailCoords.length>80) trailCoords.shift();
   trailLine.setLatLngs(trailCoords);
+  paseadorMarker.setLatLng([paseadorLat,paseadorLng]);
 
-  // Mover marcador
-  paseadorMarker.setLatLng([paseadorLat, paseadorLng]);
-
-  // Calcular distancia acumulada
-  if (lastLat !== null) {
-    distKm += haversine(lastLat, lastLng, paseadorLat, paseadorLng);
-    document.getElementById('statDist').textContent = distKm.toFixed(2) + ' km';
+  if(lastLat!==null){
+    distKm += haversine(lastLat,lastLng,paseadorLat,paseadorLng);
+    document.getElementById('statDist').textContent = distKm.toFixed(2)+' km';
   }
-  lastLat = paseadorLat; lastLng = paseadorLng;
+  lastLat=paseadorLat; lastLng=paseadorLng;
 
-  // Distancia al cliente
-  const distCasa = haversine(paseadorLat, paseadorLng, CLIENTE.lat, CLIENTE.lng);
-  const etaMin   = Math.max(1, Math.round(distCasa / 0.05)); // ~3km/h caminando
+  const distCasa = haversine(paseadorLat,paseadorLng,CLIENTE.lat,CLIENTE.lng);
+  const etaMin   = Math.max(1,Math.round(distCasa/0.05));
   document.getElementById('etaVal').textContent  = `En aprox. ${etaMin} min`;
-  document.getElementById('etaDist').textContent = `📍 ${(distCasa).toFixed(2)} km de tu casa`;
+  document.getElementById('etaDist').textContent = `📍 ${distCasa.toFixed(2)} km de tu casa`;
 
-  // Progreso simulado
-  progreso = Math.min(98, progreso + 0.4);
-  document.getElementById('progressFill').style.width = progreso + '%';
-  document.getElementById('progPct').textContent = Math.round(progreso) + '%';
+  progreso = Math.min(98, progreso+0.4);
+  document.getElementById('progressFill').style.width = progreso+'%';
+  document.getElementById('progPct').textContent = Math.round(progreso)+'%';
 
-  // Actualizar contador
   updateCounter++;
-  document.getElementById('lastUpdate').textContent = (updateCounter % 5) + 1;
+  document.getElementById('lastUpdate').textContent = (updateCounter%5)+1;
 
-  // ── GEOFENCE: alerta cuando el paseador está a <200m ──
-  if (distCasa < 0.2 && !arrivalNotified) {
-    arrivalNotified = true;
-    setTimeout(() => simularLlegada(), 500);
-  }
-
-  // PRODUCCIÓN: en lugar de simulación, usar SSE o polling:
-  // const source = new EventSource('../model/php/sse_ubicacion.php?id_paseador=1');
-  // source.onmessage = e => { const d=JSON.parse(e.data); actualizarMarcador(d.lat,d.lng); };
+  if(distCasa<0.2 && !arrivalNotified){ arrivalNotified=true; setTimeout(simularLlegada,500); }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// NOTIFICACIONES PUSH
-// ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   PUSH NOTIFICATIONS
+══════════════════════════════════════════════════════ */
 let pushTimer;
-function showPush(tipo, title, msg='', actions=[]) {
-  const typeMap = {
-    arrival: {icon:'🏠 🐾', cls:'arrival', color:'var(--green)'},
-    delivery:{icon:'✅ 🐾', cls:'delivery', color:'var(--purple)'},
-    update:  {icon:'📍',    cls:'update',   color:'var(--primary)'},
+function showPush(tipo,title,msg='',actions=[]) {
+  const map2={
+    arrival: {icon:'🏠 🐾',cls:'arrival'},
+    delivery:{icon:'✅ 🐾',cls:'delivery'},
+    update:  {icon:'📍',   cls:'update'},
   };
-  const t = typeMap[tipo] || typeMap.update;
-
+  const t = map2[tipo]||map2.update;
   document.getElementById('pnIcon').textContent  = t.icon;
   document.getElementById('pnIcon').className    = `pn-icon ${t.cls}`;
   document.getElementById('pnTitle').textContent = title;
-  document.getElementById('pnMsg').textContent   = msg || '';
+  document.getElementById('pnMsg').textContent   = msg||'';
   document.getElementById('pnTime').textContent  = 'Ahora mismo';
 
-  // Acciones
   const actEl = document.getElementById('pnActions');
-  actEl.innerHTML = '';
-  actions.forEach(a => {
-    const btn = document.createElement('button');
-    btn.className  = `pna-btn ${a.primary?'primary':''}`;
-    btn.textContent = a.label;
-    btn.onclick = () => { closePush(); if(a.action) a.action(); };
+  actEl.innerHTML='';
+  actions.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className=`pna-btn ${a.primary?'primary':''}`;
+    btn.textContent=a.label;
+    btn.onclick=()=>{ closePush(); if(a.action) a.action(); };
     actEl.appendChild(btn);
   });
-
   document.getElementById('pushNotif').classList.add('show');
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(closePush, 5500);
+  pushTimer=setTimeout(closePush,5500);
 }
+function closePush(){document.getElementById('pushNotif').classList.remove('show');}
 
-function closePush() {
-  document.getElementById('pushNotif').classList.remove('show');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DEMO: SIMULAR LLEGADA ANTES DEL PASEO (recogida)
-// ═══════════════════════════════════════════════════════════════
-function simularLlegada() {
-  // 1. Notificación push
-  showPush('arrival',
-    '🐾 Carlos está llegando',
+/* ══════════════════════════════════════════════════════
+   DEMOS
+══════════════════════════════════════════════════════ */
+function simularLlegada(){
+  showPush('arrival','🐾 Carlos está llegando',
     'El paseador está a menos de 200m de tu casa. ¡Prepara a Max!',
     [
-      {label:'Ver en mapa', action:()=>{ map.setView([CLIENTE.lat,CLIENTE.lng],17); collapseSheet(); }},
-      {label:'OK, gracias', primary:true, action:closePush},
+      {label:'Ver en mapa',action:()=>{ map.setView([CLIENTE.lat,CLIENTE.lng],17); }},
+      {label:'OK, gracias',primary:true,action:closePush},
     ]
   );
-
-  // 2. Overlay especial
-  document.getElementById('aoEmoji').textContent = '🏃🐶';
-  document.getElementById('aoTitle').textContent = '¡Carlos está llegando!';
-  document.getElementById('aoMsg').textContent   =
-    'El paseador está a menos de 200 metros de tu casa. Prepara a Max para su paseo. 🎉';
-  setTimeout(() => {
-    document.getElementById('arrivalOverlay').classList.add('show');
-  }, 800);
-
-  // 3. Agregar a alertas y timeline
-  agregarAlerta('success', '🏠', 'Paseador llegando a tu casa',
-    'Carlos está a 200m — en aprox. 3 minutos');
-  agregarTimeline('🏃', 'Carlos se acerca a tu casa', 'A menos de 200m', 'Ahora');
+  document.getElementById('aoEmoji').textContent='🏃🐶';
+  document.getElementById('aoTitle').textContent='¡Carlos está llegando!';
+  document.getElementById('aoMsg').textContent  ='El paseador está a menos de 200 metros de tu casa. Prepara a Max para su paseo. 🎉';
+  setTimeout(()=>document.getElementById('arrivalOverlay').classList.add('show'),800);
+  agregarAlerta('success','🏠','Paseador llegando a tu casa','Carlos está a 200m — en aprox. 3 minutos');
+  agregarTimeline('🏃','Carlos se acerca a tu casa','A menos de 200m','Ahora');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DEMO: SIMULAR ENTREGA DESPUÉS DEL PASEO
-// ═══════════════════════════════════════════════════════════════
-function simularEntrega() {
-  if (!deliveryNotified) {
-    deliveryNotified = true;
-    showPush('delivery',
-      '✅ Max regresó a casa',
-      'Carlos ha entregado a Max. El paseo ha finalizado. 🐾❤️',
-      [
-        {label:'Calificar paseo', action:()=>showPush('update','¡Gracias por calificar a Carlos!')},
-        {label:'Ver resumen', primary:true, action:()=>expandSheet()},
-      ]
-    );
-
-    agregarAlerta('success', '✅', '¡Max entregado en casa!',
-      'El paseo finalizó. Carlos lo trajo de vuelta sano y feliz.');
-    agregarTimeline('🏠', 'Max regresó a casa', 'Entregado por Carlos', 'Ahora');
-
-    document.getElementById('petStatusLabel').textContent = 'En casa · Paseo finalizado ✅';
-    document.getElementById('etaVal').textContent  = '✅ Max ya está en casa';
-    document.getElementById('etaDist').textContent = 'Paseo completado — 5.2 km recorridos';
-    document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progPct').textContent = '100%';
-
-    // Overlay especial
-    document.getElementById('aoEmoji').textContent = '🎉🐶';
-    document.getElementById('aoTitle').textContent = '¡Max regresó a casa!';
-    document.getElementById('aoMsg').textContent   =
-      'Carlos entregó a Max sano y feliz. El paseo duró 2h 15min y recorrieron 5.2 km.';
-    document.getElementById('arrivalOverlay').classList.add('show');
-  }
+function simularEntrega(){
+  if(deliveryNotified) return;
+  deliveryNotified=true;
+  showPush('delivery','✅ Max regresó a casa',
+    'Carlos ha entregado a Max. El paseo ha finalizado. 🐾❤️',
+    [
+      {label:'Calificar paseo',action:()=>showPush('update','¡Gracias por calificar a Carlos!')},
+      {label:'Ver resumen',primary:true,action:()=>{}},
+    ]
+  );
+  agregarAlerta('success','✅','¡Max entregado en casa!','El paseo finalizó. Carlos lo trajo sano y feliz.');
+  agregarTimeline('🏠','Max regresó a casa','Entregado por Carlos','Ahora');
+  document.getElementById('etaVal').textContent  ='✅ Max ya está en casa';
+  document.getElementById('etaDist').textContent ='Paseo completado — 5.2 km recorridos';
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progPct').textContent='100%';
+  document.getElementById('aoEmoji').textContent='🎉🐶';
+  document.getElementById('aoTitle').textContent='¡Max regresó a casa!';
+  document.getElementById('aoMsg').textContent  ='Carlos entregó a Max sano y feliz. El paseo duró 2h 15min y recorrieron 5.2 km.';
+  document.getElementById('arrivalOverlay').classList.add('show');
 }
 
 function closeArrival() {
-  document.getElementById('arrivalOverlay').classList.remove('show');
+    // Forzamos la desaparición completa del recuadro blanco y el fondo oscuro
+    const overlay = document.getElementById('arrivalOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('show');
+    }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════
-function agregarTimeline(emoji, title, sub, time) {
-  timeline.push({emoji, title, sub, time, color:'#25D366'});
+/* ══════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════ */
+function agregarTimeline(emoji,title,sub,time){
+  timeline.push({emoji,title,sub,time,color:'#25D366'});
   renderTimeline();
 }
-
-function agregarAlerta(tipo, emoji, title, msg) {
-  alertas.push({tipo, emoji, title, msg, time:'Ahora'});
+function agregarAlerta(tipo,emoji,title,msg){
+  alertas.push({tipo,emoji,title,msg,time:'Ahora'});
   renderAlertas();
 }
-
-function haversine(lat1, lon1, lat2, lon2) {
-  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+function haversine(la1,lo1,la2,lo2){
+  const R=6371,dLat=(la2-la1)*Math.PI/180,dLon=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ═══════════════════════════════════════════════════════════════
-// RENDER TIMELINE
-// ═══════════════════════════════════════════════════════════════
-function renderTimeline() {
-  const el = document.getElementById('timelineList');
-  el.innerHTML = '';
-  timeline.forEach((t,i) => {
-    const div = document.createElement('div');
-    div.className = 'timeline-item';
-    div.innerHTML = `
+function renderTimeline(){
+  const el=document.getElementById('timelineList');
+  el.innerHTML='';
+  timeline.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='timeline-item';
+    d.innerHTML=`
       <div class="tl-left">
         <div class="tl-dot" style="background:${t.color}20;color:${t.color}">${t.emoji}</div>
-        ${i < timeline.length-1 ? '<div class="tl-line"></div>' : ''}
+        ${i<timeline.length-1?'<div class="tl-line"></div>':''}
       </div>
-      <div class="tl-body">
+      <div>
         <div class="tl-title">${t.title}</div>
         <div class="tl-sub">${t.sub}</div>
-        <div class="tl-time"><i class="fas fa-clock" style="font-size:.6rem"></i>${t.time}</div>
-      </div>
-    `;
-    el.appendChild(div);
+        <div class="tl-time"><i class="fas fa-clock" style="font-size:.6rem"></i> ${t.time}</div>
+      </div>`;
+    el.appendChild(d);
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// RENDER ALERTAS
-// ═══════════════════════════════════════════════════════════════
-function renderAlertas() {
-  const el = document.getElementById('alertasList');
-  el.innerHTML = '';
-  const bgMap = {success:'#dcfce7',info:'#dbeafe',warning:'#ffedd5',error:'#fee2e2'};
-  alertas.slice().reverse().forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'alert-item';
-    div.style.background = bgMap[a.tipo] || '#f1f5f9';
-    div.innerHTML = `
+function renderAlertas(){
+  const el=document.getElementById('alertasList');
+  el.innerHTML='';
+  const bg={success:'#dcfce7',info:'#dbeafe',warning:'#ffedd5',error:'#fee2e2'};
+  alertas.slice().reverse().forEach(a=>{
+    const d=document.createElement('div');
+    d.className='alert-item';
+    d.style.background=bg[a.tipo]||'#f1f5f9';
+    d.innerHTML=`
       <div class="alert-icon">${a.emoji}</div>
-      <div class="alert-body">
+      <div>
         <div class="al-title">${a.title}</div>
         <div class="al-sub">${a.msg}</div>
-        <div style="font-size:.65rem;color:var(--muted);margin-top:3px">${a.time}</div>
-      </div>
-    `;
-    el.appendChild(div);
+        <div class="al-time">${a.time}</div>
+      </div>`;
+    el.appendChild(d);
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BOTTOM SHEET
-// ═══════════════════════════════════════════════════════════════
-function toggleSheet() {
-  sheetExpanded = !sheetExpanded;
-  applySheet();
+/* ══════════════════════════════════════════════════════
+   CONTROLES MAPA
+══════════════════════════════════════════════════════ */
+function toggleSat(){
+  usingSat=!usingSat;
+  if(usingSat){map.removeLayer(baseLayer);satLayer.addTo(map);}
+  else{map.removeLayer(satLayer);baseLayer.addTo(map);}
+  document.getElementById('btnSat').classList.toggle('active',usingSat);
 }
-function expandSheet()  { sheetExpanded=true;  applySheet(); }
-function collapseSheet(){ sheetExpanded=false; applySheet(); }
-function applySheet() {
-  const s = document.getElementById('petSheet');
-  s.classList.toggle('expanded', sheetExpanded);
-  s.classList.toggle('collapsed', !sheetExpanded);
-  // Ajustar FAB
-  const fab = document.getElementById('fabLocate');
-  fab.style.bottom = sheetExpanded ? '52vh' : '220px';
+function toggleGeofence(){
+  geofenceActive=!geofenceActive;
+  if(geofenceActive) geofenceCircle.addTo(map);
+  else               map.removeLayer(geofenceCircle);
+  document.getElementById('btnGeofence').classList.toggle('active',geofenceActive);
+  showPush('update',geofenceActive?'Zona de alerta activada (200m)':'Zona de alerta desactivada');
 }
+function fitAll(){
+  map.fitBounds([[paseadorLat,paseadorLng],[CLIENTE.lat,CLIENTE.lng]],{padding:[60,40]});
+}
+function centerOnPaseador(){ map.setView([paseadorLat,paseadorLng],17); }
 
-// Drag handle
-let touchStart=0;
-document.getElementById('sheetHandle').addEventListener('touchstart',e=>{touchStart=e.touches[0].clientY});
-document.getElementById('sheetHandle').addEventListener('touchend',e=>{
-  const dy=touchStart-e.changedTouches[0].clientY;
-  if(dy>40)expandSheet(); if(dy<-40)collapseSheet();
-});
-
-// Tabs
-document.querySelectorAll('.ps-tab').forEach(tab=>{
+/* ══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+document.querySelectorAll('.pt-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
-    document.querySelectorAll('.ps-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.pt-tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     ['actividad','info','alertas'].forEach(id=>{
       const el=document.getElementById('tab-'+id);
-      if(el) el.style.display = tab.dataset.tab===id ? 'block' : 'none';
+      if(el) el.style.display=tab.dataset.tab===id?'block':'none';
     });
   });
 });
 
-// ═══════════════════════════════════════════════════════════════
-// CAPAS MAPA
-// ═══════════════════════════════════════════════════════════════
-function toggleSat() {
-  usingSat = !usingSat;
-  if(usingSat){ map.removeLayer(baseLayer); satLayer.addTo(map); }
-  else        { map.removeLayer(satLayer); baseLayer.addTo(map); }
-  document.getElementById('btnSat').classList.toggle('active',usingSat);
-}
+/* ══════════════════════════════════════════════════════
+   MENÚ HAMBURGUESA
+══════════════════════════════════════════════════════ */
+const btnMenu=document.getElementById('btn-menu');
+const menuLatente=document.getElementById('menu-latente');
+btnMenu.addEventListener('click',()=>menuLatente.classList.toggle('show'));
+window.addEventListener('click',e=>{
+  if(!btnMenu.contains(e.target)&&!menuLatente.contains(e.target))
+    menuLatente.classList.remove('show');
+});
 
-function toggleGeofence() {
-  geofenceActive = !geofenceActive;
-  if(geofenceActive) geofenceCircle.addTo(map);
-  else               map.removeLayer(geofenceCircle);
-  document.getElementById('btnGeofence').classList.toggle('active',geofenceActive);
-  showPush('update', geofenceActive ? 'Zona de alerta activada (200m)' : 'Zona de alerta desactivada');
-}
-
-function fitAll() {
-  map.fitBounds([
-    [paseadorLat, paseadorLng],
-    [CLIENTE.lat, CLIENTE.lng],
-  ], {padding:[90,60]});
-}
-
-function centerOnPaseador() {
-  map.setView([paseadorLat, paseadorLng], 17);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// TIMER
-// ═══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════════════ */
 setInterval(()=>{
   elapsedSec++;
   const m=String(Math.floor(elapsedSec/60)).padStart(2,'0');
   const s=String(elapsedSec%60).padStart(2,'0');
   document.getElementById('statTime').textContent=`${m}:${s}`;
-}, 1000);
+},1000);
 
-// ═══════════════════2332532════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-// Ocultar splash
+/* ══════════════════════════════════════════════════════
+   ARRANQUE
+══════════════════════════════════════════════════════ */
 setTimeout(()=>{
   document.getElementById('splash').classList.add('hide');
-  setTimeout(()=>{ document.getElementById('splash').style.display='none'; }, 600);
-}, 1800);
+  setTimeout(()=>document.getElementById('splash').style.display='none',600);
+},1800);
 
-// Actualizar GPS cada 3s
 setTimeout(()=>{
   initMap();
   renderTimeline();
   renderAlertas();
-  setInterval(actualizarGPS, 3000);
-}, 2000);
+  setInterval(actualizarGPS,3000);
+},2000);
 </script>
 </body>
 </html>
