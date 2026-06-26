@@ -1,192 +1,699 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Servicios</title>
-    <link rel="icon" href="../assets/images/logo.png" type="image/png">
-
-    <link rel="stylesheet" href="../css/principal_css/global.css">
-    <link rel="stylesheet" href="../css/principal_css/paseos.css">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-
 <body>
 
-    <div id="contenedor_general" class="app-container">
+<!-- ══════════════════════════════════════════
+     SKELETON PANTALLA COMPLETA (carga inicial)
+══════════════════════════════════════════ -->
+<div id="page-skeleton">
 
-        <nav class="sidebar">
-            <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
-                <nav class="menu-desplegable" id="menu-latente">
-                    <ul>
-                        <a href="./sub_menu/conocenos.html">
-                            <li>
-                                <i class="fas fa-camera"></i>
-                                <span>Conocenos</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/direccion_oficial.html">
-                            <li>
-                                <i class="fas fa-book-open"></i>
-                                <span>Direccion oficial</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/centro_de_ayuda.html">
-                            <li>
-                                <i class="fas fa-sliders-h"></i>
-                                <span>Centro de ayuda</span>
-                            </li>
-                        </a>
-
-                        <a href="./sub_menu/configuracion.html">
-                            <li>
-                                <i class="fas fa-gear"></i>
-                                <span>Configuracion</span>
-                            </li>
-                        </a>
-
-                        <a href="../../index.html">
-                            <li>
-                                <i class="fas fa-gear"></i>
-                                <span>Cerrar sesion</span>
-                            </li>
-                        </a>
-                    </ul>
-                </nav>
-            </div>
-
-            <ul class="nav-links">
-                <li class="active">
-                    <a href="#">
-                        <i class="fas fa-paw"></i>
-                        <span>Servicios</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="Chat.html">
-                        <i class="far fa-comment-alt"></i>
-                        <span>Chat</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="mapa.html">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Mapa</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="adopcion.html">
-                        <i class="fas fa-bone"></i>
-                        <span>Adopción</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="usuario.html">
-                        <i class="fas fa-user"></i>
-                        <span>Usuario</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-
-        <main class="main-content">
-
-            <section class="banner-section">
-                <div class="banner-container">
-                    <img src="../assets/recursos_pagina_principal/imgpaseo1.png.png" alt="Paseo Feliz" class="banner-image">
-                </div>
-                <div class="section-title">
-                    <h2>Nuestros productos y servicios</h2>
-                </div>
-            </section>
-
-            <section class="services-list">
-                <article class="service-card">
-                    <div class="service-icon-container">
-                        <img src="../assets/recursos_pagina_principal/iconpaseo1.png.png" alt="Paseos">
-                    </div>
-                    <div class="service-details">
-                        <div class="card-header-row">
-                            <h3>Paseos</h3>
-                            <div class="ratings-and-actions">
-                                <a href="paseos_info.html" class="btn-ver-mas">Ver más</a>
-                                <i class="far fa-heart heart-icon"></i>
-                            </div>
-                        </div>
-                        <p class="metadata">Category • $$ • 1.2 miles away</p>
-                        <p class="description">Servicio profesional de paseos diarios para que tu mascota se mantenga
-                            activa y feliz.</p>
-                    </div>
-                </article>
-                <hr class="divider">
-
-                <article class="service-card">
-                    <div class="service-icon-container">
-                        <img src="../assets/recursos_pagina_principal/iconcolegio.png.png" alt="Adiestramiento">
-                    </div>
-                    <div class="service-details">
-                        <div class="card-header-row">
-                            <h3>Adiestramiento canino</h3>
-                            <div class="ratings-and-actions">
-                                <div class="ratings-and-actions">
-                                    <a href="adiestramiento_info.html" class="btn-ver-mas">Ver más</a>
-                                    <i class="far fa-heart heart-icon"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="metadata">Category • $$ • 1.2 miles away</p>
-                        <p class="description">Mejora el comportamiento de tu perro con técnicas positivas y
-                            personalizadas.</p>
-                    </div>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon-container">
-                        <img src="../assets/recursos_pagina_principal/iconhospedaje.png.png" alt="Adiestramiento">
-                    </div>
-                    <div class="service-details">
-                        <div class="card-header-row">
-                            <h3>Hospedaje canino</h3>
-                            <div class="ratings-and-actions">
-                                <div class="ratings-and-actions">
-                                    <a href="hospedaje_info.html" class="btn-ver-mas">Ver más</a>
-                                    <i class="far fa-heart heart-icon"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="metadata">Category • $$ • 1.2 miles away</p>
-                        <p class="description">Cuidamos de tu mascota en todo momento y velamos por su salud en cada
-                            instante.</p>
-                    </div>
-                </article>
-
-            </section>
-        </main>
+    <!-- Sidebar falsa -->
+    <div class="sk-sidebar">
+        <div class="sk-sidebar-circle"></div>
+        <div class="sk-nav-item active-sk"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
     </div>
 
-</body>
+    <!-- Contenido principal falso -->
+    <div class="sk-main">
+
+        <!-- Top bar -->
+        <div class="sk-topbar">
+            <div class="sk sk-welcome"></div>
+            <div class="sk sk-date"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="sk-tabs">
+            <div class="sk sk-tab"></div>
+            <div class="sk sk-tab"></div>
+            <div class="sk sk-tab"></div>
+        </div>
+
+        <!-- Showcase 3 cols -->
+        <div class="sk-showcase">
+
+            <!-- Carrusel -->
+            <div class="sk-carousel">
+                <div class="sk sk-main-img"></div>
+                <div class="sk-thumbs">
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                </div>
+            </div>
+
+            <!-- Detalles -->
+            <div class="sk-details">
+                <div class="sk sk-title"></div>
+                <div class="sk sk-rating"></div>
+                <div class="sk sk-desc"></div>
+                <div class="sk sk-desc w80"></div>
+                <div class="sk sk-desc w65"></div>
+                <div style="height:8px"></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div style="height:4px"></div>
+                <div class="sk-badges">
+                    <div class="sk sk-badge"></div>
+                    <div class="sk sk-badge"></div>
+                    <div class="sk sk-badge"></div>
+                </div>
+            </div>
+
+            <!-- Booking -->
+            <div class="sk-booking">
+                <div class="sk sk-avail"></div>
+                <div class="sk sk-price"></div>
+                <div class="sk sk-unit"></div>
+                <div style="height:6px"></div>
+                <div class="sk sk-benefit"></div>
+                <div class="sk sk-benefit w85"></div>
+                <div class="sk sk-benefit"></div>
+                <div class="sk sk-benefit w70"></div>
+                <div class="sk sk-benefit w85"></div>
+                <div style="flex:1"></div>
+                <div class="sk sk-btn-p"></div>
+                <div class="sk-btn-s"></div>
+            </div>
+
+        </div>
+
+        <!-- Bottom -->
+        <div class="sk-bottom">
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-right-panel">
+                <div class="sk-stats">
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                </div>
+                <div class="sk-testimonial">
+                    <div class="sk-t-line w90"></div>
+                    <div class="sk-t-line w75"></div>
+                    <div class="sk-t-line w55"></div>
+                    <div class="sk-t-author">
+                        <div class="sk-t-avatar"></div>
+                        <div class="sk-t-name"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /sk-main -->
+</div><!-- /page-skeleton -->
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <button class="menu-btn"><i class="ph ph-list"></i></button>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="ph ph-paw-print"></i>
+                    <span>Servicios</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-chat-circle-dots"></i>
+                    <span>Chat</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-map-pin"></i>
+                    <span>Mapa</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-bone"></i>
+                    <span>Adopción</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-user"></i>
+                    <span>Usuario</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-logo">
+            <i class="ph ph-paw-print"></i>
+            <span>Paseo<br>Feliz</span>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <h1 class="welcome">¡Hola de nuevo, Carlos! <span class="paw">🐾</span></h1>
+            <div class="date-badge">
+                <i class="ph ph-calendar-blank"></i>
+                <span id="current-date">25 de junio de 2026</span>
+            </div>
+        </header>
+
+        <!-- SECTION HEADER -->
+        <div class="section-header">
+            <div class="divider-line"></div>
+            <i class="ph ph-paw-print"></i>
+            Nuestros productos y servicios
+            <i class="ph ph-paw-print"></i>
+            <div class="divider-line right"></div>
+        </div>
+
+        <!-- SERVICE TABS -->
+        <div class="service-tabs">
+            <div class="tab" data-svc="paseos">
+                <div class="tab-icon">🐶</div>
+                <div>
+                    <h3>Paseos</h3>
+                    <p>Ejercicio, diversión y bienestar</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+            <div class="tab" data-svc="adiestramiento">
+                <div class="tab-icon">🎓</div>
+                <div>
+                    <h3>Adiestramiento canino</h3>
+                    <p>Educación positiva y efectiva</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+            <div class="tab active" data-svc="hospedaje">
+                <div class="tab-icon">🏠</div>
+                <div>
+                    <h3>Hospedaje canino</h3>
+                    <p>Como en casa, pero mejor</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+        </div>
+
+        <!-- SHOWCASE: 3 cols -->
+        <div class="showcase" id="showcase">
+
+            <!-- SKELETON OVERLAY (cambio de tab) -->
+            <div class="sk-inline-overlay">
+                <!-- Carrusel sk -->
+                <div class="sk-carousel">
+                    <div class="sk sk-main-img"></div>
+                    <div class="sk-thumbs">
+                        <div class="sk sk-thumb"></div><div class="sk sk-thumb"></div>
+                        <div class="sk sk-thumb"></div><div class="sk sk-thumb"></div>
+                    </div>
+                </div>
+                <!-- Detalles sk -->
+                <div class="sk-details">
+                    <div class="sk sk-title"></div>
+                    <div class="sk sk-rating"></div>
+                    <div class="sk sk-desc"></div><div class="sk sk-desc w80"></div>
+                    <div style="height:8px"></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-badges"><div class="sk sk-badge"></div><div class="sk sk-badge"></div><div class="sk sk-badge"></div></div>
+                </div>
+                <!-- Booking sk -->
+                <div class="sk-booking">
+                    <div class="sk sk-avail"></div>
+                    <div class="sk sk-price"></div>
+                    <div class="sk sk-unit"></div>
+                    <div class="sk sk-benefit"></div>
+                    <div class="sk sk-benefit w85"></div>
+                    <div class="sk sk-benefit"></div>
+                    <div class="sk sk-benefit w70"></div>
+                    <div style="flex:1"></div>
+                    <div class="sk sk-btn-p"></div>
+                </div>
+            </div>
+
+            <!-- COL 1: CAROUSEL -->
+            <div class="carousel-col">
+                <div class="img-wrapper">
+                    <img id="main-img" src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80" alt="Servicio">
+                    <span class="img-tag" id="img-tag"><i class="ph ph-shield-check"></i> Como en casa, pero con más amor</span>
+                    <button class="arr-btn prev" id="prev-btn"><i class="ph ph-caret-left"></i></button>
+                    <button class="arr-btn next" id="next-btn"><i class="ph ph-caret-right"></i></button>
+                </div>
+                <div class="thumbs" id="thumbs-container"></div>
+                <div class="dots" id="dots-container"></div>
+            </div>
+
+            <!-- COL 2: DETAILS -->
+            <div class="details-col">
+                <h2 class="svc-title" id="svc-title">Hospedaje canino</h2>
+                <div class="rating-row">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-num" id="svc-rating">4.9</span>
+                    <span class="client-cnt"><i class="ph ph-users"></i> <span id="svc-clients">+950 perros hospedados</span></span>
+                </div>
+                <p class="svc-desc" id="svc-desc">Tu perro se sentirá como en casa mientras tú disfrutas de tranquilidad. Un ambiente seguro, cómodo y lleno de cariño mientras tú estás fuera.</p>
+                <div class="features-list" id="features-list"></div>
+                <div class="badges" id="badges-row"></div>
+            </div>
+
+            <!-- COL 3: BOOKING -->
+            <div class="booking-col">
+                <div class="avail">
+                    <span class="avail-dot"></span>
+                    Disponible hoy
+                </div>
+                <div class="price-lbl">Desde</div>
+                <div class="price-val" id="svc-price">$28.000</div>
+                <div class="price-unit" id="svc-unit">por noche</div>
+                <ul class="benefits" id="benefits-list"></ul>
+                <button class="btn-primary">
+                    <i class="ph ph-paw-print"></i> Reservar ahora <i class="ph ph-arrow-right"></i>
+                </button>
+                <button class="btn-secondary">
+                    <i class="ph ph-calendar-check"></i> Ver disponibilidad
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM -->
+        <div class="bottom-section" style="display:grid;">
+        <!-- SKELETON OVERLAY BOTTOM (cambio de tab) -->
+            <div class="sk-bottom-overlay">
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-right-panel">
+                    <div class="sk-stats">
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    </div>
+                    <div class="sk-testimonial">
+                        <div class="sk-t-line w90"></div><div class="sk-t-line w75"></div>
+                        <div class="sk-t-author"><div class="sk-t-avatar"></div><div class="sk-t-name"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="community-wrap">
+                <!-- INFO CARDS (4) -->
+                <div id="info-cards" style="display:contents"></div>
+
+                <!-- COMMUNITY + STATS + TESTIMONIAL -->
+                <div class="right-panel">
+                    <div class="community-label">
+                        <i class="ph ph-sparkle"></i> Nuestra comunidad
+                    </div>
+                    <div class="stats-row" id="stats-row"></div>
+                    <div class="testimonial-card">
+                        <div class="test-nav">
+                            <button class="test-btn" id="tprev"><i class="ph ph-caret-left"></i></button>
+                            <button class="test-btn" id="tnext"><i class="ph ph-caret-right"></i></button>
+                        </div>
+                        <div class="test-quote">"</div>
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-text" id="test-text">Mi perrito la pasó increíble, lo cuidaron como si fuera de ellos. ¡Totalmente recomendado!</p>
+                        <div class="test-author">
+                            <img id="test-img" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80" alt="testimonio">
+                            <div>
+                                <h5 id="test-name">Valentina G.</h5>
+                                <span id="test-role">Cliente satisfecha</span>
+                            </div>
+                        </div>
+                        <div class="test-dots" id="test-dots"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER BAR -->
+        <div class="footer-bar" id="footer-bar">
+            <i class="ph ph-heart"></i>
+            <span id="footer-text">Seguridad, cariño y diversión en un solo lugar. 🐾</span>
+        </div>
+
+    </main>
+</div>
+
 <script>
-    const btnMenu = document.getElementById('btn-menu');
-    const menuLatente = document.getElementById('menu-latente');
+// ══════════════════════════════════════════════════
+//  SKELETON: CARGA INICIAL DE PÁGINA
+// ══════════════════════════════════════════════════
+const pageSkeleton = document.getElementById('page-skeleton');
 
-    btnMenu.addEventListener('click', () => {
-        // Alterna la clase 'show' para mostrar/ocultar
-        menuLatente.classList.toggle('show');
-    });
+function hideSkeleton() {
+    pageSkeleton.classList.add('hidden');
+    // Lo quitamos del DOM tras el fade para que no interfiera
+    setTimeout(() => pageSkeleton.remove(), 600);
+}
 
-    // Opcional: Cerrar el menú si haces clic fuera de él
-    window.addEventListener('click', (e) => {
-        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
-            menuLatente.classList.remove('show');
-        }
+// Espera a que la página esté lista Y a que las imágenes críticas carguen
+window.addEventListener('load', () => {
+    // Mínimo 1.2 s para que el shimmer sea visible
+    setTimeout(hideSkeleton, 1200);
+});
+// Fallback: si load tarda más de 4 s, ocultamos igual
+setTimeout(hideSkeleton, 4000);
+
+
+// ── SERVICE DATA ──
+const services = {
+    paseos: {
+        tag: '⭐ Más solicitado',
+        images: [
+            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Paseos',
+        rating: '4.9',
+        clients: '+1.200 clientes felices',
+        desc: 'Tu mascota disfrutará de paseos seguros, divertidos y adaptados a su energía. Nosotros cuidamos de su bienestar mientras tú tienes tranquilidad.',
+        features: [
+            { icon: 'ph-paw-print', text: '<strong>Número de mascotas:</strong> <span>Máximo 6 mascotas.</span>' },
+            { icon: 'ph-users', text: '<strong>Modalidad de paseo:</strong> <span>Grupal o Individual.</span>' },
+            { icon: 'ph-calendar-blank', text: '<strong>Días en la semana:</strong> <span>Puedes elegir los días que prefieras.</span>' },
+            { icon: 'ph-clock', text: '<strong>Duración del paseo:</strong> <span>Desde 30 min, 1 h, 2 h. Máx. 3 h.</span>' },
+        ],
+        badges: ['Paseadores certificados', 'Mascotas aseguradas', 'Trato amoroso', 'Seguimiento en tiempo real'],
+        price: '$18.000',
+        unit: 'por paseo',
+        benefits: ['Fotos del paseo', 'Seguimiento GPS', 'Hidratación incluida', 'Ejercicio y diversión'],
+        stats: [
+            { icon: 'ph-paw-print', num: '3.200+', desc: 'Mascotas felices' },
+            { icon: 'ph-person-simple-walk', num: '8.400+', desc: 'Paseos realizados' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+        ],
+        infoCards: [
+            { icon: 'ph-camera', title: 'Fotos del paseo', desc: 'Recibe imágenes de tu peludo.' },
+            { icon: 'ph-map-pin', title: 'Ruta GPS', desc: 'Seguimiento del recorrido.' },
+            { icon: 'ph-chat-dots', title: 'Resumen del paseo', desc: 'Informe con detalles y recomendaciones.' },
+            { icon: 'ph-drop', title: 'Hidratación incluida', desc: 'Agua fresca durante el paseo.' },
+        ],
+        testimonials: [
+            { text: 'Mi perro volvió feliz y cansado cada vez. ¡Excelente servicio!', name: 'Laura M.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Los paseadores son increíbles. Mi golden los adora.', name: 'Sofía R.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Porque tu mascota merece lo mejor, cada paseo es una experiencia llena de amor y cuidado. 🐾',
+    },
+    adiestramiento: {
+        tag: '🎓 Transformamos su comportamiento',
+        images: [
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1554692918-08fa0fdc9db3?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Adiestramiento canino',
+        rating: '4.9',
+        clients: '+850 perros educados',
+        desc: 'Métodos positivos, basados en refuerzo y empatía. Mejora la conducta de tu perro y fortalece la relación que tienen.',
+        features: [
+            { icon: 'ph-users', text: '<strong>Modalidades:</strong> <span>Individual / A domicilio / Grupal.</span>' },
+            { icon: 'ph-target', text: '<strong>Áreas de trabajo:</strong> <span>Obediencia, conducta, socialización, ansiedad, reactividad y más.</span>' },
+            { icon: 'ph-clock', text: '<strong>Duración:</strong> <span>Sesiones de 45 a 60 minutos.</span>' },
+            { icon: 'ph-clipboard-text', text: '<strong>Plan personalizado:</strong> <span>Adaptado a las necesidades de tu perro.</span>' },
+        ],
+        badges: ['Entrenadores certificados', 'Métodos positivos', 'Bienestar emocional', 'Resultados efectivos'],
+        price: '$22.000',
+        unit: 'por sesión',
+        benefits: ['Evaluación inicial incluida', 'Plan de entrenamiento personalizado', 'Seguimiento y recomendaciones', 'Apoyo entre sesiones', 'Informe de progreso'],
+        stats: [
+            { icon: 'ph-paw-print', num: '850+', desc: 'Perros entrenados' },
+            { icon: 'ph-users', num: '620+', desc: 'Familias satisfechas' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+        ],
+        infoCards: [
+            { icon: 'ph-lightbulb', title: 'Mejora la conducta', desc: 'Reduce ladridos, saltos y conductas indeseadas.' },
+            { icon: 'ph-heart', title: 'Vínculo más fuerte', desc: 'Comunicación y confianza.' },
+            { icon: 'ph-target', title: 'Obediencia básica', desc: 'Sentarse, quedarse, venir, caminar.' },
+            { icon: 'ph-smiley', title: 'Menos estrés', desc: 'Perros más tranquilos y equilibrados.' },
+        ],
+        testimonials: [
+            { text: 'El cambio de mi perro ha sido increíble. Más tranquilo, obediente y feliz.', name: 'Carolina R.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Increíble metodología. Mi perro aprendió en tiempo récord.', name: 'Andrés P.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Cada perro es único, por eso diseñamos un plan a la medida para lograr resultados reales. 🐾',
+    },
+    hospedaje: {
+        tag: '🏡 Como en casa, pero con más amor',
+        images: [
+            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Hospedaje canino',
+        rating: '4.9',
+        clients: '+950 perros hospedados',
+        desc: 'Tu perro se sentirá como en casa. Un ambiente seguro, cómodo y lleno de cariño mientras tú estás fuera.',
+        features: [
+            { icon: 'ph-house', text: '<strong>Ambiente familiar:</strong> <span>Atención personalizada 24/7.</span>' },
+            { icon: 'ph-shield-check', text: '<strong>Espacios seguros:</strong> <span>Casa adaptada y áreas de juego.</span>' },
+            { icon: 'ph-person-simple-walk', text: '<strong>Paseos diarios:</strong> <span>Ejercicio y diversión asegurados.</span>' },
+            { icon: 'ph-fork-knife', text: '<strong>Alimentación incluida:</strong> <span>Seguimos sus hábitos y horarios.</span>' },
+            { icon: 'ph-camera', text: '<strong>Reportes diarios:</strong> <span>Fotos y videos para tu tranquilidad.</span>' },
+        ],
+        badges: ['Supervisión 24/7', 'Atención personalizada', 'Fotos y videos diarios', 'Veterinaria de confianza'],
+        price: '$28.000',
+        unit: 'por noche',
+        benefits: ['Alojamiento en ambiente familiar', 'Paseos y juegos diarios', 'Alimentación incluida', 'Medicamentos (si aplica)', 'Actualizaciones diarias'],
+        stats: [
+            { icon: 'ph-paw-print', num: '950+', desc: 'Perros hospedados' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+            { icon: 'ph-smiley', num: '98%', desc: 'Clientes satisfechos' },
+        ],
+        infoCards: [
+            { icon: 'ph-house', title: 'Ambiente hogareño', desc: 'Tu perro vive dentro de casa.' },
+            { icon: 'ph-heart', title: 'Mucho amor', desc: 'Cuidado y compañía todo el día.' },
+            { icon: 'ph-tree', title: 'Zonas de juego', desc: 'Patio seguro para correr y explorar.' },
+            { icon: 'ph-moon', title: 'Rutinas respetadas', desc: 'Mantenemos sus hábitos y horarios.' },
+        ],
+        testimonials: [
+            { text: 'Mi perrito la pasó increíble, lo cuidaron como si fuera de ellos. ¡Totalmente recomendado!', name: 'Valentina G.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Regresé tranquila sabiendo que mi perra estaba en las mejores manos.', name: 'Mariana L.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Seguridad, cariño y diversión en un solo lugar. 🐾',
+    }
+};
+
+// ── STATE ──
+let currentSvc = 'hospedaje';
+let currentImg = 0;
+let currentTest = 0;
+
+// ── DOM REFS ──
+const mainImg = document.getElementById('main-img');
+const imgTag = document.getElementById('img-tag');
+const thumbsEl = document.getElementById('thumbs-container');
+const dotsEl = document.getElementById('dots-container');
+const svcTitle = document.getElementById('svc-title');
+const svcRating = document.getElementById('svc-rating');
+const svcClients = document.getElementById('svc-clients');
+const svcDesc = document.getElementById('svc-desc');
+const featuresList = document.getElementById('features-list');
+const badgesRow = document.getElementById('badges-row');
+const svcPrice = document.getElementById('svc-price');
+const svcUnit = document.getElementById('svc-unit');
+const benefitsList = document.getElementById('benefits-list');
+const infoCardsEl = document.getElementById('info-cards');
+const statsRow = document.getElementById('stats-row');
+const testText = document.getElementById('test-text');
+const testImg = document.getElementById('test-img');
+const testName = document.getElementById('test-name');
+const testRole = document.getElementById('test-role');
+const testDots = document.getElementById('test-dots');
+const footerText = document.getElementById('footer-text');
+const showcase = document.getElementById('showcase');
+const bottomSection = document.querySelector('.bottom-section');
+
+// ══════════════════════════════════════════════════
+//  SKELETON: CAMBIO DE TAB
+// ══════════════════════════════════════════════════
+function showTabSkeleton() {
+    showcase.classList.add('sk-loading');
+    bottomSection.classList.add('sk-loading');
+}
+function hideTabSkeleton() {
+    showcase.classList.remove('sk-loading');
+    bottomSection.classList.remove('sk-loading');
+}
+
+function renderService(key) {
+    const s = services[key];
+    currentImg = 0;
+    currentTest = 0;
+
+    // 1. Mostrar skeleton de tab
+    showTabSkeleton();
+
+    // 2. Tras 420 ms renderizar contenido y quitar skeleton
+    setTimeout(() => {
+
+        // Tag & image
+        imgTag.innerHTML = s.tag;
+        mainImg.src = s.images[0];
+
+        // Thumbnails
+        thumbsEl.innerHTML = '';
+        dotsEl.innerHTML = '';
+        s.images.forEach((src, i) => {
+            const t = document.createElement('img');
+            t.src = src; t.className = 'thumb' + (i===0?' active':'');
+            t.addEventListener('click', () => setImage(i));
+            thumbsEl.appendChild(t);
+
+            const d = document.createElement('div');
+            d.className = 'dot' + (i===0?' active':'');
+            d.addEventListener('click', () => setImage(i));
+            dotsEl.appendChild(d);
+        });
+
+        // Details
+        svcTitle.textContent = s.title;
+        svcRating.textContent = s.rating;
+        svcClients.textContent = s.clients;
+        svcDesc.textContent = s.desc;
+
+        featuresList.innerHTML = s.features.map(f =>
+            `<div class="feat"><i class="ph ${f.icon}"></i><div>${f.text}</div></div>`
+        ).join('');
+
+        badgesRow.innerHTML = s.badges.map(b =>
+            `<span class="badge"><i class="ph ph-check-circle"></i>${b}</span>`
+        ).join('');
+
+        // Booking
+        svcPrice.textContent = s.price;
+        svcUnit.textContent = s.unit;
+        benefitsList.innerHTML = s.benefits.map(b =>
+            `<li><i class="ph ph-check-circle"></i>${b}</li>`
+        ).join('');
+
+        // Info cards
+        infoCardsEl.innerHTML = s.infoCards.map(c =>
+            `<div class="info-card">
+                <i class="ph ${c.icon} ic"></i>
+                <h4>${c.title}</h4>
+                <p>${c.desc}</p>
+            </div>`
+        ).join('');
+
+        // Stats
+        statsRow.innerHTML = s.stats.map(st =>
+            `<div class="stat-box">
+                <i class="ph ${st.icon}"></i>
+                <span class="stat-num">${st.num}</span>
+                <span class="stat-desc">${st.desc}</span>
+            </div>`
+        ).join('');
+
+        // Testimonial
+        renderTestimonial(s, 0);
+
+        // Footer
+        footerText.textContent = s.footer;
+
+        // 3. Quitar skeleton → aparece contenido
+        hideTabSkeleton();
+
+    }, 420);
+}
+
+function setImage(idx) {
+    const s = services[currentSvc];
+    currentImg = idx;
+    mainImg.src = s.images[idx];
+    document.querySelectorAll('.thumb').forEach((t,i) => t.classList.toggle('active', i===idx));
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function renderTestimonial(s, idx) {
+    const t = s.testimonials[idx];
+    testText.textContent = t.text;
+    testName.textContent = '— ' + t.name;
+    testRole.textContent = t.role;
+    testImg.src = t.img;
+
+    testDots.innerHTML = s.testimonials.map((_,i) =>
+        `<div class="test-dot${i===idx?' active':''}"></div>`
+    ).join('');
+    testDots.querySelectorAll('.test-dot').forEach((d,i) => {
+        d.addEventListener('click', () => { currentTest=i; renderTestimonial(s,i); });
     });
+}
+
+// ── EVENT LISTENERS ──
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelector('.tab.active').classList.remove('active');
+        tab.classList.add('active');
+        currentSvc = tab.dataset.svc;
+        renderService(currentSvc);
+    });
+});
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+    const imgs = services[currentSvc].images;
+    setImage((currentImg - 1 + imgs.length) % imgs.length);
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+    const imgs = services[currentSvc].images;
+    setImage((currentImg + 1) % imgs.length);
+});
+
+document.getElementById('tprev').addEventListener('click', () => {
+    const s = services[currentSvc];
+    currentTest = (currentTest - 1 + s.testimonials.length) % s.testimonials.length;
+    renderTestimonial(s, currentTest);
+});
+document.getElementById('tnext').addEventListener('click', () => {
+    const s = services[currentSvc];
+    currentTest = (currentTest + 1) % s.testimonials.length;
+    renderTestimonial(s, currentTest);
+});
+
+// ── INIT ──
+renderService('hospedaje');
+
+// Dynamic date
+const now = new Date();
+const opts = { weekday: undefined, year: 'numeric', month: 'long', day: 'numeric' };
+document.getElementById('current-date').textContent = now.toLocaleDateString('es-CO', opts);
 </script>
-
+</body>
 </html>

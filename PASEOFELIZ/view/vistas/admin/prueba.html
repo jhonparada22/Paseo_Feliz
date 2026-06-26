@@ -3,218 +3,1351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Paseo Feliz</title>
-    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+    <title>Paseo Feliz - Servicios</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --primary: #3F78B8;
+            --primary-dark: #173D70;
+            --secondary: #55E36A;
+            --bg: #FFFFFF;
+            --bg-body: #F3F7FB;
+            --border: #E8EDF3;
+            --text: #173D70;
+            --muted: #6B7280;
+            --radius-xl: 22px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-xs: 0 2px 8px rgba(23,61,112,0.05);
+            --shadow-sm: 0 4px 16px rgba(23,61,112,0.07);
+            --shadow-md: 0 8px 28px rgba(23,61,112,0.10);
+            --ease: all 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-body);
+            color: var(--text);
+            overflow-x: hidden;
+        }
 
-    <!-- Tus estilos globales -->
-    <link rel="stylesheet" href="../../css/principal_css/global.css">
-    <link rel="stylesheet" href="../../css/principal_css/paseos.css">
-    
-    <!-- Estilos específicos del dashboard que crearemos abajo -->
-    <link rel="stylesheet" href="../../css/admin.css">
+        /* ══════════════════════════════════════
+           SKELETON SCREENS
+        ══════════════════════════════════════ */
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Fuente de la plantilla -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        /* Animación shimmer compartida */
+        @keyframes shimmer {
+            0%   { background-position: -600px 0; }
+            100% { background-position:  600px 0; }
+        }
+        .sk {
+            background: linear-gradient(90deg, #E8EDF3 25%, #F3F7FB 50%, #E8EDF3 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+            border-radius: 8px;
+        }
+
+        /* ── OVERLAY DE CARGA INICIAL ── */
+        #page-skeleton {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-body);
+            z-index: 9999;
+            display: flex;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        #page-skeleton.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Sidebar falsa */
+        .sk-sidebar {
+            width: 96px;
+            background: #3a6faa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 28px 0 24px;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+        .sk-sidebar-circle {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+        }
+        .sk-nav-item {
+            width: 64px; height: 64px; border-radius: 14px;
+            background: rgba(255,255,255,0.12);
+        }
+        .sk-nav-item.active-sk {
+            background: rgba(85,227,106,0.35);
+        }
+
+        /* Contenido principal falso */
+        .sk-main {
+            flex: 1;
+            padding: 32px 36px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            overflow: hidden;
+        }
+
+        /* Top bar */
+        .sk-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sk-welcome { width: 280px; height: 32px; border-radius: 10px; }
+        .sk-date    { width: 180px; height: 38px; border-radius: 12px; }
+
+        /* Tabs */
+        .sk-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .sk-tab  { height: 80px; border-radius: 22px; }
+
+        /* Showcase */
+        .sk-showcase {
+            display: grid;
+            grid-template-columns: 36% 1fr 240px;
+            gap: 28px;
+            background: #fff;
+            padding: 28px;
+            border-radius: 22px;
+            border: 1px solid var(--border);
+        }
+
+        /* Columna carrusel */
+        .sk-carousel { display: flex; flex-direction: column; gap: 14px; }
+        .sk-main-img { height: 288px; border-radius: 16px; }
+        .sk-thumbs   { display: flex; gap: 8px; }
+        .sk-thumb    { width: 62px; height: 56px; border-radius: 8px; flex-shrink: 0; }
+
+        /* Columna detalles */
+        .sk-details { display: flex; flex-direction: column; gap: 12px; }
+        .sk-title   { width: 55%; height: 32px; border-radius: 8px; }
+        .sk-rating  { width: 40%; height: 18px; border-radius: 6px; }
+        .sk-desc    { width: 100%; height: 14px; border-radius: 6px; }
+        .sk-desc.w80 { width: 80%; }
+        .sk-desc.w65 { width: 65%; }
+        .sk-feat-row { display: flex; gap: 10px; align-items: center; }
+        .sk-feat-icon { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+        .sk-feat-txt  { flex: 1; height: 14px; border-radius: 6px; }
+        .sk-badges    { display: flex; gap: 8px; margin-top: 6px; }
+        .sk-badge     { width: 110px; height: 28px; border-radius: 30px; }
+
+        /* Columna booking */
+        .sk-booking {
+            border-left: 1px solid var(--border);
+            padding-left: 24px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .sk-avail  { width: 120px; height: 26px; border-radius: 30px; }
+        .sk-price  { width: 70%;  height: 44px; border-radius: 8px; }
+        .sk-unit   { width: 50%;  height: 14px; border-radius: 6px; }
+        .sk-benefit { width: 100%; height: 14px; border-radius: 6px; }
+        .sk-benefit.w85 { width: 85%; }
+        .sk-benefit.w70 { width: 70%; }
+        .sk-btn-p  { width: 100%; height: 46px; border-radius: 12px; }
+        .sk-btn-s  { width: 100%; height: 40px; border-radius: 12px; background: #f0f4f8; animation: none; }
+
+        /* Bottom */
+        .sk-bottom {
+            display: grid;
+            grid-template-columns: repeat(4,1fr) 1.5fr;
+            gap: 18px;
+        }
+        .sk-info-card {
+            background: #fff;
+            border-radius: 22px;
+            padding: 22px 18px;
+            border: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 10px;
+            align-items: center;
+        }
+        .sk-ic-icon   { width: 40px; height: 40px; border-radius: 50%; }
+        .sk-ic-title  { width: 70%; height: 16px; border-radius: 6px; }
+        .sk-ic-desc   { width: 90%; height: 12px; border-radius: 6px; }
+        .sk-ic-desc2  { width: 60%; height: 12px; border-radius: 6px; }
+
+        .sk-right-panel { display: flex; flex-direction: column; gap: 12px; }
+        .sk-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .sk-stat  {
+            background: #fff; border-radius: 16px; border: 1px solid var(--border);
+            padding: 14px 10px;
+            display: flex; flex-direction: column; gap: 6px; align-items: center;
+        }
+        .sk-stat-num  { width: 50%; height: 22px; border-radius: 6px; }
+        .sk-stat-desc { width: 70%; height: 12px; border-radius: 6px; }
+        .sk-testimonial {
+            background: #1a3d6b;
+            border-radius: 22px; padding: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .sk-t-line { height: 13px; border-radius: 6px;
+            background: linear-gradient(90deg,rgba(255,255,255,.12) 25%,rgba(255,255,255,.22) 50%,rgba(255,255,255,.12) 75%);
+            background-size: 600px 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+        .sk-t-line.w90 { width:90%; }
+        .sk-t-line.w75 { width:75%; }
+        .sk-t-line.w55 { width:55%; }
+        .sk-t-author { display:flex; gap:10px; align-items:center; margin-top:4px; }
+        .sk-t-avatar {
+            width:36px; height:36px; border-radius:50%;
+            background: rgba(255,255,255,.18);
+            flex-shrink:0;
+        }
+        .sk-t-name { width:90px; height:12px; border-radius:6px;
+            background:rgba(255,255,255,.18); animation:none; }
+
+        /* ── SKELETON EN TABS (inline) ── */
+        /* Cuando el showcase está en modo skeleton durante cambio de tab */
+        .showcase.sk-loading .carousel-col,
+        .showcase.sk-loading .details-col,
+        .showcase.sk-loading .booking-col { visibility: hidden; }
+
+        .sk-inline-overlay {
+            position: absolute; inset: 0;
+            display: none;
+            grid-template-columns: 36% 1fr 240px;
+            gap: 28px;
+            padding: 28px;
+            pointer-events: none;
+            z-index: 10;
+            background: #fff;
+            border-radius: 22px;
+        }
+        .showcase { position: relative; }
+        .showcase.sk-loading .sk-inline-overlay { display: grid; }
+
+        /* Bottom skeleton inline */
+        .bottom-section { position: relative; }
+        .sk-bottom-overlay {
+            position: absolute; inset: 0;
+            display: none;
+            grid-template-columns: repeat(4,1fr) 1.5fr;
+            gap: 18px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .bottom-section.sk-loading > * { visibility: hidden; }
+        .bottom-section.sk-loading .sk-bottom-overlay { display: grid; }
+
+        /* ── LAYOUT ── */
+        .app { display:flex; min-height:100vh; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 96px;
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px 0 24px;
+            position: fixed;
+            height: 100vh;
+            left: 0; top: 0;
+            z-index: 200;
+        }
+        .menu-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--ease);
+            margin-bottom: 32px;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.25); }
+        .sidebar-nav { display:flex; flex-direction:column; gap:6px; align-items:center; }
+        .nav-item {
+            display: flex; flex-direction:column; align-items:center;
+            text-decoration: none;
+            color: rgba(255,255,255,0.72);
+            width: 76px; min-height: 72px;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            font-size: 11px; gap: 5px;
+            transition: var(--ease);
+            padding: 10px 4px;
+        }
+        .nav-item i { font-size: 22px; }
+        .nav-item.active {
+            background: var(--secondary);
+            color: var(--primary-dark);
+            font-weight: 700;
+            box-shadow: 0 0 18px rgba(85,227,106,0.45);
+            border-radius: 18px;
+        }
+        .nav-item:hover:not(.active) { background: rgba(255,255,255,0.12); color:#fff; }
+        .sidebar-logo {
+            color: #fff;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        .sidebar-logo i { font-size: 26px; display:block; margin-bottom: 4px; color: var(--secondary); }
+
+        /* ── MAIN ── */
+        .main {
+            margin-left: 96px;
+            flex: 1;
+            padding: 32px 36px 40px;
+            width: calc(100% - 96px);
+            max-width: 1380px;
+        }
+
+        /* ── TOP BAR ── */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .welcome { font-size: 24px; font-weight: 700; display:flex; align-items:center; gap:10px; }
+        .welcome .paw { font-size: 22px; }
+        .date-badge {
+            background: #fff;
+            padding: 9px 18px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            display: flex; align-items:center; gap:8px;
+            font-size: 13px; color: var(--muted);
+            border: 1px solid var(--border);
+        }
+        .date-badge i { color: var(--primary); font-size:16px; }
+
+        /* ── SERVICE SECTION HEADER ── */
+        .section-header {
+            text-align: center;
+            margin-bottom: 18px;
+            display: flex; align-items:center; justify-content:center; gap:10px;
+            color: var(--muted); font-size: 14px; font-weight: 500;
+        }
+        .section-header i { color: var(--primary); font-size: 16px; }
+        .divider-line {
+            flex:1; height:1px; background: linear-gradient(to right, transparent, var(--border));
+        }
+        .divider-line.right { background: linear-gradient(to left, transparent, var(--border)); }
+
+        /* ── SERVICE TABS ── */
+        .service-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .tab {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            padding: 18px 20px;
+            border-radius: var(--radius-xl);
+            display: flex; align-items: center; gap: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: var(--ease);
+            box-shadow: var(--shadow-xs);
+        }
+        .tab:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+        .tab.active { border-color: var(--secondary); box-shadow: 0 4px 20px rgba(85,227,106,0.2); }
+        .tab-icon {
+            width: 50px; height: 50px;
+            background: #EFF5FB;
+            border-radius: 50%;
+            display: flex; align-items:center; justify-content:center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+        .tab.active .tab-icon { background: rgba(85,227,106,0.15); }
+        .tab h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+        .tab p { font-size: 12px; color: var(--muted); }
+        .tab-arrow {
+            position: absolute;
+            bottom: -13px; left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 11px solid transparent;
+            border-right: 11px solid transparent;
+            border-top: 11px solid var(--secondary);
+            display: none;
+        }
+        .tab.active .tab-arrow { display: block; }
+
+        /* ── SHOWCASE GRID ── */
+        .showcase {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            padding: 28px;
+            display: grid;
+            grid-template-columns: 36% 1fr 240px;
+            gap: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        /* CAROUSEL */
+        .carousel-col { display:flex; flex-direction:column; gap:14px; }
+        .img-wrapper {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            height: 288px;
+            background: #e8edf3;
+        }
+        .img-wrapper img {
+            width:100%; height:100%; object-fit:cover;
+            transition: opacity 0.4s ease;
+        }
+        .img-tag {
+            position: absolute; top: 14px; left: 14px;
+            background: var(--secondary);
+            color: var(--primary-dark);
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 12px; font-weight: 700;
+            display: flex; align-items:center; gap:5px;
+        }
+        .arr-btn {
+            position: absolute; top:50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.92);
+            border: none; width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items:center; justify-content:center;
+            cursor: pointer; box-shadow: var(--shadow-xs);
+            transition: var(--ease); font-size:16px; color: var(--text);
+        }
+        .arr-btn:hover { background: #fff; box-shadow: var(--shadow-sm); }
+        .arr-btn.prev { left: 12px; }
+        .arr-btn.next { right: 12px; }
+        .thumbs { display:flex; gap:8px; }
+        .thumb {
+            width: 62px; height: 56px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--ease);
+            flex-shrink: 0;
+        }
+        .thumb.active, .thumb:hover { border-color: var(--primary); }
+        .dots { display:flex; gap:6px; justify-content:center; margin-top:2px; }
+        .dot {
+            width:8px; height:8px; border-radius:50%;
+            background: var(--border); cursor:pointer; transition: var(--ease);
+        }
+        .dot.active { background: var(--primary); width: 20px; border-radius: 4px; }
+
+        /* DETAILS COL */
+        .details-col { display:flex; flex-direction:column; }
+        .svc-title { font-size: 27px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .rating-row {
+            display:flex; align-items:center; gap: 8px;
+            margin-bottom: 14px; flex-wrap: wrap;
+        }
+        .stars { color: #F59E0B; font-size: 15px; letter-spacing:1px; }
+        .rating-num {
+            background: #FFF7ED;
+            color: #D97706;
+            font-weight: 700; font-size: 13px;
+            padding: 2px 8px; border-radius: 20px;
+        }
+        .client-cnt { font-size: 13px; color: var(--muted); display:flex; align-items:center; gap:4px; }
+        .client-cnt i { font-size: 14px; }
+        .svc-desc {
+            font-size: 14px; color: var(--muted); line-height:1.65;
+            margin-bottom: 20px;
+        }
+        .features-list { display:flex; flex-direction:column; gap:13px; margin-bottom:20px; }
+        .feat {
+            display:flex; align-items:flex-start; gap:10px;
+            font-size: 13.5px; line-height:1.4;
+        }
+        .feat i {
+            font-size: 18px; color: var(--primary);
+            margin-top: 1px; flex-shrink:0;
+        }
+        .feat strong { color: var(--text); }
+        .feat span { color: var(--muted); }
+        .badges {
+            display:flex; gap:8px; flex-wrap:wrap;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .badge {
+            background: #EFF5FB;
+            color: var(--primary);
+            padding: 6px 13px;
+            border-radius: 30px;
+            font-size: 12px; font-weight: 600;
+            display:flex; align-items:center; gap:5px;
+        }
+        .badge i { font-size: 14px; color: var(--primary); }
+
+        /* BOOKING COL */
+        .booking-col {
+            border-left: 1px solid var(--border);
+            padding-left: 24px;
+            display: flex; flex-direction:column;
+        }
+        .avail {
+            display:flex; align-items:center; gap:7px;
+            font-size: 12.5px; font-weight: 600; color: #059669;
+            background: #ECFDF5; padding: 6px 12px; border-radius: 30px;
+            margin-bottom: 18px; width:fit-content;
+            border: 1px solid #A7F3D0;
+        }
+        .avail-dot { width:7px; height:7px; border-radius:50%; background:#10B981; }
+        .price-lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+        .price-val {
+            font-size: 34px; font-weight: 900;
+            color: var(--primary-dark); letter-spacing: -1px;
+            line-height:1;
+        }
+        .price-unit { font-size: 13px; font-weight: 400; color: var(--muted); margin-bottom: 22px; }
+        .benefits { list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+        .benefits li { font-size: 13px; display:flex; align-items:center; gap:8px; }
+        .benefits li i { color:#10B981; font-size:16px; }
+        .btn-primary {
+            background: var(--secondary);
+            color: var(--primary-dark);
+            border: none; padding: 14px;
+            border-radius: var(--radius-md);
+            font-weight: 700; font-size: 14px;
+            cursor: pointer;
+            display: flex; align-items:center; justify-content:center; gap:8px;
+            box-shadow: 0 4px 18px rgba(85,227,106,0.35);
+            transition: var(--ease);
+            margin-bottom: 10px;
+        }
+        .btn-primary:hover { transform:scale(1.025); box-shadow: 0 6px 24px rgba(85,227,106,0.45); }
+        .btn-primary i { font-size: 18px; }
+        .btn-secondary {
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-weight: 600; font-size: 13.5px;
+            cursor: pointer;
+            display: flex; align-items:center; justify-content:center; gap:7px;
+            transition: var(--ease);
+        }
+        .btn-secondary:hover { background: #EFF5FB; }
+        .btn-secondary i { font-size: 16px; }
+
+        /* ── BOTTOM SECTION ── */
+        .bottom-section {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        /* COMMUNITY HEADER spanning 3 center cols */
+        .community-wrap {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.5fr;
+            gap: 18px;
+        }
+        .community-label {
+            grid-column: 1 / 5;
+            text-align: center;
+            font-size: 13px; font-weight: 600; color: var(--primary);
+            margin-bottom: 6px;
+            display: flex; align-items:center; justify-content:center; gap:6px;
+        }
+
+        /* INFO CARDS */
+        .info-card {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: 22px 18px;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: var(--ease);
+        }
+        .info-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .info-card .ic { font-size: 30px; color: var(--primary); display:block; margin-bottom:10px; }
+        .info-card h4 { font-size: 14px; font-weight: 700; margin-bottom:5px; }
+        .info-card p { font-size: 12px; color: var(--muted); line-height:1.5; }
+
+        /* STATS + TESTIMONIAL */
+        .right-panel { display:flex; flex-direction:column; gap:12px; }
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3,1fr); gap:10px;
+        }
+        .stat-box {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 14px 10px;
+            text-align: center;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--border);
+        }
+        .stat-box i { font-size:20px; color: var(--primary); display:block; margin-bottom:4px; }
+        .stat-num { font-size: 20px; font-weight: 900; color: var(--primary); display:block; }
+        .stat-desc { font-size: 11px; color: var(--muted); }
+        .testimonial-card {
+            background: var(--primary-dark);
+            border-radius: var(--radius-xl);
+            padding: 20px;
+            color: #fff;
+            position: relative;
+        }
+        .test-nav { position: absolute; top: 18px; right: 16px; display:flex; gap:6px; }
+        .test-btn {
+            background: rgba(255,255,255,0.15); border:none; color:#fff;
+            width:26px; height:26px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; font-size:13px; transition:var(--ease);
+        }
+        .test-btn:hover { background:rgba(255,255,255,0.3); }
+        .test-quote { font-size:24px; color: var(--secondary); line-height:1; margin-bottom:6px; font-family:Georgia,serif; }
+        .test-stars { color: var(--secondary); font-size:12px; margin-bottom:8px; }
+        .test-text { font-size:13px; line-height:1.55; margin-bottom:14px; font-style:italic; }
+        .test-author { display:flex; align-items:center; gap:10px; }
+        .test-author img { width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.3); }
+        .test-author h5 { font-size:13px; margin-bottom:2px; }
+        .test-author span { font-size:11px; color:rgba(255,255,255,0.6); }
+        .test-dots { display:flex; gap:5px; margin-top:12px; justify-content:center; }
+        .test-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.3); cursor:pointer; transition:var(--ease); }
+        .test-dot.active { background: var(--secondary); width:14px; border-radius:3px; }
+
+        /* FOOTER BAR */
+        .footer-bar {
+            margin-top: 28px;
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: 14px 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-xs);
+            text-align:center;
+            font-size: 13px; color: var(--muted);
+            display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+        .footer-bar i { color: var(--primary); font-size:16px; }
+
+        /* SERVICE CONTENT TRANSITIONS */
+        .showcase { transition: opacity 0.3s ease; }
+        .showcase.fade { opacity:0; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1200px) {
+            .showcase { grid-template-columns: 1fr 1fr; }
+            .booking-col { grid-column: 1/-1; border-left:none; border-top: 1px solid var(--border); padding-left:0; padding-top:20px; }
+            .bottom-section { display:none; }
+            .community-wrap { grid-template-columns: repeat(2,1fr); }
+        }
+        @media (max-width: 860px) {
+            .main { padding:20px 16px 30px; }
+            .service-tabs { grid-template-columns: 1fr; }
+            .showcase { grid-template-columns: 1fr; }
+            .booking-col { border-top: 1px solid var(--border); padding-top:20px; }
+            .sidebar { width:72px; }
+            .main { margin-left:72px; width:calc(100% - 72px); }
+            .nav-item span { display:none; }
+        }
+    </style>
 </head>
 <body>
 
-    <div id="contenedor_general" class="app-container">
+<!-- ══════════════════════════════════════════
+     SKELETON PANTALLA COMPLETA (carga inicial)
+══════════════════════════════════════════ -->
+<div id="page-skeleton">
 
-        <!-- TU BARRA LATERAL ORIGINAL -->
-        <nav class="sidebar">
-            <div class="menu-hamburguesa-container">
-                <div class="profile-circle" id="btn-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
-                <nav class="menu-desplegable" id="menu-latente">
-                    <ul>
-                        <a href="./sub_menu/conocenos.html"><li><i class="fas fa-camera"></i><span>Conócenos</span></li></a>
-                        <a href="./sub_menu/direccion_oficial.html"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
-                        <a href="./sub_menu/centro_de_ayuda.html"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
-                        <a href="./sub_menu/configuracion.html"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
-                        <a href="../../index.html"><li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li></a>
-                    </ul>
-                </nav>
-            </div>
-
-            <ul class="nav-links">
-                <li class="active"><a href="#"><i class="fas fa-paw"></i><span>Tareas</span></a></li>
-                <li><a href="Chat_admin.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
-                <li><a href="mapa_admin.html"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
-                <li><a href="adopcion_admin.html"><i class="fas fa-bone"></i><span>Adopción</span></a></li>
-                <li><a href="usuario_admin.html"><i class="fas fa-user"></i><span>Usuario</span></a></li>
-            </ul>
-        </nav>
-
-        <!-- CONTENIDO PRINCIPAL ADAPTADO -->
-        <main class="main-content dashboard-content">
-            
-            <div class="page-header">
-                <div>
-                    <div class="greeting">¡Bienvenido, Admin! 👋</div>
-                    <div class="sub">Aquí tienes un resumen general de Paseo Feliz.</div>
-                </div>
-                <div class="date-pill">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span id="dateLabel"></span>
-                </div>
-            </div>
-
-            <!-- Tarjetas de Estadísticas -->
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon blue"><i class="fas fa-person-walking-luggage"></i></div>
-                    <div class="stat-info">
-                        <div class="label">Paseos Activos</div>
-                        <div class="value">24</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon green"><i class="fas fa-users"></i></div>
-                    <div class="stat-info">
-                        <div class="label">Usuarios Registrados</div>
-                        <div class="value">1,248</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon orange"><i class="fas fa-person-walking"></i></div>
-                    <div class="stat-info">
-                        <div class="label">Paseadores Disponibles</div>
-                        <div class="value">86</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon indigo"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-info">
-                        <div class="label">Ingresos Totales</div>
-                        <div class="value">$12,540</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráficos -->
-            <div class="mid-row">
-                <div class="card" style="grid-column: span 2;">
-                    <div class="card-head">
-                        <span class="title">Resumen de Paseos</span>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="lineChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-head">
-                        <span class="title">Paseos por Estado</span>
-                    </div>
-                    <div class="donut-wrap">
-                        <div class="donut-canvas-wrap">
-                            <canvas id="donutChart" width="160" height="160"></canvas>
-                            <div class="donut-center">
-                                <div class="pct">100%</div>
-                                <div class="lbl">Total</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabla de Actividad -->
-            <div class="bottom-row">
-                <div class="card" style="width: 100%;">
-                    <div class="card-head">
-                        <span class="title">Paseos Recientes</span>
-                        <a href="#" class="ver-todos">Ver todos</a>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Usuario</th>
-                                    <th>Mascota</th>
-                                    <th>Paseador</th>
-                                    <th>Fecha</th>
-                                    <th>Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+    <!-- Sidebar falsa -->
+    <div class="sk-sidebar">
+        <div class="sk-sidebar-circle"></div>
+        <div class="sk-nav-item active-sk"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
+        <div class="sk-nav-item"></div>
     </div>
 
-    <!-- Scripts de la plantilla -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script>
-        // Lógica de Menú
-        const btnMenu = document.getElementById('btn-menu');
-        const menuLatente = document.getElementById('menu-latente');
-        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
-        window.addEventListener('click', (e) => {
-            if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
-                menuLatente.classList.remove('show');
-            }
+    <!-- Contenido principal falso -->
+    <div class="sk-main">
+
+        <!-- Top bar -->
+        <div class="sk-topbar">
+            <div class="sk sk-welcome"></div>
+            <div class="sk sk-date"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="sk-tabs">
+            <div class="sk sk-tab"></div>
+            <div class="sk sk-tab"></div>
+            <div class="sk sk-tab"></div>
+        </div>
+
+        <!-- Showcase 3 cols -->
+        <div class="sk-showcase">
+
+            <!-- Carrusel -->
+            <div class="sk-carousel">
+                <div class="sk sk-main-img"></div>
+                <div class="sk-thumbs">
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                    <div class="sk sk-thumb"></div>
+                </div>
+            </div>
+
+            <!-- Detalles -->
+            <div class="sk-details">
+                <div class="sk sk-title"></div>
+                <div class="sk sk-rating"></div>
+                <div class="sk sk-desc"></div>
+                <div class="sk sk-desc w80"></div>
+                <div class="sk sk-desc w65"></div>
+                <div style="height:8px"></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                <div style="height:4px"></div>
+                <div class="sk-badges">
+                    <div class="sk sk-badge"></div>
+                    <div class="sk sk-badge"></div>
+                    <div class="sk sk-badge"></div>
+                </div>
+            </div>
+
+            <!-- Booking -->
+            <div class="sk-booking">
+                <div class="sk sk-avail"></div>
+                <div class="sk sk-price"></div>
+                <div class="sk sk-unit"></div>
+                <div style="height:6px"></div>
+                <div class="sk sk-benefit"></div>
+                <div class="sk sk-benefit w85"></div>
+                <div class="sk sk-benefit"></div>
+                <div class="sk sk-benefit w70"></div>
+                <div class="sk sk-benefit w85"></div>
+                <div style="flex:1"></div>
+                <div class="sk sk-btn-p"></div>
+                <div class="sk-btn-s"></div>
+            </div>
+
+        </div>
+
+        <!-- Bottom -->
+        <div class="sk-bottom">
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-info-card">
+                <div class="sk sk-ic-icon"></div>
+                <div class="sk sk-ic-title"></div>
+                <div class="sk sk-ic-desc"></div>
+                <div class="sk sk-ic-desc2"></div>
+            </div>
+            <div class="sk-right-panel">
+                <div class="sk-stats">
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                </div>
+                <div class="sk-testimonial">
+                    <div class="sk-t-line w90"></div>
+                    <div class="sk-t-line w75"></div>
+                    <div class="sk-t-line w55"></div>
+                    <div class="sk-t-author">
+                        <div class="sk-t-avatar"></div>
+                        <div class="sk-t-name"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /sk-main -->
+</div><!-- /page-skeleton -->
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <button class="menu-btn"><i class="ph ph-list"></i></button>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="ph ph-paw-print"></i>
+                    <span>Servicios</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-chat-circle-dots"></i>
+                    <span>Chat</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-map-pin"></i>
+                    <span>Mapa</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-bone"></i>
+                    <span>Adopción</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ph ph-user"></i>
+                    <span>Usuario</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-logo">
+            <i class="ph ph-paw-print"></i>
+            <span>Paseo<br>Feliz</span>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOP BAR -->
+        <header class="top-bar">
+            <h1 class="welcome">¡Hola de nuevo, Carlos! <span class="paw">🐾</span></h1>
+            <div class="date-badge">
+                <i class="ph ph-calendar-blank"></i>
+                <span id="current-date">25 de junio de 2026</span>
+            </div>
+        </header>
+
+        <!-- SECTION HEADER -->
+        <div class="section-header">
+            <div class="divider-line"></div>
+            <i class="ph ph-paw-print"></i>
+            Nuestros productos y servicios
+            <i class="ph ph-paw-print"></i>
+            <div class="divider-line right"></div>
+        </div>
+
+        <!-- SERVICE TABS -->
+        <div class="service-tabs">
+            <div class="tab" data-svc="paseos">
+                <div class="tab-icon">🐶</div>
+                <div>
+                    <h3>Paseos</h3>
+                    <p>Ejercicio, diversión y bienestar</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+            <div class="tab" data-svc="adiestramiento">
+                <div class="tab-icon">🎓</div>
+                <div>
+                    <h3>Adiestramiento canino</h3>
+                    <p>Educación positiva y efectiva</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+            <div class="tab active" data-svc="hospedaje">
+                <div class="tab-icon">🏠</div>
+                <div>
+                    <h3>Hospedaje canino</h3>
+                    <p>Como en casa, pero mejor</p>
+                </div>
+                <div class="tab-arrow"></div>
+            </div>
+        </div>
+
+        <!-- SHOWCASE: 3 cols -->
+        <div class="showcase" id="showcase">
+
+            <!-- SKELETON OVERLAY (cambio de tab) -->
+            <div class="sk-inline-overlay">
+                <!-- Carrusel sk -->
+                <div class="sk-carousel">
+                    <div class="sk sk-main-img"></div>
+                    <div class="sk-thumbs">
+                        <div class="sk sk-thumb"></div><div class="sk sk-thumb"></div>
+                        <div class="sk sk-thumb"></div><div class="sk sk-thumb"></div>
+                    </div>
+                </div>
+                <!-- Detalles sk -->
+                <div class="sk-details">
+                    <div class="sk sk-title"></div>
+                    <div class="sk sk-rating"></div>
+                    <div class="sk sk-desc"></div><div class="sk sk-desc w80"></div>
+                    <div style="height:8px"></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
+                    <div class="sk-badges"><div class="sk sk-badge"></div><div class="sk sk-badge"></div><div class="sk sk-badge"></div></div>
+                </div>
+                <!-- Booking sk -->
+                <div class="sk-booking">
+                    <div class="sk sk-avail"></div>
+                    <div class="sk sk-price"></div>
+                    <div class="sk sk-unit"></div>
+                    <div class="sk sk-benefit"></div>
+                    <div class="sk sk-benefit w85"></div>
+                    <div class="sk sk-benefit"></div>
+                    <div class="sk sk-benefit w70"></div>
+                    <div style="flex:1"></div>
+                    <div class="sk sk-btn-p"></div>
+                </div>
+            </div>
+
+            <!-- COL 1: CAROUSEL -->
+            <div class="carousel-col">
+                <div class="img-wrapper">
+                    <img id="main-img" src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80" alt="Servicio">
+                    <span class="img-tag" id="img-tag"><i class="ph ph-shield-check"></i> Como en casa, pero con más amor</span>
+                    <button class="arr-btn prev" id="prev-btn"><i class="ph ph-caret-left"></i></button>
+                    <button class="arr-btn next" id="next-btn"><i class="ph ph-caret-right"></i></button>
+                </div>
+                <div class="thumbs" id="thumbs-container"></div>
+                <div class="dots" id="dots-container"></div>
+            </div>
+
+            <!-- COL 2: DETAILS -->
+            <div class="details-col">
+                <h2 class="svc-title" id="svc-title">Hospedaje canino</h2>
+                <div class="rating-row">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-num" id="svc-rating">4.9</span>
+                    <span class="client-cnt"><i class="ph ph-users"></i> <span id="svc-clients">+950 perros hospedados</span></span>
+                </div>
+                <p class="svc-desc" id="svc-desc">Tu perro se sentirá como en casa mientras tú disfrutas de tranquilidad. Un ambiente seguro, cómodo y lleno de cariño mientras tú estás fuera.</p>
+                <div class="features-list" id="features-list"></div>
+                <div class="badges" id="badges-row"></div>
+            </div>
+
+            <!-- COL 3: BOOKING -->
+            <div class="booking-col">
+                <div class="avail">
+                    <span class="avail-dot"></span>
+                    Disponible hoy
+                </div>
+                <div class="price-lbl">Desde</div>
+                <div class="price-val" id="svc-price">$28.000</div>
+                <div class="price-unit" id="svc-unit">por noche</div>
+                <ul class="benefits" id="benefits-list"></ul>
+                <button class="btn-primary">
+                    <i class="ph ph-paw-print"></i> Reservar ahora <i class="ph ph-arrow-right"></i>
+                </button>
+                <button class="btn-secondary">
+                    <i class="ph ph-calendar-check"></i> Ver disponibilidad
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM -->
+        <div class="bottom-section" style="display:grid;">
+        <!-- SKELETON OVERLAY BOTTOM (cambio de tab) -->
+            <div class="sk-bottom-overlay">
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-info-card"><div class="sk sk-ic-icon"></div><div class="sk sk-ic-title"></div><div class="sk sk-ic-desc"></div></div>
+                <div class="sk-right-panel">
+                    <div class="sk-stats">
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                        <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
+                    </div>
+                    <div class="sk-testimonial">
+                        <div class="sk-t-line w90"></div><div class="sk-t-line w75"></div>
+                        <div class="sk-t-author"><div class="sk-t-avatar"></div><div class="sk-t-name"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="community-wrap">
+                <!-- INFO CARDS (4) -->
+                <div id="info-cards" style="display:contents"></div>
+
+                <!-- COMMUNITY + STATS + TESTIMONIAL -->
+                <div class="right-panel">
+                    <div class="community-label">
+                        <i class="ph ph-sparkle"></i> Nuestra comunidad
+                    </div>
+                    <div class="stats-row" id="stats-row"></div>
+                    <div class="testimonial-card">
+                        <div class="test-nav">
+                            <button class="test-btn" id="tprev"><i class="ph ph-caret-left"></i></button>
+                            <button class="test-btn" id="tnext"><i class="ph ph-caret-right"></i></button>
+                        </div>
+                        <div class="test-quote">"</div>
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-text" id="test-text">Mi perrito la pasó increíble, lo cuidaron como si fuera de ellos. ¡Totalmente recomendado!</p>
+                        <div class="test-author">
+                            <img id="test-img" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80" alt="testimonio">
+                            <div>
+                                <h5 id="test-name">Valentina G.</h5>
+                                <span id="test-role">Cliente satisfecha</span>
+                            </div>
+                        </div>
+                        <div class="test-dots" id="test-dots"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER BAR -->
+        <div class="footer-bar" id="footer-bar">
+            <i class="ph ph-heart"></i>
+            <span id="footer-text">Seguridad, cariño y diversión en un solo lugar. 🐾</span>
+        </div>
+
+    </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  SKELETON: CARGA INICIAL DE PÁGINA
+// ══════════════════════════════════════════════════
+const pageSkeleton = document.getElementById('page-skeleton');
+
+function hideSkeleton() {
+    pageSkeleton.classList.add('hidden');
+    // Lo quitamos del DOM tras el fade para que no interfiera
+    setTimeout(() => pageSkeleton.remove(), 600);
+}
+
+// Espera a que la página esté lista Y a que las imágenes críticas carguen
+window.addEventListener('load', () => {
+    // Mínimo 1.2 s para que el shimmer sea visible
+    setTimeout(hideSkeleton, 1200);
+});
+// Fallback: si load tarda más de 4 s, ocultamos igual
+setTimeout(hideSkeleton, 4000);
+
+
+// ── SERVICE DATA ──
+const services = {
+    paseos: {
+        tag: '⭐ Más solicitado',
+        images: [
+            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Paseos',
+        rating: '4.9',
+        clients: '+1.200 clientes felices',
+        desc: 'Tu mascota disfrutará de paseos seguros, divertidos y adaptados a su energía. Nosotros cuidamos de su bienestar mientras tú tienes tranquilidad.',
+        features: [
+            { icon: 'ph-paw-print', text: '<strong>Número de mascotas:</strong> <span>Máximo 6 mascotas.</span>' },
+            { icon: 'ph-users', text: '<strong>Modalidad de paseo:</strong> <span>Grupal o Individual.</span>' },
+            { icon: 'ph-calendar-blank', text: '<strong>Días en la semana:</strong> <span>Puedes elegir los días que prefieras.</span>' },
+            { icon: 'ph-clock', text: '<strong>Duración del paseo:</strong> <span>Desde 30 min, 1 h, 2 h. Máx. 3 h.</span>' },
+        ],
+        badges: ['Paseadores certificados', 'Mascotas aseguradas', 'Trato amoroso', 'Seguimiento en tiempo real'],
+        price: '$18.000',
+        unit: 'por paseo',
+        benefits: ['Fotos del paseo', 'Seguimiento GPS', 'Hidratación incluida', 'Ejercicio y diversión'],
+        stats: [
+            { icon: 'ph-paw-print', num: '3.200+', desc: 'Mascotas felices' },
+            { icon: 'ph-person-simple-walk', num: '8.400+', desc: 'Paseos realizados' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+        ],
+        infoCards: [
+            { icon: 'ph-camera', title: 'Fotos del paseo', desc: 'Recibe imágenes de tu peludo.' },
+            { icon: 'ph-map-pin', title: 'Ruta GPS', desc: 'Seguimiento del recorrido.' },
+            { icon: 'ph-chat-dots', title: 'Resumen del paseo', desc: 'Informe con detalles y recomendaciones.' },
+            { icon: 'ph-drop', title: 'Hidratación incluida', desc: 'Agua fresca durante el paseo.' },
+        ],
+        testimonials: [
+            { text: 'Mi perro volvió feliz y cansado cada vez. ¡Excelente servicio!', name: 'Laura M.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Los paseadores son increíbles. Mi golden los adora.', name: 'Sofía R.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Porque tu mascota merece lo mejor, cada paseo es una experiencia llena de amor y cuidado. 🐾',
+    },
+    adiestramiento: {
+        tag: '🎓 Transformamos su comportamiento',
+        images: [
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1554692918-08fa0fdc9db3?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Adiestramiento canino',
+        rating: '4.9',
+        clients: '+850 perros educados',
+        desc: 'Métodos positivos, basados en refuerzo y empatía. Mejora la conducta de tu perro y fortalece la relación que tienen.',
+        features: [
+            { icon: 'ph-users', text: '<strong>Modalidades:</strong> <span>Individual / A domicilio / Grupal.</span>' },
+            { icon: 'ph-target', text: '<strong>Áreas de trabajo:</strong> <span>Obediencia, conducta, socialización, ansiedad, reactividad y más.</span>' },
+            { icon: 'ph-clock', text: '<strong>Duración:</strong> <span>Sesiones de 45 a 60 minutos.</span>' },
+            { icon: 'ph-clipboard-text', text: '<strong>Plan personalizado:</strong> <span>Adaptado a las necesidades de tu perro.</span>' },
+        ],
+        badges: ['Entrenadores certificados', 'Métodos positivos', 'Bienestar emocional', 'Resultados efectivos'],
+        price: '$22.000',
+        unit: 'por sesión',
+        benefits: ['Evaluación inicial incluida', 'Plan de entrenamiento personalizado', 'Seguimiento y recomendaciones', 'Apoyo entre sesiones', 'Informe de progreso'],
+        stats: [
+            { icon: 'ph-paw-print', num: '850+', desc: 'Perros entrenados' },
+            { icon: 'ph-users', num: '620+', desc: 'Familias satisfechas' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+        ],
+        infoCards: [
+            { icon: 'ph-lightbulb', title: 'Mejora la conducta', desc: 'Reduce ladridos, saltos y conductas indeseadas.' },
+            { icon: 'ph-heart', title: 'Vínculo más fuerte', desc: 'Comunicación y confianza.' },
+            { icon: 'ph-target', title: 'Obediencia básica', desc: 'Sentarse, quedarse, venir, caminar.' },
+            { icon: 'ph-smiley', title: 'Menos estrés', desc: 'Perros más tranquilos y equilibrados.' },
+        ],
+        testimonials: [
+            { text: 'El cambio de mi perro ha sido increíble. Más tranquilo, obediente y feliz.', name: 'Carolina R.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Increíble metodología. Mi perro aprendió en tiempo récord.', name: 'Andrés P.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Cada perro es único, por eso diseñamos un plan a la medida para lograr resultados reales. 🐾',
+    },
+    hospedaje: {
+        tag: '🏡 Como en casa, pero con más amor',
+        images: [
+            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
+        ],
+        title: 'Hospedaje canino',
+        rating: '4.9',
+        clients: '+950 perros hospedados',
+        desc: 'Tu perro se sentirá como en casa. Un ambiente seguro, cómodo y lleno de cariño mientras tú estás fuera.',
+        features: [
+            { icon: 'ph-house', text: '<strong>Ambiente familiar:</strong> <span>Atención personalizada 24/7.</span>' },
+            { icon: 'ph-shield-check', text: '<strong>Espacios seguros:</strong> <span>Casa adaptada y áreas de juego.</span>' },
+            { icon: 'ph-person-simple-walk', text: '<strong>Paseos diarios:</strong> <span>Ejercicio y diversión asegurados.</span>' },
+            { icon: 'ph-fork-knife', text: '<strong>Alimentación incluida:</strong> <span>Seguimos sus hábitos y horarios.</span>' },
+            { icon: 'ph-camera', text: '<strong>Reportes diarios:</strong> <span>Fotos y videos para tu tranquilidad.</span>' },
+        ],
+        badges: ['Supervisión 24/7', 'Atención personalizada', 'Fotos y videos diarios', 'Veterinaria de confianza'],
+        price: '$28.000',
+        unit: 'por noche',
+        benefits: ['Alojamiento en ambiente familiar', 'Paseos y juegos diarios', 'Alimentación incluida', 'Medicamentos (si aplica)', 'Actualizaciones diarias'],
+        stats: [
+            { icon: 'ph-paw-print', num: '950+', desc: 'Perros hospedados' },
+            { icon: 'ph-star', num: '4.9/5', desc: 'Calificación' },
+            { icon: 'ph-smiley', num: '98%', desc: 'Clientes satisfechos' },
+        ],
+        infoCards: [
+            { icon: 'ph-house', title: 'Ambiente hogareño', desc: 'Tu perro vive dentro de casa.' },
+            { icon: 'ph-heart', title: 'Mucho amor', desc: 'Cuidado y compañía todo el día.' },
+            { icon: 'ph-tree', title: 'Zonas de juego', desc: 'Patio seguro para correr y explorar.' },
+            { icon: 'ph-moon', title: 'Rutinas respetadas', desc: 'Mantenemos sus hábitos y horarios.' },
+        ],
+        testimonials: [
+            { text: 'Mi perrito la pasó increíble, lo cuidaron como si fuera de ellos. ¡Totalmente recomendado!', name: 'Valentina G.', role: 'Cliente satisfecha', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80' },
+            { text: 'Regresé tranquila sabiendo que mi perra estaba en las mejores manos.', name: 'Mariana L.', role: 'Cliente habitual', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&q=80' },
+        ],
+        footer: 'Seguridad, cariño y diversión en un solo lugar. 🐾',
+    }
+};
+
+// ── STATE ──
+let currentSvc = 'hospedaje';
+let currentImg = 0;
+let currentTest = 0;
+
+// ── DOM REFS ──
+const mainImg = document.getElementById('main-img');
+const imgTag = document.getElementById('img-tag');
+const thumbsEl = document.getElementById('thumbs-container');
+const dotsEl = document.getElementById('dots-container');
+const svcTitle = document.getElementById('svc-title');
+const svcRating = document.getElementById('svc-rating');
+const svcClients = document.getElementById('svc-clients');
+const svcDesc = document.getElementById('svc-desc');
+const featuresList = document.getElementById('features-list');
+const badgesRow = document.getElementById('badges-row');
+const svcPrice = document.getElementById('svc-price');
+const svcUnit = document.getElementById('svc-unit');
+const benefitsList = document.getElementById('benefits-list');
+const infoCardsEl = document.getElementById('info-cards');
+const statsRow = document.getElementById('stats-row');
+const testText = document.getElementById('test-text');
+const testImg = document.getElementById('test-img');
+const testName = document.getElementById('test-name');
+const testRole = document.getElementById('test-role');
+const testDots = document.getElementById('test-dots');
+const footerText = document.getElementById('footer-text');
+const showcase = document.getElementById('showcase');
+const bottomSection = document.querySelector('.bottom-section');
+
+// ══════════════════════════════════════════════════
+//  SKELETON: CAMBIO DE TAB
+// ══════════════════════════════════════════════════
+function showTabSkeleton() {
+    showcase.classList.add('sk-loading');
+    bottomSection.classList.add('sk-loading');
+}
+function hideTabSkeleton() {
+    showcase.classList.remove('sk-loading');
+    bottomSection.classList.remove('sk-loading');
+}
+
+function renderService(key) {
+    const s = services[key];
+    currentImg = 0;
+    currentTest = 0;
+
+    // 1. Mostrar skeleton de tab
+    showTabSkeleton();
+
+    // 2. Tras 420 ms renderizar contenido y quitar skeleton
+    setTimeout(() => {
+
+        // Tag & image
+        imgTag.innerHTML = s.tag;
+        mainImg.src = s.images[0];
+
+        // Thumbnails
+        thumbsEl.innerHTML = '';
+        dotsEl.innerHTML = '';
+        s.images.forEach((src, i) => {
+            const t = document.createElement('img');
+            t.src = src; t.className = 'thumb' + (i===0?' active':'');
+            t.addEventListener('click', () => setImage(i));
+            thumbsEl.appendChild(t);
+
+            const d = document.createElement('div');
+            d.className = 'dot' + (i===0?' active':'');
+            d.addEventListener('click', () => setImage(i));
+            dotsEl.appendChild(d);
         });
 
-        // Fecha actual
-        document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+        // Details
+        svcTitle.textContent = s.title;
+        svcRating.textContent = s.rating;
+        svcClients.textContent = s.clients;
+        svcDesc.textContent = s.desc;
 
-        // Gráfico de Líneas (Ajustado al color corporativo)
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        const gradient = lineCtx.createLinearGradient(0, 0, 0, 200);
-        gradient.addColorStop(0, 'rgba(10, 78, 99, 0.25)'); // Tu color azul en RGBA
-        gradient.addColorStop(1, 'rgba(10, 78, 99, 0)');
+        featuresList.innerHTML = s.features.map(f =>
+            `<div class="feat"><i class="ph ${f.icon}"></i><div>${f.text}</div></div>`
+        ).join('');
 
-        new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-                datasets: [{
-                    data: [12, 19, 15, 25, 22, 30, 28],
-                    borderColor: '#0a4e63', // Tu color principal
-                    backgroundColor: gradient,
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+        badgesRow.innerHTML = s.badges.map(b =>
+            `<span class="badge"><i class="ph ph-check-circle"></i>${b}</span>`
+        ).join('');
 
-        // Gráfico de Donas
-        new Chart(document.getElementById('donutChart'), {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [58, 25, 12, 5],
-                    backgroundColor: ['#22c55e', '#0a4e63', '#f97316', '#ef4444'],
-                    borderWidth: 0
-                }]
-            },
-            options: { cutout: '72%', plugins: { legend: { display: false } } }
-        });
+        // Booking
+        svcPrice.textContent = s.price;
+        svcUnit.textContent = s.unit;
+        benefitsList.innerHTML = s.benefits.map(b =>
+            `<li><i class="ph ph-check-circle"></i>${b}</li>`
+        ).join('');
 
-        // Llenar tabla
-        const walks = [
-            { id: '#PA-1254', user: 'María González', pet: 'Max', walker: 'Carlos R.', date: '25 May', status: 'en-proceso', label: 'En Proceso' },
-            { id: '#PA-1253', user: 'Juan Pérez', pet: 'Luna', walker: 'Ana M.', date: '25 May', status: 'completado', label: 'Completado' },
-        ];
-        const tbody = document.getElementById('tableBody');
-        walks.forEach(w => {
-            tbody.innerHTML += `<tr>
-                <td style="font-weight:bold; color:#64748b;">${w.id}</td>
-                <td>${w.user}</td>
-                <td>${w.pet}</td>
-                <td>${w.walker}</td>
-                <td>${w.date}</td>
-                <td><span class="badge-status ${w.status}">${w.label}</span></td>
-            </tr>`;
-        });
-    </script>
+        // Info cards
+        infoCardsEl.innerHTML = s.infoCards.map(c =>
+            `<div class="info-card">
+                <i class="ph ${c.icon} ic"></i>
+                <h4>${c.title}</h4>
+                <p>${c.desc}</p>
+            </div>`
+        ).join('');
+
+        // Stats
+        statsRow.innerHTML = s.stats.map(st =>
+            `<div class="stat-box">
+                <i class="ph ${st.icon}"></i>
+                <span class="stat-num">${st.num}</span>
+                <span class="stat-desc">${st.desc}</span>
+            </div>`
+        ).join('');
+
+        // Testimonial
+        renderTestimonial(s, 0);
+
+        // Footer
+        footerText.textContent = s.footer;
+
+        // 3. Quitar skeleton → aparece contenido
+        hideTabSkeleton();
+
+    }, 420);
+}
+
+function setImage(idx) {
+    const s = services[currentSvc];
+    currentImg = idx;
+    mainImg.src = s.images[idx];
+    document.querySelectorAll('.thumb').forEach((t,i) => t.classList.toggle('active', i===idx));
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function renderTestimonial(s, idx) {
+    const t = s.testimonials[idx];
+    testText.textContent = t.text;
+    testName.textContent = '— ' + t.name;
+    testRole.textContent = t.role;
+    testImg.src = t.img;
+
+    testDots.innerHTML = s.testimonials.map((_,i) =>
+        `<div class="test-dot${i===idx?' active':''}"></div>`
+    ).join('');
+    testDots.querySelectorAll('.test-dot').forEach((d,i) => {
+        d.addEventListener('click', () => { currentTest=i; renderTestimonial(s,i); });
+    });
+}
+
+// ── EVENT LISTENERS ──
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelector('.tab.active').classList.remove('active');
+        tab.classList.add('active');
+        currentSvc = tab.dataset.svc;
+        renderService(currentSvc);
+    });
+});
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+    const imgs = services[currentSvc].images;
+    setImage((currentImg - 1 + imgs.length) % imgs.length);
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+    const imgs = services[currentSvc].images;
+    setImage((currentImg + 1) % imgs.length);
+});
+
+document.getElementById('tprev').addEventListener('click', () => {
+    const s = services[currentSvc];
+    currentTest = (currentTest - 1 + s.testimonials.length) % s.testimonials.length;
+    renderTestimonial(s, currentTest);
+});
+document.getElementById('tnext').addEventListener('click', () => {
+    const s = services[currentSvc];
+    currentTest = (currentTest + 1) % s.testimonials.length;
+    renderTestimonial(s, currentTest);
+});
+
+// ── INIT ──
+renderService('hospedaje');
+
+// Dynamic date
+const now = new Date();
+const opts = { weekday: undefined, year: 'numeric', month: 'long', day: 'numeric' };
+document.getElementById('current-date').textContent = now.toLocaleDateString('es-CO', opts);
+</script>
 </body>
 </html>
