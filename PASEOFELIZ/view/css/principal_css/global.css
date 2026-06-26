@@ -29,14 +29,18 @@ body {
 
 /* --- BARRA LATERAL (Sidebar) --- */
 .sidebar {
-    width: 90px; /* Ancho estrecho para los iconos */
+    width: 90px; 
     background-color: var(--primary-blue);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding-top: 20px;
     flex-shrink: 0;
+    
+    /* CAMBIOS AQUÍ */
     position: sticky;
+    top: 0;
+    height: 100vh; /* Obligatorio para que se quede estático en su lugar */
 }
 
 .profile-section {
