@@ -49,8 +49,6 @@
             <ul class="nav-links">
                 <li class="active"><a href="#"><i class="fas fa-house"></i><span>Inicio</span></a></li>
                 <li><a href="paseos_paseador.html"><i class="fas fa-route"></i><span>Mis Paseos</span></a></li>
-                <li><a href="calendario_paseador.html"><i class="fas fa-calendar-days"></i><span>Mi Agenda</span></a>
-                </li>
                 <li>
                     <div class="nav-sep"></div>
                 </li>
@@ -60,12 +58,9 @@
                     <div class="nav-sep"></div>
                 </li>
                 <li><a href="soporte_paseador.html"><i class="fas fa-headset"></i><span>Soporte</span></a></li>
-                <li><a href="perfil_paseador.html"><i class="fas fa-user"></i><span>Mi Perfil</span></a></li>
+                <li><a href="usuario_paseador.html"><i class="fas fa-user"></i><span>Mi Perfil</span></a></li>
             </ul>
 
-            <div class="sidebar-user">
-                <div class="av">P</div><span>Paseador</span>
-            </div>
         </nav>
 
         <!-- CONTENIDO PRINCIPAL: ENFOQUE EN LOGÍSTICA CANINA -->
@@ -105,13 +100,7 @@
                         <div class="value">4.9 <span class="star-small">★</span></div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon indigo"><i class="fas fa-clipboard-check"></i></div>
-                    <div class="stat-info">
-                        <div class="label">Efectividad / Cumplimiento</div>
-                        <div class="value">100%</div>
-                    </div>
-                </div>
+
             </div>
 
             <!-- FILA CENTRAL RECONFIGURADA: CALENDARIO SEMANAL + DETALLE -->
@@ -148,9 +137,14 @@
                             <span class="day-num">5</span>
                             <span class="badge-count">3 Perros</span>
                         </div>
-                        <div class="day-pill weekend" onclick="cambiarDia('Sábado', this)">
+                        <div class="day-pill" onclick="cambiarDia('Sábado', this)">
                             <span class="day-name">Sáb</span>
                             <span class="day-num">6</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill weekend" onclick="cambiarDia('Domingo', this)">
+                            <span class="day-name">Dom</span>
+                            <span class="day-num">7</span>
                             <span class="badge-count">Descanso</span>
                         </div>
                     </div>
@@ -158,12 +152,17 @@
 
                 <!-- Componente 2: Lista Dinámica de Perros según el día seleccionado -->
                 <div class="card">
-                    <div class="card-head">
-                        <span class="title"><i class="fas fa-list-check"></i> Perros a Pasear (<span
-                                id="selectedDayLabel">Lunes</span>)</span>
+                    <div class="card-head"
+                        style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="title">
+                            <i class="fas fa-list-check"></i> Perros a Pasear (<span id="selectedDayLabel">Lunes</span>)
+                        </span>
+                        <button id="btnEmpezarPaseos" class="btn-action-start" onclick="empezarTodosLosPaseos()"
+                            style="background-color: #22c55e;">
+                            <i class="fas fa-play"></i> Empezar paseos
+                        </button>
                     </div>
                     <div class="agenda-list" id="agendaContainer">
-                        <!-- Se inyecta dinámicamente con JavaScript -->
                     </div>
                 </div>
 
@@ -238,7 +237,11 @@
                 { id: 213, pet: "Luna", breed: "Pug", time: "09:00 AM", zone: "La Ceiba", status: "Pendiente" },
                 { id: 214, pet: "Zeus", breed: "Pastor Alemán", time: "04:00 PM", zone: "Quinta Vélez", status: "Pendiente" }
             ],
-            "Sábado": [] // Descanso
+            "Sábado": [
+                { id: 212, pet: "Rocky", breed: "Golden", time: "07:30 AM", zone: "Prados del Este", status: "Pendiente" },
+                { id: 213, pet: "Luna", breed: "Pug", time: "09:00 AM", zone: "La Ceiba", status: "Pendiente" },
+            ],
+            "Domingo": [] // Descanso
         };
 
         // Cambiar dinámicamente la lista al presionar un día
@@ -284,6 +287,14 @@
 
         // Cargar por defecto los datos del Lunes
         cambiarDia('Lunes', document.querySelector('.day-pill.active'));
+        // Función para iniciar la ruta global e ir al mapa
+function empezarTodosLosPaseos() {
+    // Guardamos en el almacenamiento del navegador que el paseo ya inició
+    localStorage.setItem('paseoIniciado', 'true');
+    
+    // Redireccionamos a la pantalla del mapa
+    window.location.href = 'mapa_paseador.html';
+}
     </script>
 </body>
 
