@@ -4,175 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseo Feliz - Servicios</title>
+    <link rel="icon" href="../assets/images/logo.png" type="image/png">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/principal_css/inicio_cliente.css">
+
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     SKELETON PANTALLA COMPLETA (carga inicial)
-══════════════════════════════════════════ -->
-<div id="page-skeleton">
-
-    <!-- Sidebar falsa -->
-    <div class="sk-sidebar">
-        <div class="sk-sidebar-circle"></div>
-        <div class="sk-nav-item active-sk"></div>
-        <div class="sk-nav-item"></div>
-        <div class="sk-nav-item"></div>
-        <div class="sk-nav-item"></div>
-        <div class="sk-nav-item"></div>
-    </div>
-
-    <!-- Contenido principal falso -->
-    <div class="sk-main">
-
-        <!-- Top bar -->
-        <div class="sk-topbar">
-            <div class="sk sk-welcome"></div>
-            <div class="sk sk-date"></div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="sk-tabs">
-            <div class="sk sk-tab"></div>
-            <div class="sk sk-tab"></div>
-            <div class="sk sk-tab"></div>
-        </div>
-
-        <!-- Showcase 3 cols -->
-        <div class="sk-showcase">
-
-            <!-- Carrusel -->
-            <div class="sk-carousel">
-                <div class="sk sk-main-img"></div>
-                <div class="sk-thumbs">
-                    <div class="sk sk-thumb"></div>
-                    <div class="sk sk-thumb"></div>
-                    <div class="sk sk-thumb"></div>
-                    <div class="sk sk-thumb"></div>
-                </div>
-            </div>
-
-            <!-- Detalles -->
-            <div class="sk-details">
-                <div class="sk sk-title"></div>
-                <div class="sk sk-rating"></div>
-                <div class="sk sk-desc"></div>
-                <div class="sk sk-desc w80"></div>
-                <div class="sk sk-desc w65"></div>
-                <div style="height:8px"></div>
-                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
-                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
-                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
-                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
-                <div class="sk-feat-row"><div class="sk sk-feat-icon"></div><div class="sk sk-feat-txt"></div></div>
-                <div style="height:4px"></div>
-                <div class="sk-badges">
-                    <div class="sk sk-badge"></div>
-                    <div class="sk sk-badge"></div>
-                    <div class="sk sk-badge"></div>
-                </div>
-            </div>
-
-            <!-- Booking -->
-            <div class="sk-booking">
-                <div class="sk sk-avail"></div>
-                <div class="sk sk-price"></div>
-                <div class="sk sk-unit"></div>
-                <div style="height:6px"></div>
-                <div class="sk sk-benefit"></div>
-                <div class="sk sk-benefit w85"></div>
-                <div class="sk sk-benefit"></div>
-                <div class="sk sk-benefit w70"></div>
-                <div class="sk sk-benefit w85"></div>
-                <div style="flex:1"></div>
-                <div class="sk sk-btn-p"></div>
-                <div class="sk-btn-s"></div>
-            </div>
-
-        </div>
-
-        <!-- Bottom -->
-        <div class="sk-bottom">
-            <div class="sk-info-card">
-                <div class="sk sk-ic-icon"></div>
-                <div class="sk sk-ic-title"></div>
-                <div class="sk sk-ic-desc"></div>
-                <div class="sk sk-ic-desc2"></div>
-            </div>
-            <div class="sk-info-card">
-                <div class="sk sk-ic-icon"></div>
-                <div class="sk sk-ic-title"></div>
-                <div class="sk sk-ic-desc"></div>
-                <div class="sk sk-ic-desc2"></div>
-            </div>
-            <div class="sk-info-card">
-                <div class="sk sk-ic-icon"></div>
-                <div class="sk sk-ic-title"></div>
-                <div class="sk sk-ic-desc"></div>
-                <div class="sk sk-ic-desc2"></div>
-            </div>
-            <div class="sk-info-card">
-                <div class="sk sk-ic-icon"></div>
-                <div class="sk sk-ic-title"></div>
-                <div class="sk sk-ic-desc"></div>
-                <div class="sk sk-ic-desc2"></div>
-            </div>
-            <div class="sk-right-panel">
-                <div class="sk-stats">
-                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
-                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
-                    <div class="sk-stat"><div class="sk sk-stat-num"></div><div class="sk sk-stat-desc"></div></div>
-                </div>
-                <div class="sk-testimonial">
-                    <div class="sk-t-line w90"></div>
-                    <div class="sk-t-line w75"></div>
-                    <div class="sk-t-line w55"></div>
-                    <div class="sk-t-author">
-                        <div class="sk-t-avatar"></div>
-                        <div class="sk-t-name"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div><!-- /sk-main -->
-</div><!-- /page-skeleton -->
-
 <div class="app">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div>
-            <button class="menu-btn"><i class="ph ph-list"></i></button>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active">
-                    <i class="ph ph-paw-print"></i>
-                    <span>Servicios</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-chat-circle-dots"></i>
-                    <span>Chat</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-map-pin"></i>
-                    <span>Mapa</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-bone"></i>
-                    <span>Adopción</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="ph ph-user"></i>
-                    <span>Usuario</span>
-                </a>
+    <!-- SIDEBAR (igual que adopcion.html / Chat.html / usuario.html) -->
+    <nav class="sidebar">
+        <div class="menu-hamburguesa-container">
+            <div class="profile-circle" id="btn-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+            <nav class="menu-desplegable" id="menu-latente">
+                <ul>
+                    <a href="./sub_menu/conocenos.html">
+                        <li>
+                            <i class="fas fa-camera"></i>
+                            <span>Conocenos</span>
+                        </li>
+                    </a>
+                    <a href="./sub_menu/direccion_oficial.html">
+                        <li>
+                            <i class="fas fa-book-open"></i>
+                            <span>Dirección oficial</span>
+                        </li>
+                    </a>
+                    <a href="./sub_menu/centro_de_ayuda.html">
+                        <li>
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Centro de ayuda</span>
+                        </li>
+                    </a>
+                    <a href="./sub_menu/configuracion.html">
+                        <li>
+                            <i class="fas fa-gear"></i>
+                            <span>Configuración</span>
+                        </li>
+                    </a>
+                    <a href="../../index.html">
+                        <li>
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar sesión</span>
+                        </li>
+                    </a>
+                </ul>
             </nav>
         </div>
-        <div class="sidebar-logo">
-            <i class="ph ph-paw-print"></i>
-            <span>Paseo<br>Feliz</span>
-        </div>
-    </aside>
+
+        <ul class="nav-links">
+            <li class="active">
+                <a href="#">
+                    <i class="fas fa-paw"></i>
+                    <span>Servicios</span>
+                </a>
+            </li>
+            <li>
+                <a href="Chat.html">
+                    <i class="far fa-comment-alt"></i>
+                    <span>Chat</span>
+                </a>
+            </li>
+            <li>
+                <a href="mapa.html">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Mapa</span>
+                </a>
+            </li>
+            <li>
+                <a href="adopcion.html">
+                    <i class="fas fa-bone"></i>
+                    <span>Adopción</span>
+                </a>
+            </li>
+            <li>
+                <a href="usuario.html">
+                    <i class="fas fa-user"></i>
+                    <span>Usuario</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
     <!-- MAIN -->
     <main class="main">
@@ -197,7 +113,7 @@
 
         <!-- SERVICE TABS -->
         <div class="service-tabs">
-            <div class="tab" data-svc="paseos">
+            <div class="tab active" data-svc="paseos">
                 <div class="tab-icon">🐶</div>
                 <div>
                     <h3>Paseos</h3>
@@ -213,7 +129,7 @@
                 </div>
                 <div class="tab-arrow"></div>
             </div>
-            <div class="tab active" data-svc="hospedaje">
+            <div class="tab" data-svc="hospedaje">
                 <div class="tab-icon">🏠</div>
                 <div>
                     <h3>Hospedaje canino</h3>
@@ -265,7 +181,7 @@
             <!-- COL 1: CAROUSEL -->
             <div class="carousel-col">
                 <div class="img-wrapper">
-                    <img id="main-img" src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80" alt="Servicio">
+                    <img id="main-img" src="../assets/images/g5.png" alt="Servicio">
                     <span class="img-tag" id="img-tag"><i class="ph ph-shield-check"></i> Como en casa, pero con más amor</span>
                     <button class="arr-btn prev" id="prev-btn"><i class="ph ph-caret-left"></i></button>
                     <button class="arr-btn next" id="next-btn"><i class="ph ph-caret-right"></i></button>
@@ -368,35 +284,15 @@
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  SKELETON: CARGA INICIAL DE PÁGINA
-// ══════════════════════════════════════════════════
-const pageSkeleton = document.getElementById('page-skeleton');
-
-function hideSkeleton() {
-    pageSkeleton.classList.add('hidden');
-    // Lo quitamos del DOM tras el fade para que no interfiera
-    setTimeout(() => pageSkeleton.remove(), 600);
-}
-
-// Espera a que la página esté lista Y a que las imágenes críticas carguen
-window.addEventListener('load', () => {
-    // Mínimo 1.2 s para que el shimmer sea visible
-    setTimeout(hideSkeleton, 1200);
-});
-// Fallback: si load tarda más de 4 s, ocultamos igual
-setTimeout(hideSkeleton, 4000);
-
-
 // ── SERVICE DATA ──
 const services = {
     paseos: {
         tag: '⭐ Más solicitado',
         images: [
-            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
             'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
-            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
-            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1554692918-08fa0fdc9db3?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=700&q=80',
         ],
         title: 'Paseos',
         rating: '4.9',
@@ -471,11 +367,10 @@ const services = {
     hospedaje: {
         tag: '🏡 Como en casa, pero con más amor',
         images: [
-            'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=700&q=80',
             'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=700&q=80',
-            'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=700&q=80',
-            'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=700&q=80',
-            'https://images.unsplash.com/photo-1601758174493-cd2f7b0e5a4d?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1554692918-08fa0fdc9db3?auto=format&fit=crop&w=700&q=80',
+            'https://images.unsplash.com/photo-1568572933382-74d440642117?auto=format&fit=crop&w=700&q=80',
         ],
         title: 'Hospedaje canino',
         rating: '4.9',
@@ -688,12 +583,26 @@ document.getElementById('tnext').addEventListener('click', () => {
 });
 
 // ── INIT ──
-renderService('hospedaje');
+renderService('paseos');
 
 // Dynamic date
 const now = new Date();
 const opts = { weekday: undefined, year: 'numeric', month: 'long', day: 'numeric' };
 document.getElementById('current-date').textContent = now.toLocaleDateString('es-CO', opts);
+
+// ── MENÚ HAMBURGUESA (igual que adopcion.html / usuario.html) ──
+const btnMenu = document.getElementById('btn-menu');
+const menuLatente = document.getElementById('menu-latente');
+
+btnMenu.addEventListener('click', () => {
+    menuLatente.classList.toggle('show');
+});
+
+window.addEventListener('click', (e) => {
+    if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+        menuLatente.classList.remove('show');
+    }
+});
 </script>
 </body>
 </html>
