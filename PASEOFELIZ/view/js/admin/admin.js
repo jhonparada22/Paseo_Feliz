@@ -1,135 +1,422 @@
+// ══════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════
+let USUARIOS      = [];
+let filteredUsers = [];
+let currentPage   = 1;
+const PER_PAGE    = 5;
 
-    
-        // ── Menú hamburguesa ──────────────────────────────────────────
-        const btnMenu = document.getElementById('btn-menu');
-        const menuLatente = document.getElementById('menu-latente');
-        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
-        window.addEventListener('click', e => {
-            if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target))
-                menuLatente.classList.remove('show');
-        });
+// Rutas base según estructura: view/js/admin/ → raíz
+const PATHS = {
+  obtenerUsuarios: '../../../model/obtener_usuarios.php',
+  obtenerMascotas: '../../../model/obtener_mascotas.php',
+  cambiarRol:      '../../../controller/cambiar_rol.php',
+  eliminarUsuario: '../../../controller/eliminar_usuario.php',
+};
 
-        // ── Fecha actual ──────────────────────────────────────────────
-        document.getElementById('dateLabel').textContent =
-            new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════
+const btnMenu     = document.getElementById('btn-menu');
+const menuLatente = document.getElementById('menu-latente');
+btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
+window.addEventListener('click', e => {
+  if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target))
+    menuLatente.classList.remove('show');
+});
 
-        // ── Gráfico de línea ─────────────────────────────────────────
-        const lCtx = document.getElementById('lineChart').getContext('2d');
-        const grad = lCtx.createLinearGradient(0, 0, 0, 190);
-        grad.addColorStop(0, 'rgba(62,114,166,.3)');
-        grad.addColorStop(1, 'rgba(62,114,166,0)');
-        new Chart(lCtx, {
-            type: 'line',
-            data: {
-                labels: ['19 May', '20 May', '21 May', '22 May', '23 May', '24 May', '25 May'],
-                datasets: [{
-                    data: [22, 28, 24, 32, 30, 38, 33],
-                    borderColor: '#3E72A6', backgroundColor: grad,
-                    borderWidth: 2.5, tension: 0.4, fill: true,
-                    pointBackgroundColor: '#3E72A6', pointBorderColor: '#fff',
-                    pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8' } },
-                    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 }, color: '#94a3b8', stepSize: 10 }, beginAtZero: true, max: 50 }
-                }
-            }
-        });
+// ══════════════════════════════════════════════════════════════
+// CARGAR USUARIOS
+// ══════════════════════════════════════════════════════════════
+async function cargarUsuarios() {
+  try {
+    const res  = await fetch(PATHS.obtenerUsuarios);
+    const data = await res.json();
+    if (!data.success) { showToast('Error al cargar usuarios: ' + data.message, 'error'); return; }
+    USUARIOS      = data.usuarios;
+    filteredUsers = [...USUARIOS];
+    applyFilters();
+  } catch (err) {
+    showToast('Error de conexión al cargar usuarios', 'error');
+    console.error(err);
+  }
+}
 
-        // ── Gráfico donut ─────────────────────────────────────────────
-        new Chart(document.getElementById('donutChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [58, 25, 12, 5],
-                    backgroundColor: ['#22c55e', '#3E72A6', '#f97316', '#ef4444'],
-                    borderWidth: 0, hoverOffset: 6,
-                }]
-            },
-            options: {
-                cutout: '72%', responsive: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } }
-                }
-            }
-        });
+// ══════════════════════════════════════════════════════════════
+// FILTROS
+// ══════════════════════════════════════════════════════════════
+const btnFilter   = document.getElementById('btnFilter');
+const filterPanel = document.getElementById('filterPanel');
+const btnClose    = document.getElementById('btnCloseFilter');
+const btnClear    = document.getElementById('btnClearFilter');
+const btnApply    = document.getElementById('btnApplyFilter');
+const searchInput = document.getElementById('searchInput');
 
-        // ── Calendario ────────────────────────────────────────────────
-        let calYear, calMonth;
-        function buildCalendar(year, month) {
-            const grid = document.getElementById('calGrid');
-            const heading = document.getElementById('calMonth');
-            const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-            const today = new Date();
-            const eventDs = [5, 12, 18, 25];
-            grid.innerHTML = '';
-            heading.textContent = new Date(year, month)
-                .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-                .replace(/^\w/, c => c.toUpperCase());
-            days.forEach(d => {
-                const el = document.createElement('div');
-                el.className = 'cal-dname'; el.textContent = d; grid.appendChild(el);
-            });
-            const first = new Date(year, month, 1).getDay();
-            const off = first === 0 ? 6 : first - 1;
-            const prev = new Date(year, month, 0).getDate();
-            const dim = new Date(year, month + 1, 0).getDate();
-            for (let i = off - 1; i >= 0; i--) {
-                const el = document.createElement('div'); el.className = 'cal-day other';
-                el.textContent = prev - i; grid.appendChild(el);
-            }
-            for (let d = 1; d <= dim; d++) {
-                const el = document.createElement('div'); el.className = 'cal-day';
-                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear())
-                    el.classList.add('today');
-                if (eventDs.includes(d) && !el.classList.contains('today'))
-                    el.classList.add('has-event');
-                el.textContent = d; grid.appendChild(el);
-            }
-            const rem = 42 - (off + dim);
-            for (let d = 1; d <= rem; d++) {
-                const el = document.createElement('div'); el.className = 'cal-day other';
-                el.textContent = d; grid.appendChild(el);
-            }
-        }
-        const now = new Date();
-        calYear = now.getFullYear(); calMonth = now.getMonth();
-        buildCalendar(calYear, calMonth);
-        document.getElementById('calPrev').addEventListener('click', () => {
-            if (--calMonth < 0) { calMonth = 11; calYear--; }
-            buildCalendar(calYear, calMonth);
-        });
-        document.getElementById('calNext').addEventListener('click', () => {
-            if (++calMonth > 11) { calMonth = 0; calYear++; }
-            buildCalendar(calYear, calMonth);
-        });
+btnFilter.addEventListener('click', () => {
+  filterPanel.classList.toggle('open');
+  btnFilter.classList.toggle('active');
+});
+btnClose.addEventListener('click', () => {
+  filterPanel.classList.remove('open');
+  btnFilter.classList.remove('active');
+});
+searchInput.addEventListener('input', () => applyFilters());
+btnClear.addEventListener('click', () => {
+  document.getElementById('fNombre').value = '';
+  document.getElementById('fFecha').value  = '';
+  document.getElementById('fRol').value    = '';
+  searchInput.value = '';
+  applyFilters();
+});
+btnApply.addEventListener('click', () => {
+  filterPanel.classList.remove('open');
+  btnFilter.classList.remove('active');
+  applyFilters();
+});
+document.getElementById('sortSelect').addEventListener('change', () => renderList());
 
-        // ── Tabla paseos ──────────────────────────────────────────────
-        const walks = [
-            { id: '#PA-1254', user: 'María González', pet: 'Max', walker: 'Carlos R.', date: '25 May, 10:00 AM', cls: 'b-proceso', lbl: 'En Proceso' },
-            { id: '#PA-1253', user: 'Juan Pérez', pet: 'Luna', walker: 'Ana M.', date: '25 May, 09:30 AM', cls: 'b-completado', lbl: 'Completado' },
-            { id: '#PA-1252', user: 'Laura Martínez', pet: 'Rocky', walker: 'Diego T.', date: '25 May, 08:00 AM', cls: 'b-programado', lbl: 'Programado' },
-            { id: '#PA-1251', user: 'Pedro Ramírez', pet: 'Duki', walker: 'Sofía L.', date: '24 May, 06:00 PM', cls: 'b-completado', lbl: 'Completado' },
-            { id: '#PA-1250', user: 'Claudia López', pet: 'Toby', walker: 'Carlos R.', date: '24 May, 04:30 PM', cls: 'b-cancelado', lbl: 'Cancelado' },
-        ];
-        const tbody = document.getElementById('tableBody');
-        walks.forEach(w => {
-            const ui = w.user.split(' ').map(p => p[0]).slice(0, 2).join('');
-            const pi = w.pet[0];
-            const wi = w.walker.split(' ').map(p => p[0]).slice(0, 2).join('');
-            tbody.innerHTML += `
-    <tr>
-      <td class="id-cell">${w.id}</td>
-      <td><div class="cell-flex"><div class="mini-av">${ui}</div>${w.user}</div></td>
-      <td><div class="cell-flex"><div class="mini-av pet">${pi}</div>${w.pet}</div></td>
-      <td><div class="cell-flex"><div class="mini-av walker">${wi}</div>${w.walker}</div></td>
-      <td>${w.date}</td>
-      <td><span class="badge-st ${w.cls}">${w.lbl}</span></td>
-      <td><button class="dots-btn"><i class="fas fa-ellipsis-vertical"></i></button></td>
-    </tr>`;
-        });
+function applyFilters() {
+  const q    = searchInput.value.trim().toLowerCase();
+  const fNom = document.getElementById('fNombre').value.trim().toLowerCase();
+  const fFech= document.getElementById('fFecha').value;
+  const fRol = document.getElementById('fRol').value.toLowerCase();
+
+  filteredUsers = USUARIOS.filter(u => {
+    const matchQ    = !q     || u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchNom  = !fNom  || u.nombre.toLowerCase().includes(fNom);
+    const matchFech = !fFech || u.fechaReg === fFech;
+    const matchRol  = !fRol  || u.rol === fRol;
+    return matchQ && matchNom && matchFech && matchRol;
+  });
+
+  currentPage = 1;
+  renderList();
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════
+function renderList() {
+  const sort   = document.getElementById('sortSelect').value;
+  const sorted = [...filteredUsers].sort((a, b) => {
+    if (sort === 'nombre') return a.nombre.localeCompare(b.nombre);
+    if (sort === 'fecha')  return new Date(b.fechaReg) - new Date(a.fechaReg);
+    if (sort === 'rol')    return a.rol.localeCompare(b.rol);
+    return 0;
+  });
+
+  const start = (currentPage - 1) * PER_PAGE;
+  const paged = sorted.slice(start, start + PER_PAGE);
+  const total = sorted.length;
+  const end   = Math.min(start + PER_PAGE, total);
+
+  const listEl = document.getElementById('userList');
+  const empty  = document.getElementById('emptyState');
+  listEl.innerHTML = '';
+
+  if (paged.length === 0) {
+    empty.classList.add('visible');
+  } else {
+    empty.classList.remove('visible');
+    paged.forEach(u => listEl.appendChild(buildUserRow(u)));
+  }
+
+  document.getElementById('pagInfo').textContent =
+    total === 0 ? '0 usuarios' : `Mostrando ${start + 1}–${end} de ${total} usuarios`;
+  document.getElementById('userCount').textContent = `${total} usuario${total !== 1 ? 's' : ''}`;
+
+  renderPagination(Math.ceil(total / PER_PAGE));
+  updateStats();
+}
+
+function buildUserRow(u) {
+  const div    = document.createElement('div');
+  div.className = 'user-row';
+
+  const colors   = ['#3E72A6','#16a34a','#7c3aed','#ea580c','#db2777','#0891b2'];
+  const ci       = u.id % colors.length;
+  const initials = u.nombre.split(' ').map(p => p[0]).slice(0, 2).join('');
+  const fechaFmt = u.fechaReg
+    ? new Date(u.fechaReg + 'T00:00:00').toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'})
+    : '—';
+
+  div.innerHTML = `
+    <div class="user-avatar">
+      ${u.avatar_url ? `<img src="../../${u.avatar_url}" class="av-img" alt="${u.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+      <div class="av-fallback" style="background:${colors[ci]};${u.avatar_url?'display:none':''}">${initials}</div>
+    </div>
+
+    <div class="user-info">
+      <div class="user-name">${u.nombre}</div>
+      <div class="user-email">${u.email}</div>
+      <div class="user-meta">
+        ${u.telefono  ? `<div class="um-item"><i class="fas fa-phone"></i> ${u.telefono}</div>` : ''}
+        ${u.direccion ? `<div class="um-item"><i class="fas fa-map-marker-alt"></i> ${u.direccion}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="reg-date">
+      <div class="rd-label">Fecha registro</div>
+      <div class="rd-val">${fechaFmt}</div>
+    </div>
+
+    <button class="btn-pets" data-id="${u.id}">
+      <i class="fas fa-dog"></i> Mascotas
+      <span class="pet-count">${u.totalMascotas}</span>
+    </button>
+
+    <div class="role-wrap">
+      <button class="btn-role rol-${u.rol}" data-id="${u.id}">
+        <span class="role-text">${capitalize(u.rol)}</span>
+        <i class="fas fa-chevron-down role-arrow"></i>
+      </button>
+      <div class="role-dropdown" id="role-dd-${u.id}">
+        <div class="role-option ${u.rol==='cliente'?'selected':''}" data-id="${u.id}" data-rol="cliente">
+          <div class="role-dot dot-cliente"></div> Cliente
+        </div>
+        <div class="role-option ${u.rol==='paseador'?'selected':''}" data-id="${u.id}" data-rol="paseador">
+          <div class="role-dot dot-paseador"></div> Paseador
+        </div>
+        <div class="role-option ${u.rol==='administrador'?'selected':''}" data-id="${u.id}" data-rol="administrador">
+          <div class="role-dot dot-administrador"></div> Administrador
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-menu-wrap">
+      <button class="btn-more" data-id="${u.id}">
+        <i class="fas fa-ellipsis-vertical"></i>
+      </button>
+      <div class="actions-menu" id="act-menu-${u.id}">
+        <div class="action-opt" onclick="openPetsModal(${u.id})">
+          <i class="fas fa-dog"></i> Ver mascotas
+        </div>
+        <div class="action-opt danger" onclick="confirmDelete(${u.id}, '${u.nombre.replace(/'/g,"\\'")}')">
+          <i class="fas fa-trash"></i> Eliminar usuario
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Mascotas
+  div.querySelector('.btn-pets').addEventListener('click', e => {
+    openPetsModal(Number(e.currentTarget.dataset.id));
+  });
+
+  // Rol dropdown
+  const roleBtn = div.querySelector('.btn-role');
+  const roleDd  = div.querySelector('.role-dropdown');
+  roleBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    closeAllDropdowns(roleDd);
+    roleDd.classList.toggle('open');
+    roleBtn.classList.toggle('open');
+  });
+  div.querySelectorAll('.role-option').forEach(opt => {
+    opt.addEventListener('click', e => {
+      e.stopPropagation();
+      changeRole(Number(opt.dataset.id), opt.dataset.rol);
+      roleDd.classList.remove('open');
+      roleBtn.classList.remove('open');
+    });
+  });
+
+  // Más acciones
+  const moreBtn = div.querySelector('.btn-more');
+  const actMenu = div.querySelector('.actions-menu');
+  moreBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    closeAllDropdowns(actMenu);
+    actMenu.classList.toggle('open');
+  });
+
+  return div;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CAMBIAR ROL
+// ══════════════════════════════════════════════════════════════
+async function changeRole(id, nuevoRol) {
+  const user = USUARIOS.find(u => u.id === id);
+  if (!user || user.rol === nuevoRol) return;
+
+  const rolAnterior = user.rol;
+  user.rol = nuevoRol;
+  applyFilters();
+
+  try {
+    const body = new URLSearchParams({ id_usuario: id, rol: nuevoRol });
+    const res  = await fetch(PATHS.cambiarRol, { method: 'POST', body });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`Rol de ${user.nombre} cambiado a ${capitalize(nuevoRol)}`, 'success');
+    } else {
+      user.rol = rolAnterior;
+      applyFilters();
+      showToast('Error: ' + data.message, 'error');
+    }
+  } catch (err) {
+    user.rol = rolAnterior;
+    applyFilters();
+    showToast('Error de conexión al cambiar rol', 'error');
+    console.error(err);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ELIMINAR USUARIO
+// ══════════════════════════════════════════════════════════════
+async function confirmDelete(id, nombre) {
+  if (!confirm(`¿Estás seguro de eliminar a ${nombre}?\nEsta acción eliminará también sus mascotas y no se puede deshacer.`)) return;
+
+  try {
+    const body = new URLSearchParams({ id_usuario: id });
+    const res  = await fetch(PATHS.eliminarUsuario, { method: 'POST', body });
+    const data = await res.json();
+
+    if (data.success) {
+      const idx = USUARIOS.findIndex(u => u.id === id);
+      if (idx !== -1) USUARIOS.splice(idx, 1);
+      showToast(`${nombre} eliminado correctamente`, 'success');
+      applyFilters();
+    } else {
+      showToast('Error: ' + data.message, 'error');
+    }
+  } catch (err) {
+    showToast('Error de conexión al eliminar usuario', 'error');
+    console.error(err);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL MASCOTAS
+// ══════════════════════════════════════════════════════════════
+async function openPetsModal(id) {
+  const user = USUARIOS.find(u => u.id === id);
+  if (!user) return;
+
+  document.getElementById('modalUserName').textContent = `Mascotas de ${user.nombre}`;
+  document.getElementById('modalPetCount').textContent = 'Cargando...';
+  document.getElementById('modalPetList').innerHTML    = '<div class="no-pets"><i class="fas fa-spinner fa-spin"></i><p>Cargando mascotas...</p></div>';
+  document.getElementById('petsModal').classList.add('open');
+
+  try {
+    const res  = await fetch(`${PATHS.obtenerMascotas}?id_usuario=${id}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      document.getElementById('modalPetList').innerHTML = '<div class="no-pets"><p>Error al cargar mascotas.</p></div>';
+      return;
+    }
+
+    const mascotas = data.mascotas;
+    document.getElementById('modalPetCount').textContent =
+      `${mascotas.length} mascota${mascotas.length !== 1 ? 's' : ''} registrada${mascotas.length !== 1 ? 's' : ''}`;
+
+    const listEl = document.getElementById('modalPetList');
+    listEl.innerHTML = '';
+
+    if (mascotas.length === 0) {
+      listEl.innerHTML = `<div class="no-pets"><i class="fas fa-dog"></i><p>Este usuario no tiene mascotas registradas.</p></div>`;
+    } else {
+      mascotas.forEach(p => {
+        const avatarHtml = p.avatar_url
+          ? `<img src="../../${p.avatar_url}" alt="${p.nombre_mascota}" class="pet-av-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : '';
+        const fallbackStyle = p.avatar_url ? 'display:none' : '';
+        listEl.innerHTML += `
+          <div class="pet-card">
+            <div class="pet-avatar">
+              ${avatarHtml}
+              <div class="pet-av-fallback" style="${fallbackStyle}"><i class="fas fa-dog"></i></div>
+            </div>
+            <div class="pet-info">
+              <div class="pet-name">${p.nombre_mascota}</div>
+              <div class="pet-meta">
+                <span class="pet-tag">Dueño: ${user.nombre.split(' ')[0]}</span>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+  } catch (err) {
+    document.getElementById('modalPetList').innerHTML = '<div class="no-pets"><p>Error de conexión.</p></div>';
+    console.error(err);
+  }
+}
+
+document.getElementById('closeModal').addEventListener('click', () => {
+  document.getElementById('petsModal').classList.remove('open');
+});
+document.getElementById('petsModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('petsModal'))
+    document.getElementById('petsModal').classList.remove('open');
+});
+
+// ══════════════════════════════════════════════════════════════
+// PAGINACIÓN
+// ══════════════════════════════════════════════════════════════
+function renderPagination(totalPages) {
+  const container = document.querySelector('.pag-btns');
+  const prevBtn   = document.getElementById('pagPrev');
+  const nextBtn   = document.getElementById('pagNext');
+  container.querySelectorAll('[data-page]').forEach(b => b.remove());
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage >= totalPages || totalPages === 0;
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.className    = 'pag-btn' + (i === currentPage ? ' active' : '');
+    btn.dataset.page = i;
+    btn.textContent  = i;
+    btn.addEventListener('click', () => { currentPage = i; renderList(); });
+    container.insertBefore(btn, nextBtn);
+  }
+}
+document.getElementById('pagPrev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderList(); } });
+document.getElementById('pagNext').addEventListener('click', () => { currentPage++; renderList(); });
+
+// ══════════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('statTotal').textContent    = USUARIOS.length;
+  document.getElementById('statCliente').textContent  = USUARIOS.filter(u => u.rol === 'cliente').length;
+  document.getElementById('statPaseador').textContent = USUARIOS.filter(u => u.rol === 'paseador').length;
+  document.getElementById('statAdmin').textContent    = USUARIOS.filter(u => u.rol === 'administrador').length;
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+function closeAllDropdowns(except) {
+  document.querySelectorAll('.role-dropdown.open, .actions-menu.open').forEach(d => {
+    if (d !== except) {
+      d.classList.remove('open');
+      const btn = d.previousElementSibling;
+      if (btn) btn.classList.remove('open');
+    }
+  });
+}
+document.addEventListener('click', () => closeAllDropdowns(null));
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const i = t.querySelector('i');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = `toast ${type}`;
+  i.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+cargarUsuarios();
