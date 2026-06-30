@@ -52,7 +52,9 @@ while ($row = $res->fetch_assoc()) {
         'fechaReg'      => $row['fecha_registro'] ? date('Y-m-d', strtotime($row['fecha_registro'])) : '',
         'telefono'      => $row['telefono'] ?? '',
         'direccion'     => $row['direccion'] ?? '',
-        'avatar_url'    => $row['avatar_url'] ?? '',
+        'avatar_url'    => !empty($row['avatar_url'])
+            ? 'assets/' . ltrim(preg_replace('#^(\.\./)*assets/#', '', $row['avatar_url']), '/')
+            : '',
         'rol'           => $row['rol'],
         'totalMascotas' => (int)$row['total_mascotas'],
     ];
