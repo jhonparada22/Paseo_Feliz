@@ -30,11 +30,25 @@ if (!empty($data->nombre) && !empty($data->email) && !empty($data->sexo) && !emp
     $stmt->bind_param("ssss", $nombre, $email, $sexo, $password_encriptada);
 
     if ($stmt->execute()) {
+        // Obtener el ID del usuario recién creado
+        $nuevo_id = $stmt->insert_id;
+        $stmt->close();
+
+        // Crear fila en membresias automáticamente (todo en 0 = sin membresía)
+        $stmtM = $conn->prepare(
+            "INSERT IGNORE INTO membresias (id_usuario, paseos, adiestramiento, hospedaje) VALUES (?, 0, 0, 0)"
+        );
+        if ($stmtM) {
+            $stmtM->bind_param("i", $nuevo_id);
+            $stmtM->execute();
+            $stmtM->close();
+        }
+
         echo json_encode(["success" => true, "message" => "Usuario registrado con éxito"]);
     } else {
         echo json_encode(["success" => false, "message" => "Error al guardar en la base de datos: " . $stmt->error]);
+        $stmt->close();
     }
-    $stmt->close();
 } else {
     echo json_encode(["success" => false, "message" => "Datos incompletos"]);
 }
