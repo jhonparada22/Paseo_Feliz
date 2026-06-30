@@ -15,7 +15,17 @@ body {
 
 .app-container { 
     display: flex; 
-    min-height: 100vh; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+.sidebar {
+    flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    z-index: 10;
 }
 
 .chat-main { 
@@ -23,16 +33,21 @@ body {
     display: flex; 
     overflow: hidden; 
     background-color: #fff; 
+    height: 100vh;
 }
 
 /* ── PANEL IZQUIERDO DE CONVERSACIONES ── */
 .conversations-panel { 
     width: 290px; 
+    height: 100vh;
     background: #fff; 
     border-right: 1px solid #E0E0E0; 
     display: flex; 
     flex-direction: column; 
     flex-shrink: 0; 
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
 .conversations-header { 
@@ -79,6 +94,23 @@ body {
     cursor: pointer; 
     border-bottom: 1px solid #F5F5F5; 
     transition: background 0.2s; 
+    position: relative;
+}
+
+.conv-badge {
+    background: #25D366;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+    margin-left: 8px;
 }
 
 .conv-item:hover, .conv-item.active { 
@@ -123,10 +155,12 @@ body {
 /* ── PANEL DERECHO (VENTANA DE CHAT) ── */
 .chat-window { 
     flex: 1; 
+    height: 100vh;
     display: flex; 
     flex-direction: column; 
     background: #F7F9FB; 
     position: relative; 
+    overflow: hidden;
 }
 
 .empty-chat { 
@@ -178,6 +212,13 @@ body {
 .chat-header-name { 
     font-weight: 600; 
     font-size: 1rem; 
+}
+
+.escribiendo-indicador {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: #25D366;
+    font-style: italic;
 }
 
 /* ── ÁREA DE MENSAJES Y BURBUJAS ── */
@@ -370,13 +411,15 @@ body {
     border-radius: 12px; 
     box-shadow: 0px 5px 20px rgba(0,0,0,0.15); 
     display: none; 
-    width: 280px; 
-    height: 210px; 
-    overflow-y: auto; 
+    width: 340px; 
+    height: 220px; 
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 10px; 
-    z-index: 1000; 
+    z-index: 1000;
+    /* El JS activa con display:grid — estas propiedades aplican en ese momento */
     grid-template-columns: repeat(7, 1fr); 
-    gap: 5px; 
+    gap: 4px; 
 }
 
 .emoji-item { 
