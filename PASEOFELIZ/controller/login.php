@@ -3,23 +3,19 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
-// 1. Iniciar la sesión del lado del servidor antes de cualquier salida
 session_start();
 
-// 2. Verificar la ruta de conexión. Según tu estructura está en ../model/conexion.php
 include_once '../model/conexion.php';
 
-// Leer los datos que vienen del frontend (React / JS)
 $data = json_decode(file_get_contents("php://input"));
 
 if (!empty($data->email) && !empty($data->password)) {
     $email = strtolower($conn->real_escape_string($data->email));
     $password = $data->password;
 
-    // Traemos explícitamente el 'id' (que es como se llama en tu tabla 'usuarios')
     $query = "SELECT id, nombre, email, password FROM usuarios WHERE email = ?";
     $stmt = $conn->prepare($query);
-    
+
     if (!$stmt) {
         echo json_encode(["success" => false, "message" => "Error en la preparación de la consulta: " . $conn->error]);
         exit;
@@ -30,40 +26,57 @@ if (!empty($data->email) && !empty($data->password)) {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        // Guardamos los datos de la fila en la variable $usuario
         $usuario = $result->fetch_assoc();
-        
-        // Verificamos la contraseña encriptada
+
         if (password_verify($password, $usuario['password'])) {
-            
-            // 3. Guardar las variables de sesión usando el array correcto ($usuario)
+
             $_SESSION['usuario_logged'] = true;
-            $_SESSION['usuario_id']     = $usuario['id']; // 'id' según tu esquema de BD
+            $_SESSION['usuario_id']     = $usuario['id'];
             $_SESSION['usuario_nombre'] = $usuario['nombre'];
 
-            // 4. Verificar si el correo pertenece a un administrador
+            // ── Verificar si es admin ─────────────────────────────────────────
             $esAdmin = false;
-            $queryAdmin = "SELECT id_admin FROM admin WHERE correo = ?";
-            $stmtAdmin = $conn->prepare($queryAdmin);
+            $stmtAdmin = $conn->prepare("SELECT id_admin FROM admin WHERE correo = ?");
             $stmtAdmin->bind_param("s", $email);
             $stmtAdmin->execute();
-            $resultAdmin = $stmtAdmin->get_result();
-
-            if ($resultAdmin->num_rows > 0) {
+            if ($stmtAdmin->get_result()->num_rows > 0) {
                 $esAdmin = true;
                 $_SESSION['usuario_admin'] = true;
             }
             $stmtAdmin->close();
 
+            // ── Verificar si es paseador ──────────────────────────────────────
+            $esPaseador = false;
+            $stmtPaseador = $conn->prepare("SELECT id_paseador FROM paseadores WHERE id_usuario = ? LIMIT 1");
+            $stmtPaseador->bind_param("i", $usuario['id']);
+            $stmtPaseador->execute();
+            if ($stmtPaseador->get_result()->num_rows > 0) {
+                $esPaseador = true;
+                $_SESSION['es_paseador'] = true;
+            }
+            $stmtPaseador->close();
+
+            // ── Garantizar fila en membresias ─────────────────────────────────
+            $stmtM = $conn->prepare(
+                "INSERT IGNORE INTO membresias (id_usuario, paseos, adiestramiento, hospedaje) VALUES (?, 0, 0, 0)"
+            );
+            if ($stmtM) {
+                $stmtM->bind_param("i", $usuario['id']);
+                $stmtM->execute();
+                $stmtM->close();
+            }
+
             echo json_encode([
-                "success" => true,
-                "message" => "Login correcto",
-                "esAdmin" => $esAdmin,
-                "usuario" => [
+                "success"    => true,
+                "message"    => "Login correcto",
+                "esAdmin"    => $esAdmin,
+                "esPaseador" => $esPaseador,
+                "usuario"    => [
                     "nombre" => $usuario['nombre'],
-                    "email" => $usuario['email']
+                    "email"  => $usuario['email']
                 ]
             ]);
+
         } else {
             echo json_encode(["success" => false, "message" => "Contraseña incorrecta"]);
         }
