@@ -19,7 +19,9 @@ if ($res) {
     <title>Paseo Feliz - Adopción</title>
     <link rel="icon" href="../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../css/principal_css/adopcion.css">
+    
     <link rel="stylesheet" href="../css/principal_css/global.css">
+    <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
     <link rel="stylesheet" href="../css/principal_css/adopcion_cliente.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>

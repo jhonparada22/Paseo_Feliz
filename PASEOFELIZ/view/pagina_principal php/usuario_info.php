@@ -36,9 +36,10 @@ if ($id_usuario) {
     <link rel="icon" href="../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../css/principal_css/global.css">
     <link rel="stylesheet" href="../css/principal_css/usuario_info.css">
+    <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="usuario-page">
     <div id="contenedor_general" class="app-container">
         <nav class="sidebar">
             <div class="menu-hamburguesa-container">
@@ -51,7 +52,7 @@ if ($id_usuario) {
                         <li><a href="./sub_menu/direccion_oficial.php"><i class="fas fa-book-open"></i> <span>Dirección oficial</span></a></li>
                         <li><a href="./sub_menu/centro_de_ayuda.php"><i class="fas fa-sliders-h"></i> <span>Centro de ayuda</span></a></li>
                         <li><a href="./sub_menu/configuracion.php"><i class="fas fa-gear"></i> <span>Configuración</span></a></li>
-                        <li><a href="../../controller/logout.php" style="color: #000000;"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></a></li>
+                        <li><a href="../../controller/logout.php" style="color:#000000;"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></a></li>
                     </ul>
                 </nav>
             </div>
@@ -73,38 +74,56 @@ if ($id_usuario) {
 
             <form action="../../controller/guardar_perfil.php" method="POST" enctype="multipart/form-data">
                 <div class="edit-grid-container">
-                    
+
+                    <!-- ══ Columna izquierda: Datos del dueño ══ -->
                     <section class="edit-column">
                         <h3><i class="fas fa-user-gear"></i> Datos del Dueño</h3>
-                        
+
+                        <!-- Avatar -->
                         <div class="form-group-box">
-                            <label>Cambiar foto de perfil (Icono)</label>
-                            <input type="file" name="avatar_usuario" accept="image/*">
+                            <label>Foto de perfil (Icono)</label>
+                            <div class="preview-row">
+                                <div class="preview-upload-box" id="preview-avatar-user-wrap">
+                                    <img id="preview-avatar-user" src="#" alt="Preview" class="img-preview hidden-preview">
+                                    <span class="preview-placeholder" id="placeholder-avatar-user"><i class="fas fa-user"></i></span>
+                                </div>
+                                <div style="flex:1;">
+                                    <input type="file" name="avatar_usuario" accept="image/*"
+                                           onchange="previewImg(this,'preview-avatar-user','placeholder-avatar-user')">
+                                    <span class="upload-hint"><i class="fas fa-circle-info"></i> Recomendado: <b>200×200 px</b> — Soporta GIF animado</span>
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Banner -->
                         <div class="form-group-box">
-                            <label>Cambiar Banner de perfil</label>
-                            <input type="file" name="banner_usuario" accept="image/*">
+                            <label>Banner de perfil</label>
+                            <div class="banner-preview-box">
+                                <img id="preview-banner-user" src="#" alt="Preview" class="img-preview hidden-preview">
+                                <span class="preview-placeholder" id="placeholder-banner-user"><i class="fas fa-image"></i>&nbsp; Sin banner seleccionado</span>
+                            </div>
+                            <input type="file" name="banner_usuario" accept="image/*"
+                                   onchange="previewImg(this,'preview-banner-user','placeholder-banner-user')"
+                                   style="margin-top:6px;">
+                            <span class="upload-hint"><i class="fas fa-circle-info"></i> Recomendado: <b>1280×720 px (16:9)</b> — Soporta GIF animado</span>
                         </div>
 
                         <div class="form-group-box">
                             <label>Biografía</label>
                             <textarea name="biografia" rows="3" placeholder="Cuéntanos algo sobre ti..."><?php echo htmlspecialchars($biografia); ?></textarea>
                         </div>
-
                         <div class="form-group-box">
                             <label>Fecha de Nacimiento</label>
                             <input type="date" name="cumpleanos" value="<?php echo htmlspecialchars($cumpleanos); ?>">
                         </div>
-
                         <div class="form-group-box">
                             <label>Dirección / Ubicación</label>
                             <input type="text" name="direccion" placeholder="Ej: Prados del Este, Cúcuta" value="<?php echo htmlspecialchars($direccion); ?>">
                         </div>
-
                         <div class="form-group-box">
-                            <label for="telefono">Numero Celular</label>
-                            <input type="tel" id="telefono"name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" placeholder="Ej: 3123456789"maxlength="10" onkeypress="return soloNumeros(event)" pattern="[0-9]{10,10}" title="Solo se permiten números">
+                            <label for="telefono">Número Celular</label>
+                            <input type="tel" id="telefono" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>"
+                                   placeholder="Ej: 3123456789" maxlength="10" pattern="[0-9]{10}">
                         </div>
                         <div class="form-group-box">
                             <label>Profesión / Ocupación</label>
@@ -112,26 +131,27 @@ if ($id_usuario) {
                         </div>
                     </section>
 
+                    <!-- ══ Columna derecha: Mascotas ══ -->
                     <section class="edit-column edit-column-right">
                         <div class="mascota-action-selector">
                             <div class="btn-tab active" id="tab-editar" onclick="switchMascotaTab('editar')">
-                                <i class="fas fa-marker"></i> Editar Mascota
+                                <i class="fas fa-pen"></i> Editar Mascota
                             </div>
                             <div class="btn-tab" id="tab-agregar" onclick="switchMascotaTab('agregar')">
                                 <i class="fas fa-plus"></i> Agregar Mascota
                             </div>
                         </div>
-
                         <input type="hidden" name="mascota_accion" id="mascota_accion" value="editar">
 
+                        <!-- Sección Editar -->
                         <div id="section-editar-mascota">
                             <h3><i class="fas fa-dog"></i> Modificar Canino</h3>
-                            
+
                             <div class="form-group-box">
                                 <label>Selecciona la mascota a modificar</label>
                                 <select name="select_id_mascota" id="select_id_mascota">
                                     <option value="">-- Selecciona una mascota --</option>
-                                    <?php 
+                                    <?php
                                     if ($id_usuario) {
                                         $stmt_m = $conn->prepare("SELECT id_mascota, nombre_mascota FROM mascota_usuario WHERE id_usuario = ?");
                                         $stmt_m->bind_param("i", $id_usuario);
@@ -147,39 +167,70 @@ if ($id_usuario) {
                             </div>
 
                             <div class="form-group-box">
+                                <button type="button" id="btn-abrir-modal-eliminar"
+                                        class="btn-eliminar-mascota btn-eliminar-disabled" disabled>
+                                    <i class="fas fa-trash-alt"></i> Eliminar esta mascota
+                                </button>
+                            </div>
+
+                            <div class="form-group-box">
+                                <label>Nuevo nombre de la mascota</label>
+                                <input type="text" name="nombre_mascota_edit" placeholder="Deja vacío para no cambiar">
+                            </div>
+
+                            <div class="form-group-box">
                                 <label>Cambiar icono de la mascota</label>
-                                <input type="file" name="avatar_mascota_edit" accept="image/*">
+                                <div class="preview-row">
+                                    <div class="preview-circle-box">
+                                        <img id="preview-pet-edit" src="#" alt="Preview" class="img-preview hidden-preview">
+                                        <span class="preview-placeholder" id="placeholder-pet-edit"><i class="fas fa-dog"></i></span>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <input type="file" name="avatar_mascota_edit" accept="image/*"
+                                               onchange="previewImg(this,'preview-pet-edit','placeholder-pet-edit')">
+                                        <span class="upload-hint"><i class="fas fa-circle-info"></i> Recomendado: <b>200×200 px</b> — Soporta GIF animado</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group-box">
                                 <label>Biografía Canina</label>
                                 <textarea name="biografia_canina_edit" rows="3" placeholder="¿Cómo es su personalidad?"></textarea>
                             </div>
-
                             <div class="form-group-box">
                                 <label>Enfermedades y/o Discapacidades</label>
                                 <textarea name="enfermedades_edit" rows="2" placeholder="Si padece alguna enfermedad..."></textarea>
                             </div>
                         </div>
 
+                        <!-- Sección Agregar -->
                         <div id="section-agregar-mascota" class="hidden-section">
                             <h3><i class="fas fa-plus-circle"></i> Registrar Nueva Mascota</h3>
-                            
+
                             <div class="form-group-box">
                                 <label>Nombre de la mascota</label>
                                 <input type="text" name="nombre_mascota_nuevo" placeholder="Nombre del peludito">
                             </div>
 
                             <div class="form-group-box">
-                                <label>Subir icono de la mascota</label>
-                                <input type="file" name="avatar_mascota_nuevo" accept="image/*">
+                                <label>Icono de la mascota</label>
+                                <div class="preview-row">
+                                    <div class="preview-circle-box">
+                                        <img id="preview-pet-nuevo" src="#" alt="Preview" class="img-preview hidden-preview">
+                                        <span class="preview-placeholder" id="placeholder-pet-nuevo"><i class="fas fa-dog"></i></span>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <input type="file" name="avatar_mascota_nuevo" accept="image/*"
+                                               onchange="previewImg(this,'preview-pet-nuevo','placeholder-pet-nuevo')">
+                                        <span class="upload-hint"><i class="fas fa-circle-info"></i> Recomendado: <b>200×200 px</b> — Soporta GIF animado</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group-box">
                                 <label>Biografía Canina</label>
                                 <textarea name="biografia_canina_nuevo" rows="3" placeholder="Cuéntanos su historia..."></textarea>
                             </div>
-
                             <div class="form-group-box">
                                 <label>Discapacidades y/o Enfermedades</label>
                                 <textarea name="enfermedades_nuevo" rows="2" placeholder="Ninguna / Alergias..."></textarea>
@@ -195,9 +246,99 @@ if ($id_usuario) {
 
                 </div>
             </form>
+
+            <!-- Modal eliminar mascota -->
+            <div class="modal-overlay" id="modal-eliminar">
+                <div class="modal-box">
+                    <div class="modal-icon"><i class="fas fa-paw"></i></div>
+                    <h4>¿Eliminar mascota?</h4>
+                    <p>Estás a punto de eliminar a <span class="modal-pet-name" id="modal-nombre-mascota">esta mascota</span>.<br>Esta acción no se puede deshacer.</p>
+                    <div class="modal-actions">
+                        <button class="modal-btn-cancel" id="btn-cancelar-modal" type="button">Cancelar</button>
+                        <button class="modal-btn-delete" id="btn-confirmar-eliminar" type="button">
+                            <i class="fas fa-trash-alt"></i> Sí, eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form oculto para eliminar -->
+            <form id="form-eliminar-mascota" action="../../controller/guardar_perfil.php" method="POST" style="display:none;">
+                <input type="hidden" name="accion_eliminar_mascota" value="1">
+                <input type="hidden" name="mascota_accion" value="eliminar">
+                <input type="hidden" name="select_id_mascota" id="hidden-id-mascota-eliminar">
+            </form>
         </main>
     </div>
 
     <script src="../js/js pagina principal/usuario_info.js"></script>
+    <script>
+        /* ── Pestañas Editar / Agregar ── */
+        function switchMascotaTab(accion) {
+            document.getElementById('mascota_accion').value = accion;
+            const tabEditar  = document.getElementById('tab-editar');
+            const tabAgregar = document.getElementById('tab-agregar');
+            const secEditar  = document.getElementById('section-editar-mascota');
+            const secAgregar = document.getElementById('section-agregar-mascota');
+            if (accion === 'agregar') {
+                tabEditar.classList.remove('active'); tabAgregar.classList.add('active');
+                secEditar.style.display = 'none';
+                secAgregar.style.display = 'block'; secAgregar.classList.remove('hidden-section');
+            } else {
+                tabAgregar.classList.remove('active'); tabEditar.classList.add('active');
+                secAgregar.style.display = 'none'; secEditar.style.display = 'block';
+            }
+        }
+
+        /* ── Preview de imágenes ── */
+        function previewImg(input, imgId, placeholderId) {
+            const img = document.getElementById(imgId);
+            const ph  = document.getElementById(placeholderId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    img.src = e.target.result;
+                    img.classList.remove('hidden-preview');
+                    if (ph) ph.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        /* ── Botón eliminar: habilitar/deshabilitar ── */
+        const selectMascota  = document.getElementById('select_id_mascota');
+        const btnAbrirModal  = document.getElementById('btn-abrir-modal-eliminar');
+        const modalOverlay   = document.getElementById('modal-eliminar');
+        const modalNombre    = document.getElementById('modal-nombre-mascota');
+        const btnCancelar    = document.getElementById('btn-cancelar-modal');
+        const btnConfirmarEl = document.getElementById('btn-confirmar-eliminar');
+        const formEliminar   = document.getElementById('form-eliminar-mascota');
+        const hiddenIdEl     = document.getElementById('hidden-id-mascota-eliminar');
+
+        function actualizarBotonEliminar() {
+            const val = selectMascota ? selectMascota.value : '';
+            btnAbrirModal.disabled = !val;
+            btnAbrirModal.classList.toggle('btn-eliminar-disabled', !val);
+        }
+        if (selectMascota) {
+            selectMascota.addEventListener('change', actualizarBotonEliminar);
+            actualizarBotonEliminar();
+        }
+
+        /* ── Abrir / cerrar modal ── */
+        if (btnAbrirModal) btnAbrirModal.addEventListener('click', () => {
+            const opt = selectMascota.options[selectMascota.selectedIndex];
+            modalNombre.textContent = opt ? opt.text : 'esta mascota';
+            modalOverlay.classList.add('active');
+        });
+        if (btnCancelar)    btnCancelar.addEventListener('click',    () => modalOverlay.classList.remove('active'));
+        if (modalOverlay)   modalOverlay.addEventListener('click',   e => { if (e.target === modalOverlay) modalOverlay.classList.remove('active'); });
+
+        /* ── Confirmar eliminar ── */
+        if (btnConfirmarEl) btnConfirmarEl.addEventListener('click', () => {
+            hiddenIdEl.value = selectMascota.value;
+            formEliminar.submit();
+        });
+    </script>
 </body>
 </html>
