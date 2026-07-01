@@ -26,7 +26,6 @@ include '../../../controller/chat_controller.php';
     <title>Paseo Feliz - Chat</title>
     <link rel="icon" href="../../assets/images/logo.png" type="image/png">
 
-    <link rel="stylesheet" href="../../css/principal_css/global.css">
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/principal_css/paseos.css">

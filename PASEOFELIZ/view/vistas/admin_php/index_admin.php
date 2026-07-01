@@ -28,7 +28,7 @@
           <a href="./sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
           <a href="./sub_menu/configuracion.php"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
           <li>
-               <a href="../../../controller/logout.php" style="color: #000000;">
+               <a href="../../../controller/logout.php">
                   <i class="fas fa-sign-out-alt"></i>
                   <span>Cerrar Sesión</span>
               </a>

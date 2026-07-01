@@ -44,7 +44,7 @@ if ($res) {
     <title>Paseo Feliz – Adopción (Admin)</title>
     <link rel="icon" href="../../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../../css/admin/admin.css">
-    <link rel="stylesheet" href="../../css/admin/sidebar.css">
+    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/admin/adopcion.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -61,7 +61,7 @@ if ($res) {
                     <a href="./sub_menu/direccion_oficial.php"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
                     <a href="./sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
                     <a href="./sub_menu/configuracion.php"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
-                    <li><a href="../../../controller/logout.php" style="color:#fff"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
+                    <li><a href="../../../controller/logout.php" style="color:#000000;"><i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></a></li>
                 </ul>
             </nav>
         </div>
