@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paseador - Paseo Feliz</title>
+    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+
+    <!-- Estilos globales -->
+    <link rel="stylesheet" href="../../css/principal_css/global.css">
+    <link rel="stylesheet" href="../../css/principal_css/paseos.css">
+    <!-- Nuevo CSS del Dashboard Operativo -->
+    <link rel="stylesheet" href="../../css/paseador/paseador_dashboard.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div id="contenedor_general" class="app-container">
+
+        <!-- BARRA LATERAL (Se mantiene intacta) -->
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <a href="./sub_menu/conocenos.html">
+                            <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
+                        </a>
+                        <a href="./sub_menu/direccion_oficial.html">
+                            <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
+                        </a>
+                        <a href="./sub_menu/centro_de_ayuda.html">
+                            <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
+                        </a>
+                        <a href="../../index.html">
+                            <li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li>
+                        </a>
+                    </ul>
+                </nav>
+            </div>
+
+            <ul class="nav-links">
+                <li class="active"><a href="#"><i class="fas fa-house"></i><span>Inicio</span></a></li>
+                <li><a href="paseos_paseador.html"><i class="fas fa-route"></i><span>Mis Paseos</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="chat_paseador.html"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_paseador.html"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="soporte_paseador.html"><i class="fas fa-headset"></i><span>Soporte</span></a></li>
+                <li><a href="usuario_paseador.html"><i class="fas fa-user"></i><span>Mi Perfil</span></a></li>
+            </ul>
+
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL: ENFOQUE EN LOGÍSTICA CANINA -->
+        <main class="main-content dashboard-content">
+
+            <div class="page-header">
+                <div>
+                    <div class="greeting">¡Hola de nuevo, Carlos! 🐾</div>
+                    <div class="sub">Organiza tu semana y revisa los datos de los perritos asignados.</div>
+                </div>
+                <div class="date-pill">
+                    <i class="fas fa-calendar-day"></i>
+                    <span id="dateLabel"></span>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Rendimiento Operativo (Sin Dinero) -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-dog"></i></div>
+                    <div class="stat-info">
+                        <div class="label">Paseos de Hoy</div>
+                        <div class="value" id="countHoy">3</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-paw"></i></div>
+                    <div class="stat-info">
+                        <div class="label">Total Perros Asignados</div>
+                        <div class="value">8</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-star"></i></div>
+                    <div class="stat-info">
+                        <div class="label">Calificación Promedio</div>
+                        <div class="value">4.9 <span class="star-small">★</span></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FILA CENTRAL RECONFIGURADA: CALENDARIO SEMANAL + DETALLE -->
+            <div class="mid-row">
+
+                <!-- Componente 1: Planificador Semanal Interactivo -->
+                <div class="card grid-main-calendar">
+                    <div class="card-head">
+                        <span class="title"><i class="fas fa-calendar-week"></i> Cronograma de la Semana</span>
+                    </div>
+                    <div class="calendar-week-grid">
+                        <div class="day-pill active" onclick="cambiarDia('Lunes', this)">
+                            <span class="day-name">Lun</span>
+                            <span class="day-num">1</span>
+                            <span class="badge-count">3 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Martes', this)">
+                            <span class="day-name">Mar</span>
+                            <span class="day-num">2</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Miércoles', this)">
+                            <span class="day-name">Mié</span>
+                            <span class="day-num">3</span>
+                            <span class="badge-count">4 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Jueves', this)">
+                            <span class="day-name">Jue</span>
+                            <span class="day-num">4</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Viernes', this)">
+                            <span class="day-name">Vie</span>
+                            <span class="day-num">5</span>
+                            <span class="badge-count">3 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Sábado', this)">
+                            <span class="day-name">Sáb</span>
+                            <span class="day-num">6</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill weekend" onclick="cambiarDia('Domingo', this)">
+                            <span class="day-name">Dom</span>
+                            <span class="day-num">7</span>
+                            <span class="badge-count">Descanso</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Componente 2: Lista Dinámica de Perros según el día seleccionado -->
+                <div class="card">
+                    <div class="card-head"
+                        style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="title">
+                            <i class="fas fa-list-check"></i> Perros a Pasear (<span id="selectedDayLabel">Lunes</span>)
+                        </span>
+                        <button id="btnEmpezarPaseos" class="btn-action-start" onclick="empezarTodosLosPaseos()"
+                            style="background-color: #22c55e;">
+                            <i class="fas fa-play"></i> Empezar paseos
+                        </button>
+                    </div>
+                    <div class="agenda-list" id="agendaContainer">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Fila Inferior: Notas de comportamiento urgentes / Recordatorios -->
+            <div class="bottom-row">
+                <div class="card alert-card">
+                    <div class="card-head">
+                        <span class="title"><i class="fas fa-triangle-exclamation"></i> Notas Importantes de
+                            Comportamiento</span>
+                    </div>
+                    <div class="alerts-container">
+                        <div class="alert-item hazard">
+                            <i class="fas fa-shield-dog"></i>
+                            <div>
+                                <strong>Rocky (Golden Retriever):</strong> Tiende a jalar mucho de la correa si ve
+                                gatos. Llevar arnés de control.
+                            </div>
+                        </div>
+                        <div class="alert-item medical">
+                            <i class="fas fa-capsules"></i>
+                            <div>
+                                <strong>Luna (Pug):</strong> No cansar demasiado debido al calor de Cúcuta. Llevar
+                                hidratación constante y hacer pausas en la sombra.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Lógica del Menú Hamburguesa
+        const btnMenu = document.getElementById('btn-menu');
+        const menuLatente = document.getElementById('menu-latente');
+        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
+        window.addEventListener('click', (e) => {
+            if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+                menuLatente.classList.remove('show');
+            }
+        });
+
+        // Configurar fecha de cabecera
+        document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        // Base de datos simulada indexada por días (Ideal para renderizar con PHP posteriormente)
+        const basePaseos = {
+            "Lunes": [
+                { id: 201, pet: "Rocky", breed: "Golden", time: "07:30 AM", zone: "Prados del Este", status: "Pendiente" },
+                { id: 202, pet: "Luna", breed: "Pug", time: "09:00 AM", zone: "La Ceiba", status: "Pendiente" },
+                { id: 203, pet: "Zeus", breed: "Pastor Alemán", time: "04:00 PM", zone: "Quinta Vélez", status: "Pendiente" }
+            ],
+            "Martes": [
+                { id: 204, pet: "Coco", breed: "Poodle", time: "08:00 AM", zone: "Centro", status: "Pendiente" },
+                { id: 205, pet: "Toby", breed: "Criollo", time: "10:30 AM", zone: "San Eduardo", status: "Pendiente" }
+            ],
+            "Miércoles": [
+                { id: 206, pet: "Rocky", breed: "Golden", time: "07:30 AM", zone: "Prados del Este", status: "Pendiente" },
+                { id: 207, pet: "Milo", breed: "Beagle", time: "09:00 AM", zone: "Guaimaral", status: "Pendiente" },
+                { id: 208, pet: "Bella", breed: "Siberiano", time: "02:00 PM", zone: "Niza", status: "Pendiente" },
+                { id: 209, pet: "Luna", breed: "Pug", time: "04:30 PM", zone: "La Ceiba", status: "Pendiente" }
+            ],
+            "Jueves": [
+                { id: 210, pet: "Coco", breed: "Poodle", time: "08:00 AM", zone: "Centro", status: "Pendiente" },
+                { id: 211, pet: "Toby", breed: "Criollo", time: "10:30 AM", zone: "San Eduardo", status: "Pendiente" }
+            ],
+            "Viernes": [
+                { id: 212, pet: "Rocky", breed: "Golden", time: "07:30 AM", zone: "Prados del Este", status: "Pendiente" },
+                { id: 213, pet: "Luna", breed: "Pug", time: "09:00 AM", zone: "La Ceiba", status: "Pendiente" },
+                { id: 214, pet: "Zeus", breed: "Pastor Alemán", time: "04:00 PM", zone: "Quinta Vélez", status: "Pendiente" }
+            ],
+            "Sábado": [
+                { id: 212, pet: "Rocky", breed: "Golden", time: "07:30 AM", zone: "Prados del Este", status: "Pendiente" },
+                { id: 213, pet: "Luna", breed: "Pug", time: "09:00 AM", zone: "La Ceiba", status: "Pendiente" },
+            ],
+            "Domingo": [] // Descanso
+        };
+
+        // Cambiar dinámicamente la lista al presionar un día
+        function cambiarDia(dia, elemento) {
+            // Estilo visual activo
+            document.querySelectorAll('.day-pill').forEach(pill => pill.classList.remove('active'));
+            elemento.classList.add('active');
+
+            // Actualizar etiquetas
+            document.getElementById('selectedDayLabel').textContent = dia;
+
+            const container = document.getElementById('agendaContainer');
+            container.innerHTML = '';
+
+            const perros = basePaseos[dia] || [];
+
+            if (perros.length === 0) {
+                container.innerHTML = `
+                    <div class="no-walks">
+                        <i class="fas fa-mug-hot"></i>
+                        <p>No tienes perritos programados para este día. ¡Día de descanso!</p>
+                    </div>`;
+                return;
+            }
+
+            perros.forEach(p => {
+                container.innerHTML += `
+                    <div class="agenda-item">
+                        <div class="agenda-time">${p.time}</div>
+                        <div class="agenda-info">
+                            <span class="pet-name">${p.pet} <small>${p.breed}</small></span>
+                            <span class="pet-zone"><i class="fas fa-map-marker-alt"></i> ${p.zone}</span>
+                        </div>
+                        <button class="btn-action-start" onclick="iniciarRuta(${p.id})">Iniciar</button>
+                    </div>
+                `;
+            });
+        }
+
+        function iniciarRuta(id) {
+            alert(`Abriendo mapa de navegación de Paseo Feliz para el servicio de paseo #${id}`);
+        }
+
+        // Cargar por defecto los datos del Lunes
+        cambiarDia('Lunes', document.querySelector('.day-pill.active'));
+        // Función para iniciar la ruta global e ir al mapa
+function empezarTodosLosPaseos() {
+    // Guardamos en el almacenamiento del navegador que el paseo ya inició
+    localStorage.setItem('paseoIniciado', 'true');
+    
+    // Redireccionamos a la pantalla del mapa
+    window.location.href = 'mapa_paseador.html';
+}
+    </script>
+</body>
+
+</html>
