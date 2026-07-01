@@ -9,6 +9,7 @@
     <link rel="icon" href="../assets/images/logo.png" type="image/png">
     <link rel="stylesheet" href="../css/principal_css/global.css">
     <link rel="stylesheet" href="../css/principal_css/mapa.css">
+    <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- En el <head> añade los estilos del mapa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
