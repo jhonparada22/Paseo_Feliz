@@ -28,8 +28,11 @@ if ($id_usuario) {
         if (!empty($perfil['biografia'])) $biografia = $perfil['biografia'];
         if (!empty($perfil['cumpleanos'])) $cumpleanos = $perfil['cumpleanos'];
         if (!empty($perfil['profesion'])) $profesion = $perfil['profesion'];
-        if (!empty($perfil['avatar_url'])) $avatar_url = $perfil['avatar_url'];
-        if (!empty($perfil['banner_url'])) $banner_url = $perfil['banner_url'];
+        // Normalizar: quitar cualquier ../ para dejar solo assets/uploads/foto.jpg
+        if (!empty($perfil['avatar_url']))
+            $avatar_url = 'assets/' . ltrim(preg_replace('#^(\.\./)*assets/#', '', $perfil['avatar_url']), '/');
+        if (!empty($perfil['banner_url']))
+            $banner_url = 'assets/' . ltrim(preg_replace('#^(\.\./)*assets/#', '', $perfil['banner_url']), '/');
     }
     $stmt->close();
 }
@@ -85,87 +88,135 @@ if ($id_usuario) {
         </nav>
 
         <main class="profile-main-content">
+            <!-- Banner + Avatar -->
             <div class="boceto-banner-container">
-                <?php if(!empty($banner_url)): ?>
-                    <img src="<?php echo htmlspecialchars($banner_url); ?>" class="boceto-banner-img" alt="Banner">
-                <?php endif; ?>
+                <div class="boceto-banner-bg">
+                    <?php if(!empty($banner_url)): ?>
+                        <img src="../../<?php echo htmlspecialchars($banner_url); ?>" class="boceto-banner-img" alt="Banner">
+                    <?php endif; ?>
+                </div>
                 
                 <?php if(!empty($avatar_url)): ?>
-                    <img src="<?php echo htmlspecialchars($avatar_url); ?>" class="boceto-avatar-user" alt="Avatar">
+                    <img src="../../<?php echo htmlspecialchars($avatar_url); ?>" class="boceto-avatar-user" alt="Avatar">
                 <?php else: ?>
-                    <div class="boceto-avatar-user" style="display: flex; align-items: center; justify-content: center; background: #9d9d9d;">
-                        <i class="fas fa-user fa-3x" style="color: #fff;"></i>
+                    <div class="boceto-avatar-user" style="display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-user fa-2x" style="color:#fff;"></i>
                     </div>
                 <?php endif; ?>
                 
                 <div class="boceto-nombre-linea"><?php echo htmlspecialchars($nombre_usuario); ?></div>
                 <a href="usuario_info_admin.php" class="boceto-btn-lapiz"><i class="fas fa-pencil-alt"></i></a>
             </div>
+            <div class="profile-subheader"></div>
 
+            <!-- Grid de contenido -->
             <div class="profile-grid">
+
+                <!-- Columna izquierda: Sobre mí -->
                 <div class="columna-boceto">
-                    <div class="boceto-caja-datos">
-                        <label>Biografía</label>
-                        <p><?php echo htmlspecialchars($biografia); ?></p>
-                    </div>
-
-                    <div class="boceto-caja-datos">
-                        <label>Cumpleaños</label>
-                        <p><?php echo htmlspecialchars($cumpleanos); ?></p>
-                    </div>
-
-                    <div class="boceto-caja-datos">
-                        <label>Profesión</label>
-                        <p><?php echo htmlspecialchars($profesion); ?></p>
+                    <div class="columna-card">
+                        <h3 class="seccion-titulo">
+                            <i class="fas fa-user-circle"></i> Sobre mí
+                        </h3>
+                        <div class="boceto-caja-datos">
+                            <label>Biografía</label>
+                            <p><?php echo htmlspecialchars($biografia); ?></p>
+                        </div>
+                        <div class="boceto-caja-datos">
+                            <label>Cumpleaños</label>
+                            <p><?php echo htmlspecialchars($cumpleanos); ?></p>
+                        </div>
+                        <div class="boceto-caja-datos">
+                            <label>Profesión</label>
+                            <p><?php echo htmlspecialchars($profesion); ?></p>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Columna derecha: Mascotas -->
                 <div class="columna-boceto columna-derecha">
-                    <?php 
-                    if ($id_usuario) {
-                        $stmt_m = $conn->prepare("SELECT * FROM mascota_usuario WHERE id_usuario = ?");
-                        $stmt_m->bind_param("i", $id_usuario);
-                        $stmt_m->execute();
-                        $res_m = $stmt_m->get_result();
-                        
-                        if ($res_m->num_rows === 0) {
-                            echo '<div class="boceto-caja-datos" style="text-align: center;">';
-                            echo '<p style="color: #7f8c8d; margin: 0;"><i class="fas fa-dog"></i> No hay mascotas registradas.</p>';
-                            echo '</div>';
-                        } else {
-                            while ($mascota = $res_m->fetch_assoc()) {
-                                $pet_avatar = $mascota['avatar_mascota'] ?? '';
-                                $pet_bio = !empty($mascota['biografia_canina']) ? $mascota['biografia_canina'] : 'Sin descripción.';
-                                $pet_health = !empty($mascota['enfermedades_discapacidades']) ? $mascota['enfermedades_discapacidades'] : 'Ninguna registrada.';
+                    <div class="columna-card">
+                        <h3 class="seccion-titulo">
+                            <i class="fas fa-paw"></i> Sobre mis mascotas
+                        </h3>
+                        <?php 
+                        if ($id_usuario) {
+                            $stmt_m = $conn->prepare("SELECT * FROM mascota_usuario WHERE id_usuario = ?");
+                            $stmt_m->bind_param("i", $id_usuario);
+                            $stmt_m->execute();
+                            $res_m = $stmt_m->get_result();
+                            
+                            if ($res_m->num_rows === 0) {
+                                echo '<div class="boceto-caja-datos" style="text-align:center;padding:28px 14px;">';
+                                echo '<i class="fas fa-dog fa-2x" style="color:#cbd5e0;display:block;margin-bottom:10px;"></i>';
+                                echo '<p style="color:#94a3b8;margin:0;font-size:14px;">No hay mascotas registradas.</p>';
+                                echo '</div>';
+                            } else {
+                                $mascotas_arr = [];
+                                while ($mascota = $res_m->fetch_assoc()) {
+                                    $mascotas_arr[] = $mascota;
+                                }
                                 ?>
-                                <div class="boceto-mascota-card">
+                                <!-- Pestañas de selección -->
+                                <div class="pet-selector-tabs">
+                                    <?php foreach ($mascotas_arr as $idx => $m): ?>
+                                    <button class="pet-tab-btn <?php echo $idx === 0 ? 'active' : ''; ?>"
+                                            onclick="mostrarMascota(<?php echo $idx; ?>)" type="button">
+                                        <?php echo htmlspecialchars($m['nombre_mascota']); ?>
+                                    </button>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <!-- Tarjetas -->
+                                <?php foreach ($mascotas_arr as $idx => $mascota):
+                                    $pet_avatar_raw = $mascota['avatar_mascota'] ?? '';
+                                    $pet_avatar = !empty($pet_avatar_raw)
+                                        ? 'assets/' . ltrim(preg_replace('#^(\.\./)*assets/#', '', $pet_avatar_raw), '/')
+                                        : '';
+                                    $pet_bio    = !empty($mascota['biografia_canina'])            ? $mascota['biografia_canina']            : 'Sin descripción.';
+                                    $pet_health = !empty($mascota['enfermedades_discapacidades']) ? $mascota['enfermedades_discapacidades'] : 'Ninguna registrada.';
+                                ?>
+                                <div class="boceto-mascota-card pet-card-panel <?php echo $idx !== 0 ? 'hidden-pet' : ''; ?>"
+                                     id="pet-panel-<?php echo $idx; ?>">
                                     <div class="boceto-mascota-header">
                                         <?php if(!empty($pet_avatar)): ?>
-                                            <img src="<?php echo htmlspecialchars($pet_avatar); ?>" class="boceto-avatar-pet" alt="Mascota">
+                                            <img src="../../<?php echo htmlspecialchars($pet_avatar); ?>" class="boceto-avatar-pet" alt="Mascota">
                                         <?php else: ?>
-                                            <div class="boceto-avatar-pet" style="display: flex; align-items: center; justify-content: center; background: #ccc;">
-                                                <i class="fas fa-dog fa-lg"></i>
+                                            <div class="boceto-avatar-pet" style="display:flex;align-items:center;justify-content:center;background:#e8f5e9;">
+                                                <i class="fas fa-dog" style="color:#27ae60;font-size:22px;"></i>
                                             </div>
                                         <?php endif; ?>
                                         <div class="boceto-nombre-pet"><?php echo htmlspecialchars($mascota['nombre_mascota']); ?></div>
                                     </div>
-                                    <div class="boceto-caja-datos" style="margin-bottom: 10px; border-width: 2px;">
+                                    <div class="boceto-caja-datos" style="margin-bottom:10px;">
                                         <label>Biografía Canina</label>
                                         <p><?php echo htmlspecialchars($pet_bio); ?></p>
                                     </div>
-                                    <div class="boceto-caja-datos" style="border-width: 2px; background: #fff5f5;">
-                                        <label style="color: #c53030;">Salud / Condiciones</label>
+                                    <div class="boceto-caja-datos" style="background:#fff5f5;border-left-color:#e53e3e;">
+                                        <label style="color:#c53030;">Salud / Condiciones</label>
                                         <p><?php echo htmlspecialchars($pet_health); ?></p>
                                     </div>
                                 </div>
+                                <?php endforeach; ?>
                                 <?php
                             }
+                            $stmt_m->close();
                         }
-                        $stmt_m->close();
-                    }
-                    ?>
+                        ?>
+                    </div>
                 </div>
             </div>
+
+            <script>
+            function mostrarMascota(idx) {
+                document.querySelectorAll('.pet-card-panel').forEach((el, i) => {
+                    el.classList.toggle('hidden-pet', i !== idx);
+                });
+                document.querySelectorAll('.pet-tab-btn').forEach((btn, i) => {
+                    btn.classList.toggle('active', i === idx);
+                });
+            }
+            </script>
         </main>
     </div>
 
