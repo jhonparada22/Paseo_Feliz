@@ -10,13 +10,51 @@ let mapInstance    = null;
 let paseadorParaRuta = null;
 let paseadorParaInfo = null;
 
-const CLIENTES_DISPONIBLES = [
-    { id: 101, nombre: 'María González',  mascota: 'Max',   addr: 'Av. 0 #5-35, Cúcuta Centro',    distancia: '1.2 km', urgente: false },
-    { id: 102, nombre: 'Pedro Ramírez',   mascota: 'Coco',  addr: 'Calle 7 #0e-94, Motilones',     distancia: '0.8 km', urgente: true  },
-    { id: 103, nombre: 'Laura Martínez',  mascota: 'Rocky', addr: 'Carrera 5 #12-20, Los Patios',  distancia: '3.1 km', urgente: false },
-    { id: 104, nombre: 'Carlos López',    mascota: 'Toby',  addr: 'Urb. La Riviera, Cúcuta Norte', distancia: '2.4 km', urgente: false },
-    { id: 105, nombre: 'Ana Salcedo',     mascota: 'Nala',  addr: 'Calle 10 #3-15, Atalaya',       distancia: '1.8 km', urgente: true  },
-];
+let CLIENTES_DISPONIBLES = []; // se llena desde la BD (usuarios rol cliente + sus mascotas)
+
+// ══════════════════════════════════════════════════════════════
+// CARGAR CLIENTES REALES (usuarios con rol cliente y sus mascotas)
+// ══════════════════════════════════════════════════════════════
+async function cargarClientes() {
+    try {
+        const [resU, resM] = await Promise.all([
+            fetch('../../../model/obtener_usuarios.php'),
+            fetch('../../../model/obtener_mascotas.php'),
+        ]);
+        const dataU = await resU.json();
+        const dataM = await resM.json();
+        if (!dataU.success || !dataM.success) return;
+
+        // Pedidos de mensualidad pagados: traen la ubicación exacta ya
+        // validada por el cliente en el wizard de compra (sin geocodificar).
+        let pedidos = [];
+        try {
+            const resP  = await fetch('../../../model/obtener_pedidos_paseos.php');
+            const dataP = await resP.json();
+            if (dataP.success) pedidos = dataP.pedidos;
+        } catch (e) { /* sin pedidos, se geocodifica como siempre */ }
+
+        CLIENTES_DISPONIBLES = dataU.usuarios
+            .filter(u => u.rol === 'cliente')
+            .map(u => {
+                const pedido = pedidos.find(p => p.id_usuario === u.id);
+                return {
+                    id:       u.id,
+                    nombre:   u.nombre,
+                    addr:     pedido ? pedido.direccion : (u.direccion || ''),
+                    telefono: u.telefono || '',
+                    mascotas: dataM.mascotas.filter(m => m.id_usuario === u.id),
+                    // Coordenadas exactas del pedido pagado (si existe)
+                    coords:   pedido ? { lat: pedido.lat, lng: pedido.lng } : null,
+                    pedido:   pedido || null,
+                };
+            })
+            // Solo clientes con al menos una mascota registrada
+            .filter(c => c.mascotas.length > 0);
+    } catch (err) {
+        console.error('Error cargando clientes:', err);
+    }
+}
 
 // Colores por índice para los avatares
 const COLORS = ['#3E72A6','#16a34a','#ea580c','#7c3aed','#db2777','#0891b2','#b45309'];
@@ -41,7 +79,7 @@ async function cargarPaseadores() {
         const data = await res.json();
         if (!data.success) { showToast('Error al cargar paseadores', 'warning'); return; }
 
-        // Asignar coordenadas fijas por id (lat/lng no están en BD, se usan ficticias por Cúcuta)
+        // Coordenadas de reserva mientras un paseador no ha enviado GPS todavía
         const coordsBase = [
             { lat: 7.8939, lng: -72.5078 },
             { lat: 7.9121, lng: -72.5041 },
@@ -53,9 +91,10 @@ async function cargarPaseadores() {
         PASEADORES = data.paseadores.map((p, i) => ({
             ...p,
             color: COLORS[i % COLORS.length],
-            lat:   coordsBase[i % coordsBase.length].lat,
-            lng:   coordsBase[i % coordsBase.length].lng,
-            rutaActual: p.estado === 'en-ruta' ? 'Ruta activa' : null,
+            // GPS real si existe; si no, punto de referencia en Cúcuta
+            lat:   p.lat !== null && p.lat !== undefined ? p.lat : coordsBase[i % coordsBase.length].lat,
+            lng:   p.lng !== null && p.lng !== undefined ? p.lng : coordsBase[i % coordsBase.length].lng,
+            rutaActual: p.id_ruta_activa ? `Ruta #${p.id_ruta_activa}` : null,
             rutasHistorial: [],
         }));
 
@@ -64,7 +103,12 @@ async function cargarPaseadores() {
         renderLista();
         renderDetalle();
         renderHistorial();
-        setTimeout(() => { initMapa(); setInterval(simularMovimiento, 5000); }, 300);
+        setTimeout(() => {
+            initMapa();
+            if (!window.__gpsRefreshTimer) {
+                window.__gpsRefreshTimer = setInterval(refrescarPosiciones, 8000);
+            }
+        }, 300);
     } catch (err) {
         showToast('Error de conexión', 'warning');
         console.error(err);
@@ -152,6 +196,7 @@ function renderLista() {
         <div class="p-stat-row"><i class="fas fa-users"></i> <strong>${p.clientes.length}</strong>&nbsp;clientes</div>
       </div>
       <div class="p-actions">
+        <button class="p-action-btn" style="background:#eef2ff;color:#4338ca" title="Cronograma semanal" onclick="abrirModalCronograma(${p.id},event)"><i class="fas fa-calendar-week"></i></button>
         <button class="p-action-btn chat"  title="Ir al chat"       onclick="irAlChat(${p.id},event)"><i class="fas fa-comment-alt"></i></button>
         <button class="p-action-btn map"   title="Ver en mapa"      onclick="verEnMapa(${p.id},event)"><i class="fas fa-map-marker-alt"></i></button>
         <button class="p-action-btn route" title="Asignar ruta"     onclick="abrirModalRuta(${p.id},event)"><i class="fas fa-route"></i></button>
@@ -209,6 +254,9 @@ function renderDetalle() {
       </button>
       <button class="dqa-btn ruta-btn" onclick="abrirModalRuta(${p.id},event)">
         <i class="fas fa-route"></i> Ruta
+      </button>
+      <button class="dqa-btn" style="background:#eef2ff;color:#4338ca;border:1.5px solid #c7d2fe" onclick="abrirModalCronograma(${p.id},event)">
+        <i class="fas fa-calendar-week"></i> Cronograma
       </button>
     </div>
     <div class="dc-body">
@@ -333,6 +381,7 @@ document.getElementById('confirmInfo').addEventListener('click', async () => {
 // MAPA LEAFLET
 // ══════════════════════════════════════════════════════════════
 function initMapa() {
+    if (mapInstance) return; // ya inicializado (cargarPaseadores puede llamarse varias veces)
     const centro = paseadorSel ? [paseadorSel.lat, paseadorSel.lng] : [7.8939, -72.5078];
     mapInstance  = L.map('minimap', { zoomControl: true, attributionControl: false }).setView(centro, 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapInstance);
@@ -387,24 +436,39 @@ function abrirModalRuta(id, e) {
 function renderClientesModal() {
     const list = document.getElementById('clientRouteList');
     list.innerHTML = '';
+
+    if (!CLIENTES_DISPONIBLES.length) {
+        list.innerHTML = `
+      <div style="text-align:center;padding:18px;color:var(--muted);font-size:.82rem">
+        <i class="fas fa-users" style="font-size:1.4rem;display:block;margin-bottom:6px;color:#e2e8f0"></i>
+        No hay clientes con mascotas registradas todavía.
+      </div>`;
+        return;
+    }
+
     CLIENTES_DISPONIBLES.forEach(c => {
         const sel = selectedRouteClients.includes(c.id);
+        const sinDireccion = !c.addr;
         const div = document.createElement('div');
         div.className = 'client-route-item' + (sel ? ' selected' : '');
         div.innerHTML = `
       <div class="cri-avatar" style="background:${COLORS[c.id % COLORS.length]}">${c.nombre[0]}</div>
       <div class="cri-info">
-        <div class="cri-name">${c.nombre} ${c.urgente ? '🔴' : ''}</div>
-        <div class="cri-addr"><i class="fas fa-map-pin" style="font-size:.6rem"></i>${c.addr}</div>
+        <div class="cri-name">${c.nombre}</div>
+        <div class="cri-addr"><i class="fas fa-map-pin" style="font-size:.6rem"></i>${c.addr || 'Sin dirección registrada'}</div>
         <div class="cri-meta">
-          <span class="cri-tag">🐕 ${c.mascota}</span>
-          <span class="cri-tag">📍 ${c.distancia}</span>
-          ${c.urgente ? '<span class="cri-tag" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5">⚡ Urgente</span>' : ''}
+          ${c.mascotas.map(m => `<span class="cri-tag">🐕 ${m.nombre}</span>`).join('')}
+          ${c.pedido ? '<span class="cri-tag" style="background:#dcfce7;color:#15803d;border-color:#86efac">✓ Plan pagado · ubicación exacta</span>' : ''}
+          ${sinDireccion ? '<span class="cri-tag" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5">⚠ Falta dirección</span>' : ''}
         </div>
       </div>
       <div class="cri-check"><i class="fas fa-check"></i></div>
     `;
         div.addEventListener('click', () => {
+            if (sinDireccion) {
+                showToast(`${c.nombre} no tiene dirección registrada. Pídele completarla en su perfil o usa el mapa.`, 'warning');
+                return;
+            }
             selectedRouteClients = selectedRouteClients.includes(c.id)
                 ? selectedRouteClients.filter(x => x !== c.id)
                 : [...selectedRouteClients, c.id];
@@ -431,26 +495,97 @@ document.getElementById('routeModal').addEventListener('click', e => {
         document.getElementById('routeModal').classList.remove('open');
 });
 
-document.getElementById('confirmRoute').addEventListener('click', () => {
+// Convierte la dirección registrada del cliente en coordenadas (Nominatim, gratuito)
+async function geocodificarDireccion(direccion) {
+    const q = encodeURIComponent(direccion + ', Cúcuta, Colombia');
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1&accept-language=es`);
+    const results = await res.json();
+    if (!results.length) return null;
+    return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+}
+
+document.getElementById('confirmRoute').addEventListener('click', async () => {
     if (selectedRouteClients.length === 0) {
         showToast('Selecciona al menos un cliente', 'warning'); return;
     }
-    const nombres = selectedRouteClients
-        .map(id => CLIENTES_DISPONIBLES.find(c => c.id === id)?.nombre).join(', ');
+    if (!paseadorParaRuta) return;
 
-    if (paseadorParaRuta) {
-        paseadorParaRuta.estado     = 'en-ruta';
-        paseadorParaRuta.rutaActual = nombres;
-        // Sumar paseo (en BD se haría desde el controlador de paseos)
-        paseadorParaRuta.paseos_mes++;
-        paseadorParaRuta.paseos_totales++;
+    const btn = document.getElementById('confirmRoute');
+    btn.disabled = true;
+    const labelOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando ruta...';
+
+    try {
+        const clientes = selectedRouteClients
+            .map(id => CLIENTES_DISPONIBLES.find(c => c.id === id))
+            .filter(Boolean);
+
+        // 1. Obtener coordenadas de cada cliente:
+        //    - si tiene pedido pagado del wizard, usar sus coords exactas
+        //    - si no, geocodificar la dirección (1 por segundo, límite de Nominatim)
+        const coordsPorCliente = [];
+        for (const c of clientes) {
+            let coords = c.coords || null;
+            if (!coords) {
+                coords = await geocodificarDireccion(c.addr);
+                if (clientes.length > 1) await new Promise(r => setTimeout(r, 1100));
+            }
+            if (!coords) {
+                showToast(`No se encontró la dirección de ${c.nombre} ("${c.addr}"). Usa el mapa para ubicarla manualmente.`, 'warning');
+                btn.disabled = false; btn.innerHTML = labelOriginal;
+                return;
+            }
+            coordsPorCliente.push({ cliente: c, coords });
+        }
+
+        // 2. Armar paradas: recogida en cada casa y entrega de regreso (misma dirección)
+        const puntos = [];
+        coordsPorCliente.forEach(({ cliente, coords }) => {
+            puntos.push({
+                lat: coords.lat, lng: coords.lng,
+                addr: cliente.addr, tipo: 'recogida',
+                id_usuario_cliente: cliente.id,
+                id_mascota: cliente.mascotas[0].id_mascota,
+            });
+        });
+        coordsPorCliente.forEach(({ cliente, coords }) => {
+            puntos.push({
+                lat: coords.lat, lng: coords.lng,
+                addr: cliente.addr, tipo: 'entrega',
+                id_usuario_cliente: cliente.id,
+                id_mascota: cliente.mascotas[0].id_mascota,
+            });
+        });
+
+        // 3. Crear la ruta en la BD (mismo endpoint que usa el mapa)
+        const payload = {
+            id_paseador: paseadorParaRuta.id,
+            fecha: document.getElementById('routeDate').value || new Date().toISOString().split('T')[0],
+            hora:  document.getElementById('routeTime').value || '08:00',
+            puntos,
+        };
+        const res  = await fetch('../../../model/guardar_ruta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            showToast('Error: ' + (data.message || 'No se pudo crear la ruta'), 'warning');
+            return;
+        }
+
+        document.getElementById('routeModal').classList.remove('open');
+        showToast(`✅ Ruta #${data.id_ruta} asignada a ${paseadorParaRuta.nombre}`, 'success');
+        cargarPaseadores(); // refresca estados y contadores desde la BD
+    } catch (err) {
+        console.error(err);
+        showToast('Error de conexión al crear la ruta', 'warning');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = labelOriginal;
     }
-
-    document.getElementById('routeModal').classList.remove('open');
-    showToast(`Ruta asignada a ${paseadorParaRuta?.nombre} ✓`, 'success');
-    renderLista();
-    renderDetalle();
-    updateStats();
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -505,16 +640,159 @@ function showToast(msg, type = 'success') {
     toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-// Simulación GPS
-function simularMovimiento() {
-    PASEADORES.filter(p => p.estado === 'en-ruta').forEach(p => {
-        p.lat += (Math.random() - .5) * .0008;
-        p.lng += (Math.random() - .5) * .0008;
-    });
-    if (paseadorSel) actualizarMapa();
+// Refresco de posiciones GPS reales (sin re-render completo de la lista)
+async function refrescarPosiciones() {
+    try {
+        const res  = await fetch('../../../model/obtener_paseadores.php');
+        const data = await res.json();
+        if (!data.success) return;
+        data.paseadores.forEach(nuevo => {
+            const p = PASEADORES.find(x => x.id === nuevo.id);
+            if (!p) return;
+            if (nuevo.lat !== null && nuevo.lng !== null) {
+                p.lat = nuevo.lat;
+                p.lng = nuevo.lng;
+            }
+            p.estado    = nuevo.estado;
+            p.velocidad = nuevo.velocidad;
+        });
+        if (paseadorSel) actualizarMapa();
+    } catch (err) { /* siguiente tick */ }
 }
+
+// ══════════════════════════════════════════════════════════════
+// CRONOGRAMA SEMANAL (modal por paseador)
+// ══════════════════════════════════════════════════════════════
+const DIAS_CRONO = { 1: 'LUN', 2: 'MAR', 3: 'MIÉ', 4: 'JUE', 5: 'VIE', 6: 'SÁB', 7: 'DOM' };
+let cronoPaseadorId = null;
+let cronoDiaSel = Math.min(new Date().getDay() === 0 ? 7 : new Date().getDay(), 7); // día actual (1=lun..7=dom)
+let CRONOGRAMA = null;
+
+async function abrirModalCronograma(id, e) {
+    if (e) e.stopPropagation();
+    const p = PASEADORES.find(x => x.id === id);
+    if (!p) return;
+    cronoPaseadorId = id;
+    document.getElementById('cronoSub').textContent = `Paseador: ${p.nombre} — asigna clientes con plan pagado por día`;
+    document.getElementById('cronoPills').innerHTML =
+        '<div style="padding:14px;color:#94a3b8;font-size:.8rem">Cargando cronograma...</div>';
+    document.getElementById('cronoClientes').innerHTML = '';
+    document.getElementById('cronoModal').classList.add('open');
+
+    try {
+        const r = await fetch(`../../../model/obtener_cronograma.php?id_paseador=${id}`);
+        const data = await r.json();
+        if (!data.success) { showToast(data.message || 'Error al cargar el cronograma', 'warning'); return; }
+        CRONOGRAMA = data.cronograma;
+        renderCronoPills();
+        renderCronoDia();
+    } catch (err) {
+        showToast('Error de conexión al cargar el cronograma', 'warning');
+    }
+}
+
+function renderCronoPills() {
+    const cont = document.getElementById('cronoPills');
+    cont.innerHTML = '';
+    for (let d = 1; d <= 7; d++) {
+        const n = (CRONOGRAMA[d] || []).length;
+        const pill = document.createElement('div');
+        pill.className = 'crono-pill' + (d === cronoDiaSel ? ' sel' : '');
+        pill.innerHTML = `
+            <div class="cp-dia">${DIAS_CRONO[d]}</div>
+            <div class="cp-num">${d}</div>
+            <span class="cp-cnt">${n ? n + ' Perro' + (n > 1 ? 's' : '') : (d === 7 ? 'Descanso' : 'Libre')}</span>`;
+        pill.addEventListener('click', () => { cronoDiaSel = d; renderCronoPills(); renderCronoDia(); });
+        cont.appendChild(pill);
+    }
+}
+
+function renderCronoDia() {
+    const nombreDia = { 1: 'lunes', 2: 'martes', 3: 'miércoles', 4: 'jueves', 5: 'viernes', 6: 'sábado', 7: 'domingo' }[cronoDiaSel];
+    document.getElementById('cronoDiaTitulo').innerHTML =
+        `<i class="fas fa-dog" style="margin-right:5px"></i>Paseos del ${nombreDia}`;
+
+    const cont = document.getElementById('cronoClientes');
+    cont.innerHTML = '';
+
+    // Solo clientes con plan pagado (tienen pedido con coords validadas)
+    const conPlan = CLIENTES_DISPONIBLES.filter(c => c.pedido);
+    if (!conPlan.length) {
+        cont.innerHTML = `<div style="padding:14px;color:#94a3b8;font-size:.8rem;text-align:center">
+            No hay clientes con plan pagado todavía. Los clientes aparecen aquí después de comprar su mensualidad.</div>`;
+        return;
+    }
+
+    const asignadosHoy = (CRONOGRAMA[cronoDiaSel] || []).map(x => x.id_pedido);
+
+    conPlan.forEach(c => {
+        const idPedido = c.pedido.id_pedido;
+        const sel = asignadosHoy.includes(idPedido);
+        const div = document.createElement('div');
+        div.className = 'crono-cliente' + (sel ? ' sel' : '');
+        div.innerHTML = `
+            <input type="checkbox" ${sel ? 'checked' : ''} data-pedido="${idPedido}">
+            <div class="cc-info">
+                <div class="cc-nombre">${c.nombre}</div>
+                <div class="cc-sub">🐕 ${c.pedido.mascota || (c.mascotas[0] && c.mascotas[0].nombre) || ''} · 📍 ${c.pedido.barrio || c.pedido.direccion} · ${c.pedido.franja_horaria || ''}</div>
+            </div>
+            <span class="cri-tag" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;font-size:.62rem;padding:2px 8px;border-radius:10px">✓ Plan pagado</span>`;
+        const chk = div.querySelector('input');
+        div.addEventListener('click', ev => {
+            if (ev.target !== chk) chk.checked = !chk.checked;
+            div.classList.toggle('sel', chk.checked);
+        });
+        cont.appendChild(div);
+    });
+}
+
+async function guardarCronoDia() {
+    const ids = Array.from(document.querySelectorAll('#cronoClientes input:checked'))
+        .map(i => parseInt(i.dataset.pedido));
+
+    const btn = document.getElementById('confirmCrono');
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    try {
+        const r = await fetch('../../../model/guardar_cronograma.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                accion: 'reemplazar_dia',
+                id_paseador: cronoPaseadorId,
+                dia_semana: cronoDiaSel,
+                ids_pedidos: ids,
+            }),
+        });
+        const data = await r.json();
+        if (!data.success) { showToast(data.message || 'No se pudo guardar', 'warning'); return; }
+        showToast('✅ ' + data.message, 'success');
+        // Refrescar contadores del modal
+        const r2 = await fetch(`../../../model/obtener_cronograma.php?id_paseador=${cronoPaseadorId}`);
+        const d2 = await r2.json();
+        if (d2.success) { CRONOGRAMA = d2.cronograma; renderCronoPills(); renderCronoDia(); }
+    } catch (err) {
+        showToast('Error de conexión al guardar el cronograma', 'warning');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
+document.getElementById('closeCronoModal').addEventListener('click', () =>
+    document.getElementById('cronoModal').classList.remove('open'));
+document.getElementById('cancelCrono').addEventListener('click', () =>
+    document.getElementById('cronoModal').classList.remove('open'));
+document.getElementById('cronoModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('cronoModal'))
+        document.getElementById('cronoModal').classList.remove('open');
+});
+document.getElementById('confirmCrono').addEventListener('click', guardarCronoDia);
 
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
 cargarPaseadores();
+cargarClientes();
