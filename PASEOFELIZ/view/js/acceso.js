@@ -569,7 +569,11 @@ document.getElementById("btn-login").addEventListener("click", () => {
       sessionStorage.setItem("usuario_logeado", JSON.stringify(data.usuario));
       mostrarAlertaPersonalizada(`Bienvenido A Paseo Feliz, ${data.usuario.nombre}! 👋`);
       limpiarTodo();
-      const destino = data.esAdmin ? "../vistas/admin/index_admin.php" : "../pagina_principal/inicio.php";
+      const destino = data.esAdmin
+        ? "../vistas/admin/index_admin.php"
+        : data.esPaseador
+          ? "../vistas/paseador/index_paseador.php"
+          : "../pagina_principal/inicio.php";
       setTimeout(() => { window.location.href = destino; }, 2000);
     } else {
       mostrarAlertaPersonalizada(data.message, true);
