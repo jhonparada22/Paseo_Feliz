@@ -393,15 +393,20 @@ function actualizarBotonesBooking(svcKey) {
     avail.classList.remove('listo');
     const nombre = svcNombre[svcKey];
 
+    // Paseos ya tiene wizard de compra real; los demás servicios siguen "en proceso"
+    const tieneWizard = svcKey === 'paseos' && typeof abrirWizardPaseos === 'function';
+
     if (membresias.renovar[svcKey]) {
         // Membresía activa pero vence en menos de 1 día
         avail.innerHTML = `<span class="avail-dot avail-warn"></span> ¡Renueva tu membresía hoy!`;
         btnP.innerHTML  = `<i class="ph ph-arrow-clockwise"></i> Renovar membresía`;
-        btnP.onclick    = () => abrirModal(
-            '🔄 Renovación en proceso',
-            `Tu membresía de ${nombre} vence muy pronto. El sistema de pago estará disponible próximamente.`,
-            'ph-arrow-clockwise'
-        );
+        btnP.onclick    = tieneWizard
+            ? () => abrirWizardPaseos()
+            : () => abrirModal(
+                '🔄 Renovación en proceso',
+                `Tu membresía de ${nombre} vence muy pronto. El sistema de pago estará disponible próximamente.`,
+                'ph-arrow-clockwise'
+            );
         btnS.style.display = 'flex';
         btnS.innerHTML  = `<i class="ph ph-calendar-check"></i> Ver disponibilidad`;
         btnS.onclick    = () => abrirModal('📅 En proceso', 'La consulta de disponibilidad estará lista muy pronto.', 'ph-calendar-check');
@@ -423,11 +428,13 @@ function actualizarBotonesBooking(svcKey) {
         // Sin membresía
         avail.innerHTML = `<span class="avail-dot avail-off"></span> No tienes membresía`;
         btnP.innerHTML  = `<i class="ph ph-shopping-cart"></i> Comprar membresía de ${nombre}`;
-        btnP.onclick    = () => abrirModal(
-            '🛒 Pago en proceso',
-            `El módulo de compra para "${nombre}" estará disponible muy pronto. ¡Estamos trabajando en ello! 🐾`,
-            'ph-shopping-cart'
-        );
+        btnP.onclick    = tieneWizard
+            ? () => abrirWizardPaseos()
+            : () => abrirModal(
+                '🛒 Pago en proceso',
+                `El módulo de compra para "${nombre}" estará disponible muy pronto. ¡Estamos trabajando en ello! 🐾`,
+                'ph-shopping-cart'
+            );
         btnS.style.display = 'none'; // "Ver disponibilidad" oculto sin membresía
     }
 
