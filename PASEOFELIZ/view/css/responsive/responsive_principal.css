@@ -1,0 +1,287 @@
+/* =========================================================================
+   RESPONSIVE PRINCIPAL — Paseo Feliz
+   Archivo único con los ajustes responsive de: Chat, Usuario (perfil),
+   Usuario Info (editar perfil) e Inicio (servicios).
+
+   IMPORTANTE: este archivo debe cargarse DESPUÉS de global.css,
+   sidebar_usuario.css, paseos.css y del CSS propio de cada página
+   (Chat.css / usuario.css / usuario_info.css / inicio_cliente.css),
+   para que sus reglas puedan sobreescribir correctamente.
+   ========================================================================= */
+
+
+/* =========================================================================
+   1. CHAT (Chat.php / Chat.css)
+   -------------------------------------------------------------------------
+   Problemas que corrige:
+   - El chat usaba "height: 100vh" fijo en varios paneles. Cuando el
+     sidebar pasa a ser una barra inferior en pantallas chicas, esto hacía
+     que la caja de texto quedara cortada fuera de la pantalla (no se veía).
+   - En móvil se mostraban la lista de conversaciones y el "rectángulo"
+     vacío del chat al mismo tiempo, muy apretados. Ahora solo se muestra
+     un panel a la vez: primero la lista, y al abrir una conversación, el
+     chat a pantalla completa (con la caja de texto visible).
+   ========================================================================= */
+
+/* Alturas relativas en vez de 100vh fijo, así no se desbordan */
+.chat-main {
+    min-height: 0;
+}
+.conversations-panel {
+    height: 100%;
+}
+.chat-window {
+    height: 100%;
+}
+
+@media (max-width: 680px) {
+    /* La lista de conversaciones tenía un ancho fijo de 290px; en
+       pantallas angostas eso dejaba una franja en blanco al costado
+       (el "rectángulo vacío"). En móvil debe ocupar todo el ancho. */
+    .conversations-panel {
+        width: 100%;
+    }
+
+    /* Chat.js ya agrega la clase "hidden" a #conv-panel cuando se abre
+       una conversación en pantallas ≤680px (y la quita con el botón
+       "atrás"). Antes de abrir un chat: solo se ve la lista, nada del
+       rectángulo vacío al lado. Al abrir un chat: la lista se oculta y
+       el chat pasa a ocupar el 100% del ancho. */
+    .chat-window {
+        display: none !important;
+    }
+    .conversations-panel.hidden {
+        display: none !important;
+    }
+    .conversations-panel.hidden + .chat-window {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .chat-header-back {
+        display: block !important;
+    }
+}
+
+/* El sidebar pasa a ser una barra inferior fija (ver global.css) en
+   pantallas muy pequeñas; ajustamos el alto del chat para que la caja
+   de texto (o el aviso de "chat desactivado") no queden cortados por
+   debajo de la pantalla. */
+@media (max-width: 540px) {
+    .app-container {
+        height: 100vh !important;
+    }
+    .chat-main {
+        height: calc(100vh - 58px) !important;
+    }
+}
+
+
+/* =========================================================================
+   2. USUARIO — Perfil (usuario.php / usuario.css)
+   -------------------------------------------------------------------------
+   Problema que corrige:
+   - El grid de dos columnas (Biografía/Cumpleaños/Profesión y Mascotas)
+     era fijo (1fr 1fr) sin ningún ajuste responsive, por lo que en
+     celular el texto quedaba comprimido y difícil de leer.
+   ========================================================================= */
+@media (max-width: 780px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+        padding: 18px 16px;
+        gap: 18px;
+    }
+
+    .boceto-banner-container {
+        max-height: 220px;
+    }
+
+    .boceto-avatar-user {
+        width: 84px;
+        height: 84px;
+        left: 18px;
+        bottom: -24px;
+    }
+
+    .boceto-nombre-linea {
+        left: 116px;
+        bottom: 14px;
+        font-size: 16px;
+        max-width: calc(100% - 170px);
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    .boceto-btn-lapiz {
+        width: 36px;
+        height: 36px;
+        right: 14px;
+        top: 12px;
+        font-size: 14px;
+    }
+
+    .profile-subheader {
+        height: 34px;
+    }
+}
+
+@media (max-width: 480px) {
+    .boceto-banner-container {
+        max-height: 170px;
+    }
+
+    .boceto-avatar-user {
+        width: 68px;
+        height: 68px;
+        left: 14px;
+        bottom: -18px;
+        border-width: 3px;
+    }
+
+    .boceto-nombre-linea {
+        left: 92px;
+        font-size: 13.5px;
+        bottom: 10px;
+        max-width: calc(100% - 130px);
+    }
+
+    .columna-card {
+        padding: 16px 14px;
+    }
+}
+
+
+/* =========================================================================
+   3. USUARIO INFO — Editar Perfil (usuario_info.php / usuario_info.css)
+   -------------------------------------------------------------------------
+   Problema que corrige:
+   - El grid de dos columnas (Datos del Dueño / Personalizar Mascota) era
+     fijo (1fr 1fr) sin ajuste responsive, por lo que en celular la columna
+     de la mascota quedaba tan angosta que prácticamente no se veía.
+   ========================================================================= */
+@media (max-width: 780px) {
+    .edit-main-content {
+        padding: 18px 14px;
+    }
+
+    .edit-grid-container {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .edit-column {
+        padding: 18px;
+    }
+
+    .edit-column-right {
+        border-top: 3px solid #27ae60;
+    }
+
+    .btn-submit-container {
+        grid-column: 1;
+    }
+
+    .preview-row {
+        flex-wrap: wrap;
+    }
+
+    .preview-row input[type="file"] {
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .mascota-action-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .edit-header-title h2 {
+        font-size: 17px;
+    }
+}
+
+
+/* =========================================================================
+   4. INICIO — Servicios (inicio.php / inicio_cliente.css)
+   -------------------------------------------------------------------------
+   Problemas que corrige:
+   - El encabezado ("¡Hola de nuevo...!" + fecha) no tenía wrap y se
+     desbordaba/encimaba en pantallas chicas.
+   - La sección de comunidad / estadísticas / testimonio usaba una grilla
+     de varias columnas fija que quedaba ilegible y muy comprimida en
+     móvil. Se apila en una sola columna para que se pueda leer bien.
+   ========================================================================= */
+@media (max-width: 860px) {
+
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .welcome {
+        font-size: 19px;
+        flex-wrap: wrap;
+    }
+
+    .date-badge {
+        align-self: flex-start;
+    }
+
+    .bottom-section {
+        grid-template-columns: 1fr;
+        margin-top: 20px;
+    }
+
+    .community-wrap {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .community-label {
+        grid-column: 1;
+    }
+
+    .right-panel {
+        grid-column: 1;
+    }
+
+    .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .main {
+        padding: 18px 14px 90px;
+    }
+
+    .welcome {
+        font-size: 17px;
+    }
+
+    .showcase {
+        padding: 18px;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ── BUG CLAVE del "descentrado" ──
+   .main heredaba "margin-left:72px" y "width:calc(100% - 72px)" de la
+   regla pensada para cuando el sidebar es una barra angosta vertical
+   (860px→541px). Pero a partir de 540px el sidebar pasa a ser una barra
+   INFERIOR (ver global.css) y ya no ocupa espacio a la izquierda: ese
+   margen/ancho heredado dejaba todo el contenido corrido y angosto.
+   Lo reseteamos aquí para que use el 100% del ancho disponible. */
+@media (max-width: 540px) {
+    .main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100%;
+        padding-bottom: 80px; /* espacio para que la barra inferior fija no tape contenido */
+    }
+}
