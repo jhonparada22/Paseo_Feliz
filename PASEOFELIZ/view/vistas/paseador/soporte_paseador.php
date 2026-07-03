@@ -1,0 +1,154 @@
+<?php include_once '../../../controller/control_acceso.php'; ?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paseo Feliz - Soporte</title>
+    <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+
+    <link rel="stylesheet" href="../../css/principal_css/global.css">
+    <link rel="stylesheet" href="../../css/principal_css/paseos.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="contenedor_general" class="app-container">
+
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <a href="../../pagina_principal/sub_menu/conocenos.php">
+                            <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
+                        </a>
+                        <a href="../../pagina_principal/sub_menu/direccion_oficial.php">
+                            <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
+                        </a>
+                        <a href="../../pagina_principal/sub_menu/centro_de_ayuda.php">
+                            <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
+                        </a>
+                        <a href="../../../controller/logout.php">
+                            <li><i class="fas fa-sign-out-alt"></i><span>Cerrar sesión</span></li>
+                        </a>
+                    </ul>
+                </nav>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index_paseador.php"><i class="fas fa-house"></i><span>Inicio</span></a></li>
+                <li><a href="paseos_paseador.php"><i class="fas fa-route"></i><span>Mis Paseos</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li><a href="Chat_paseador.php"><i class="far fa-comment-alt"></i><span>Chat</span></a></li>
+                <li><a href="mapa_paseador.php"><i class="fas fa-map-marker-alt"></i><span>Mapa</span></a></li>
+                <li>
+                    <div class="nav-sep"></div>
+                </li>
+                <li class="active"><a href="#"><i class="fas fa-headset"></i><span>Soporte</span></a></li>
+                <li><a href="usuario_paseador.php"><i class="fas fa-user"></i><span>Mi Perfil</span></a></li>
+            </ul>
+
+        </nav>
+
+        <main class="main-content">
+
+            <section class="banner-section">
+                <div class="banner-container">
+                    <img src="../../assets/recursos_pagina_principal/imgpaseo1.png" alt="Paseo Feliz" class="banner-image">
+                </div>
+                <div class="section-title">
+                    <h2>Nuestros productos y servicios</h2>
+                </div>
+            </section>
+
+            <section class="services-list">
+                <article class="service-card">
+                    <div class="service-icon-container">
+                        <img src="../../assets/recursos_pagina_principal/iconpaseo1.png" alt="Paseos">
+                    </div>
+                    <div class="service-details">
+                        <div class="card-header-row">
+                            <h3>Paseos</h3>
+                            <div class="ratings-and-actions">
+                                <a href="../../pagina_principal/paseos_info.php" class="btn-ver-mas">Ver más</a>
+                                <i class="far fa-heart heart-icon"></i>
+                            </div>
+                        </div>
+                        <p class="metadata">Category • $$ • 1.2 miles away</p>
+                        <p class="description">Servicio profesional de paseos diarios para que tu mascota se mantenga
+                            activa y feliz.</p>
+                    </div>
+                </article>
+                <hr class="divider">
+
+                <article class="service-card">
+                    <div class="service-icon-container">
+                        <img src="../../assets/recursos_pagina_principal/iconcolegio.png" alt="Adiestramiento">
+                    </div>
+                    <div class="service-details">
+                        <div class="card-header-row">
+                            <h3>Adiestramiento canino</h3>
+                            <div class="ratings-and-actions">
+                                <div class="ratings-and-actions">
+                                    <a href="../../pagina_principal/adiestramiento_info.php" class="btn-ver-mas">Ver más</a>
+                                    <i class="far fa-heart heart-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="metadata">Category • $$ • 1.2 miles away</p>
+                        <p class="description">Mejora el comportamiento de tu perro con técnicas positivas y
+                            personalizadas.</p>
+                    </div>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon-container">
+                        <img src="../../assets/recursos_pagina_principal/iconhospedaje.png" alt="Hospedaje">
+                    </div>
+                    <div class="service-details">
+                        <div class="card-header-row">
+                            <h3>Hospedaje canino</h3>
+                            <div class="ratings-and-actions">
+                                <div class="ratings-and-actions">
+                                    <a href="../../pagina_principal/hospedaje_info.php" class="btn-ver-mas">Ver más</a>
+                                    <i class="far fa-heart heart-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="metadata">Category • $$ • 1.2 miles away</p>
+                        <p class="description">Cuidamos de tu mascota en todo momento y velamos por su salud en cada
+                            instante.</p>
+                    </div>
+                </article>
+
+            </section>
+        </main>
+    </div>
+
+</body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+
+</html>
