@@ -7,30 +7,18 @@ require_once __DIR__ . '/conexion.php';
 
 desactivarMembresiasVencidas($conn);
 
-$resultado = [
-    'pagos_recientes' => [],
-    'usuarios'        => [],
-];
+$resultado = ['pagos_recientes' => [], 'usuarios' => []];
 
-// ── 1. PAGOS RECIENTES (últimos 20) ─────────────────────────────
+// ── 1. PAGOS RECIENTES ───────────────────────────────────────
 $sqlPagos = "
-    SELECT
-        p.id_pago,
-        p.tipo_membresia,
-        p.monto,
-        p.fecha_pago,
-        p.metodo_pago,
-        u.id        AS id_usuario,
-        u.nombre,
-        u.email,
-        i.avatar_url
+    SELECT p.id_pago, p.tipo_membresia, p.monto, p.fecha_pago, p.metodo_pago,
+           u.id AS id_usuario, u.nombre, u.email, i.avatar_url
     FROM pagos p
     INNER JOIN usuarios u ON u.id = p.id_usuario
     LEFT  JOIN info_usuario i ON i.id_usuario = u.id
-    ORDER BY p.fecha_pago DESC
-    LIMIT 20
+    WHERE p.tipo_membresia IS NOT NULL AND p.tipo_membresia != ''
+    ORDER BY p.fecha_pago DESC LIMIT 20
 ";
-
 $res = $conn->query($sqlPagos);
 if ($res) {
     while ($row = $res->fetch_assoc()) {
@@ -48,29 +36,20 @@ if ($res) {
     }
 }
 
-// ── 2. USUARIOS CLIENTES con estado de membresía ────────────────
-// usuarios sin rol paseador/admin: la tabla usuarios no tiene columna rol,
-// paseadores están en tabla paseadores y admins en tabla admin
+// ── 2. USUARIOS CLIENTES ─────────────────────────────────────
 $sqlUsuarios = "
-    SELECT
-        u.id,
-        u.nombre,
-        u.email,
-        i.avatar_url,
-        m.paseos,
-        m.adiestramiento,
-        m.hospedaje,
-        m.fecha_fin_paseos,
-        m.fecha_fin_adiestramiento,
-        m.fecha_fin_hospedaje
+    SELECT u.id, u.nombre, u.email, i.avatar_url,
+           m.paseos, m.adiestramiento, m.hospedaje,
+           m.fecha_fin_paseos, m.fecha_fin_adiestramiento, m.fecha_fin_hospedaje
     FROM usuarios u
-    LEFT JOIN info_usuario i  ON i.id_usuario = u.id
-    LEFT JOIN membresias m    ON m.id_usuario = u.id
-    WHERE u.id NOT IN (SELECT id_usuario FROM paseadores)
-      AND u.id NOT IN (SELECT id_usuario FROM admin)
+    LEFT JOIN info_usuario i ON i.id_usuario = u.id
+    LEFT JOIN membresias m   ON m.id_usuario = u.id
+    LEFT JOIN paseadores pa ON pa.id_usuario = u.id
+    LEFT JOIN admin ad       ON ad.id_usuario = u.id
+    WHERE pa.id_usuario IS NULL
+      AND ad.id_usuario IS NULL
     ORDER BY u.nombre ASC
 ";
-
 $res2 = $conn->query($sqlUsuarios);
 if ($res2) {
     while ($row = $res2->fetch_assoc()) {
@@ -82,20 +61,18 @@ if ($res2) {
             'avatar_url'     => $row['avatar_url'] ?? null,
             'activa'         => $estado['activa'],
             'dias_restantes' => $estado['dias_restantes'],
-            'servicios'      => $estado['servicios'],
+            'servicios'      => $estado['servicios'], // { "Paseos": 28, "Adiestramiento": 15 }
         ];
     }
 }
 
-// ── 3. STATS ────────────────────────────────────────────────────
-$statPagos   = $conn->query("SELECT COUNT(*) AS c FROM pagos");
-$statActivos = $conn->query("SELECT COUNT(*) AS c FROM membresias WHERE paseos=1 OR adiestramiento=1 OR hospedaje=1");
-$statIngres  = $conn->query("SELECT COALESCE(SUM(monto),0) AS t FROM pagos WHERE MONTH(fecha_pago)=MONTH(NOW()) AND YEAR(fecha_pago)=YEAR(NOW())");
-
+// ── 3. STATS ─────────────────────────────────────────────────
 $resultado['stats'] = [
-    'total_pagos'        => (int)$statPagos->fetch_assoc()['c'],
-    'membresias_activas' => (int)$statActivos->fetch_assoc()['c'],
-    'ingresos_mes'       => (float)$statIngres->fetch_assoc()['t'],
+    'miembros_con_membresia' => (int)$conn->query("SELECT COUNT(*) AS c FROM membresias WHERE paseos=1 OR adiestramiento=1 OR hospedaje=1")->fetch_assoc()['c'],
+    'paseos_activos'         => (int)$conn->query("SELECT COUNT(*) AS c FROM membresias WHERE paseos=1")->fetch_assoc()['c'],
+    'adiestramiento_activos' => (int)$conn->query("SELECT COUNT(*) AS c FROM membresias WHERE adiestramiento=1")->fetch_assoc()['c'],
+    'hospedaje_activos'      => (int)$conn->query("SELECT COUNT(*) AS c FROM membresias WHERE hospedaje=1")->fetch_assoc()['c'],
+    'ingresos_totales'       => (float)$conn->query("SELECT COALESCE(SUM(monto),0) AS t FROM pagos")->fetch_assoc()['t'],
 ];
 
 header('Content-Type: application/json');
