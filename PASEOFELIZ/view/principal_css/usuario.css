@@ -1,0 +1,254 @@
+/* ===================================================
+   usuario.css — Perfil de Usuario (Paseo Feliz)
+   =================================================== */
+
+.profile-main-content {
+    flex: 1;
+    padding: 0;
+    overflow-y: auto;
+    background-color: #f0f4f8;
+}
+
+/* ── Banner ── */
+.boceto-banner-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 360px;   /* en pantallas muy anchas no crece infinito */
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    overflow: visible;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+
+/* Capa interna que recorta solo la imagen del banner */
+.boceto-banner-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.boceto-banner-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+/* ── Avatar de usuario ── */
+.boceto-avatar-user {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    position: absolute;
+    bottom: -30px;
+    left: 30px;
+    background: #c8d6e5;
+    object-fit: cover;
+    object-position: center;
+    z-index: 10;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.35);
+}
+
+/* ── Nombre sobre el banner ── */
+.boceto-nombre-linea {
+    position: absolute;
+    bottom: 18px;
+    left: 160px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.6);
+    letter-spacing: 0.3px;
+}
+
+/* ── Botón lápiz editar ── */
+.boceto-btn-lapiz {
+    position: absolute;
+    right: 22px;
+    top: 16px;
+    background: rgba(255,255,255,0.92);
+    color: #2c3e50;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+    transition: all 0.25s;
+    text-decoration: none;
+}
+.boceto-btn-lapiz:hover {
+    background: #27ae60;
+    color: #fff;
+    transform: scale(1.08);
+}
+
+/* ── Franja de espacio bajo el banner (para el avatar que sobresale) ── */
+.profile-subheader {
+    background: #fff;
+    height: 44px;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+/* ── Grid principal ── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px 28px;
+    margin-top: 0;
+}
+
+.columna-boceto {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.columna-derecha {
+    border-left: none;
+    padding-left: 0;
+}
+
+/* ── Tarjeta contenedora de columna ── */
+.columna-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid #e8edf3;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Título de sección ── */
+.seccion-titulo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e8f5e9;
+}
+.seccion-titulo i {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: #e8f5e9;
+    color: #27ae60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* ── Cajas de datos ── */
+.boceto-caja-datos {
+    background: #f8fafc;
+    border: 1px solid #e8edf3;
+    border-left: 3px solid #27ae60;
+    padding: 11px 14px;
+    border-radius: 8px;
+}
+.boceto-caja-datos label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+}
+.boceto-caja-datos p {
+    margin: 0;
+    font-size: 14px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* ── Selector de mascotas (pestañas) ── */
+.pet-selector-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.pet-tab-btn {
+    padding: 7px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    background: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748b;
+}
+.pet-tab-btn.active {
+    background: #27ae60;
+    color: #fff;
+    border-color: #27ae60;
+    box-shadow: 0 2px 8px rgba(39,174,96,0.25);
+}
+.pet-tab-btn:hover:not(.active) {
+    background: #e8f5e9;
+    border-color: #27ae60;
+    color: #27ae60;
+}
+.hidden-pet {
+    display: none;
+}
+
+/* ── Tarjeta de mascota ── */
+.boceto-mascota-card {
+    background: #fff;
+    border: 1px solid #e8edf3;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    animation: fadeInCard 0.2s ease;
+}
+@keyframes fadeInCard {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.boceto-mascota-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e8edf3;
+}
+.boceto-avatar-pet {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #e8f5e9;
+    background: #e0e0e0;
+    object-fit: cover;
+    object-position: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.boceto-nombre-pet {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a202c;
+    flex: 1;
+}
