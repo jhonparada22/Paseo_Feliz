@@ -474,11 +474,18 @@
         }
 
         /* ── MAIN ── */
+        /* .main es el contenedor con scroll vertical (ver sidebar_usuario.css).
+           Ocupa todo el ancho disponible para que su barra de scroll quede
+           pegada al borde de la ventana; el contenido interno conserva su
+           ancho de lectura y queda alineado a la izquierda. */
         .main {
             margin-left: 0;
             flex: 1;
+            min-width: 0;
             padding: 32px 36px 40px;
-            width: calc(100% - 90px);
+        }
+
+        .main>* {
             max-width: 1380px;
         }
 

@@ -16,6 +16,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <!-- Wizard de compra de mensualidad de Paseos (mapa Leaflet en el paso 2) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="../css/principal_css/wizard_paseos.css?v=1">
+    <!-- Dashboard post-compra del servicio de Paseos -->
+    <link rel="stylesheet" href="../css/principal_css/dashboard_paseos.css?v=1">
 </head>
 <body class="usuario-page">
 
@@ -276,6 +278,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             </div>
         </div>
 
+        <!-- DASHBOARD POST-COMPRA DE PASEOS (lo pinta dashboard_paseos.js
+             cuando el cliente tiene la membresía de paseos activa) -->
+        <section id="paseos-dashboard" hidden></section>
+
         <!-- FOOTER BAR -->
         <div class="footer-bar" id="footer-bar">
             <i class="ph ph-heart"></i>
@@ -287,6 +293,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="../js/js pagina principal/wizard_paseos.js?v=1"></script>
-<script src="../js/js pagina principal/inicio_cliente.js?v=2"></script>
+<script src="../js/js pagina principal/dashboard_paseos.js?v=1"></script>
+<script src="../js/js pagina principal/inicio_cliente.js?v=3"></script>
 </body>
 </html>

@@ -58,7 +58,8 @@ body.usuario-page .app-container,
    CONTENIDO PRINCIPAL — scroll interno, nunca empuja el sidebar
 ══════════════════════════════════════════════════════════════════════════ */
 #contenedor_general .profile-main-content,
-#contenedor_general .edit-main-content {
+#contenedor_general .edit-main-content,
+#contenedor_general .main {
     flex: 1 !important;
     height: 100vh !important;
     overflow-y: auto !important;
@@ -296,7 +297,8 @@ body.usuario-page .app-container,
     }
 
     #contenedor_general .profile-main-content,
-    #contenedor_general .edit-main-content {
+    #contenedor_general .edit-main-content,
+    #contenedor_general .main {
         order: 1 !important;
         height: calc(100vh - 58px) !important;
         padding-bottom: 0 !important;

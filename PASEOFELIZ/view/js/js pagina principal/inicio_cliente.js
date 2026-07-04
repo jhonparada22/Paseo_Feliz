@@ -173,7 +173,39 @@ function hideTabSkeleton() {
     bottomSection.classList.remove('sk-loading');
 }
 
+// ── Regla de navegación post-compra (FASE 4) ──
+// Con la membresía de Paseos activa el cliente ya no ve la vista de compra:
+// se muestra el dashboard post-compra conectado a la BD (dashboard_paseos.js).
 function renderService(key) {
+    const usarDashboard = key === 'paseos' && membresias.paseos &&
+                          typeof mostrarDashboardPaseos === 'function';
+
+    if (usarDashboard) {
+        mostrarVistaCompra(false);
+        mostrarDashboardPaseos().then(ok => {
+            // Caso borde: membresía activa sin pedido en la BD → vista de compra normal
+            if (!ok && currentSvc === 'paseos') {
+                mostrarVistaCompra(true);
+                renderShowcase(key);
+            }
+        });
+        return;
+    }
+
+    if (typeof ocultarDashboardPaseos === 'function') ocultarDashboardPaseos();
+    mostrarVistaCompra(true);
+    renderShowcase(key);
+}
+
+// Muestra u oculta la vista de compra (showcase + tarjetas + footer)
+function mostrarVistaCompra(visible) {
+    showcase.style.display = visible ? '' : 'none';           // CSS: display grid
+    bottomSection.style.display = visible ? 'grid' : 'none';  // inline original: grid
+    const footer = document.getElementById('footer-bar');
+    if (footer) footer.style.display = visible ? '' : 'none';
+}
+
+function renderShowcase(key) {
     const s = services[key];
     currentImg = randomImgIndex(s.images, key);
     currentTest = 0;

@@ -1,0 +1,500 @@
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD_PASEOS.CSS — Dashboard post-compra del servicio de Paseos
+   Prefijo .dz- · usa las variables de inicio_cliente.css
+   ══════════════════════════════════════════════════════════════ */
+
+#paseos-dashboard {
+    margin-top: 6px;
+    animation: dzAparecer .35s ease;
+}
+@keyframes dzAparecer {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.dz-sub {
+    color: var(--muted);
+    font-size: .95rem;
+    margin: -6px 0 16px;
+}
+
+/* ── Grid de 3 columnas ── */
+.dz-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr 320px;
+    gap: 18px;
+    align-items: start;
+}
+.dz-col { display: flex; flex-direction: column; gap: 18px; }
+
+@media (max-width: 1250px) {
+    .dz-grid { grid-template-columns: 1fr 1fr; }
+    .dz-col-centro { order: -1; grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+    .dz-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Tarjetas ── */
+.dz-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    padding: 18px;
+}
+.dz-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.dz-card-head .dz-h3 { margin-bottom: 0; }
+.dz-card-centrada { text-align: center; }
+
+.dz-h3 {
+    font-size: .95rem;
+    font-weight: 800;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+.dz-h3 i { color: var(--primary); font-size: 1.05rem; }
+.dz-h3-verde i { color: #22c55e; }
+
+.dz-titulo { font-size: 1.35rem; font-weight: 800; margin: 4px 0 2px; }
+.dz-titulo-verde { color: #16a34a; }
+.dz-titulo-sm { font-weight: 700; font-size: .95rem; margin: 8px 0; }
+.dz-texto { color: var(--muted); font-size: .88rem; }
+.dz-vacio { color: var(--muted); font-size: .85rem; padding: 8px 0; }
+
+/* ── Chips de estado ── */
+.dz-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.dz-chip-verde { background: #e9f9ef; color: #16a34a; }
+.dz-chip-ambar { background: #fef6e7; color: #b45309; }
+.dz-dot-vivo {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #22c55e;
+    animation: dzPulso 1.4s infinite;
+}
+@keyframes dzPulso {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .45); }
+    50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+/* ── Timeline horizontal (6 pasos) ── */
+.dz-timeline {
+    display: flex;
+    align-items: flex-start;
+    margin: 18px 0 6px;
+}
+.dz-paso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 58px;
+    flex: 0 0 auto;
+}
+.dz-paso-circulo {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #eef2f7;
+    color: #9aa7b8;
+    font-size: 1rem;
+    border: 2px solid transparent;
+    transition: var(--ease);
+}
+.dz-paso.hecho .dz-paso-circulo { background: #7c5cf0; color: #fff; }
+.dz-paso.activo .dz-paso-circulo {
+    background: #fff; color: #7c5cf0;
+    border-color: #7c5cf0;
+    animation: dzPulsoMorado 1.6s infinite;
+}
+@keyframes dzPulsoMorado {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 240, .35); }
+    50%      { box-shadow: 0 0 0 7px rgba(124, 92, 240, 0); }
+}
+.dz-paso-txt {
+    font-size: .66rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.25;
+}
+.dz-paso.hecho .dz-paso-txt, .dz-paso.activo .dz-paso-txt { color: var(--text); }
+.dz-paso-linea {
+    flex: 1 1 auto;
+    height: 2px;
+    background: var(--border);
+    margin-top: 17px;
+    min-width: 8px;
+}
+
+/* ── Avisos ── */
+.dz-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: #f2f7ff;
+    color: var(--primary-dark);
+    border-radius: var(--radius-md);
+    padding: 11px 13px;
+    font-size: .8rem;
+    margin-top: 12px;
+    line-height: 1.4;
+}
+.dz-aviso i { font-size: 1rem; margin-top: 1px; flex: 0 0 auto; }
+.dz-aviso-morado { background: #f4f1fe; color: #5b3fd4; }
+.dz-aviso-ambar  { background: #fef6e7; color: #b45309; }
+.dz-aviso-grande { padding: 15px; font-size: .84rem; }
+.dz-aviso small  { color: inherit; opacity: .8; }
+
+/* ── Filas de datos (resumen / info) ── */
+.dz-fila {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 6px 0;
+    font-size: .86rem;
+    border-bottom: 1px dashed var(--border);
+}
+.dz-card .dz-fila:last-of-type { border-bottom: none; }
+.dz-fila i {
+    color: var(--primary);
+    font-size: .95rem;
+    align-self: center;
+    flex: 0 0 auto;
+}
+.dz-fila-lbl { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.dz-fila-val { color: var(--text); font-weight: 600; }
+.dz-fila-sm { font-size: .8rem; border-bottom: none; }
+
+/* ── Mapa ── */
+.dz-card-mapa { padding: 12px; }
+#dz-map {
+    height: 300px;
+    border-radius: var(--radius-md);
+    z-index: 0;
+}
+.dz-map-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e9f9ef;
+    color: #16a34a;
+    font-size: .76rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+.dz-badge-vivo { background: #e9f9ef; }
+.dz-map-link { margin-top: 12px; width: 100%; }
+
+/* Pines del mapa */
+.dz-pin-casa, .dz-pin-paseador {
+    width: 34px; height: 34px;
+    border-radius: 50% 50% 50% 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1rem;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, .3);
+    transform: rotate(-45deg);
+}
+.dz-pin-casa i, .dz-pin-paseador i { transform: rotate(45deg); }
+.dz-pin-casa { background: #22c55e; }
+.dz-pin-paseador {
+    background: var(--primary-dark);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    transform: none;
+}
+.dz-pin-paseador i { transform: none; }
+
+/* ── Dirección ── */
+.dz-dir { font-weight: 700; font-size: .92rem; margin-bottom: 6px; }
+.dz-dir-ref { color: var(--muted); font-size: .84rem; margin-bottom: 10px; }
+
+/* ── Historial ── */
+.dz-hist-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 0;
+    font-size: .84rem;
+    border-bottom: 1px dashed var(--border);
+}
+.dz-hist-item:last-child { border-bottom: none; }
+.dz-hist-item i { color: #22c55e; font-size: .95rem; }
+.dz-hist-fecha {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: .78rem;
+    min-width: 74px;
+}
+.dz-hist-futuro { opacity: .75; }
+.dz-hist-futuro i { color: var(--primary); }
+
+/* ── Timeline vertical (paseo en curso) ── */
+.dz-tl-vertical { display: flex; flex-direction: column; }
+.dz-tlv-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 18px;
+}
+.dz-tlv-item:last-child { padding-bottom: 0; }
+.dz-tlv-item::before {
+    content: '';
+    position: absolute;
+    left: 15px; top: 32px; bottom: 0;
+    width: 2px;
+    background: var(--border);
+}
+.dz-tlv-item:last-child::before { display: none; }
+.dz-tlv-punto {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    background: #eef2f7;
+    color: #9aa7b8;
+    font-size: .9rem;
+    z-index: 1;
+}
+.dz-tlv-item.hecho .dz-tlv-punto { background: #22c55e; color: #fff; }
+.dz-tlv-item.activo .dz-tlv-punto {
+    background: var(--primary);
+    color: #fff;
+    animation: dzPulso 1.4s infinite;
+}
+.dz-tlv-titulo {
+    font-weight: 800;
+    font-size: .88rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.dz-tlv-item.hecho .dz-tlv-titulo, .dz-tlv-item.activo .dz-tlv-titulo { color: #16a34a; }
+.dz-tlv-item.activo .dz-tlv-titulo { color: var(--primary); }
+.dz-tlv-hora { color: var(--muted); font-weight: 600; font-size: .78rem; white-space: nowrap; }
+.dz-tlv-desc { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+.dz-tlv-info { flex: 1; }
+
+/* ── Stats mini (en curso) ── */
+.dz-stats-mini {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+}
+.dz-stat {
+    background: var(--bg-body);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    text-align: center;
+}
+.dz-stat-val { font-weight: 800; font-size: 1.05rem; color: var(--primary-dark); }
+.dz-stat-lbl { color: var(--muted); font-size: .72rem; font-weight: 600; }
+
+/* ── Paseador ── */
+.dz-avatar {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #eef2f7;
+    margin: 6px auto 8px;
+    display: block;
+}
+.dz-paseador-nombre { font-weight: 800; font-size: 1.05rem; }
+.dz-paseador-rating { color: var(--muted); font-size: .88rem; font-weight: 700; margin: 3px 0; }
+.dz-estrellas { color: #f59e0b; letter-spacing: 1px; }
+.dz-paseador-sub {
+    color: var(--muted);
+    font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+.dz-paseador-sub i { color: var(--primary); }
+.dz-buscando-icono {
+    width: 84px; height: 84px;
+    margin: 10px auto 4px;
+    border-radius: 50%;
+    background: #f2f7ff;
+    color: var(--primary);
+    font-size: 2.2rem;
+    display: flex; align-items: center; justify-content: center;
+    animation: dzPulsoMorado 1.8s infinite;
+}
+
+/* ── Botones ── */
+.dz-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: .84rem;
+    padding: 11px 16px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: var(--ease);
+    font-family: inherit;
+}
+.dz-btn-primario { background: var(--primary-dark); color: #fff; }
+.dz-btn-primario:hover { background: var(--primary); }
+.dz-btn-borde {
+    background: #fff;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+}
+.dz-btn-borde:hover { border-color: var(--primary); color: var(--primary); }
+.dz-btn-full { width: 100%; margin-top: 12px; }
+.dz-botones-fila { display: flex; gap: 10px; justify-content: center; }
+.dz-botones-fila .dz-btn { flex: 1; }
+
+.dz-acciones { display: flex; flex-direction: column; gap: 9px; }
+.dz-btn-accion {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    justify-content: flex-start;
+    width: 100%;
+}
+.dz-btn-accion:hover { border-color: var(--primary); color: var(--primary); }
+.dz-btn-accion i { color: var(--primary); font-size: 1rem; }
+.dz-btn-rojo { border-color: #fecaca; color: #dc2626; }
+.dz-btn-rojo i { color: #dc2626; }
+.dz-btn-rojo:hover { border-color: #dc2626; color: #b91c1c; }
+.dz-btn-mini {
+    background: #f2f7ff;
+    border: none;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: .76rem;
+    padding: 6px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+}
+.dz-btn-mini:hover { background: #e3eefc; }
+
+/* ── Instrucciones ── */
+.dz-instr-item {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    background: #f0fbf3;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: .84rem;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+.dz-instr-item i { color: #16a34a; margin-top: 1px; flex: 0 0 auto; }
+
+/* ── Plan ── */
+.dz-plan-nombre { color: #16a34a; font-weight: 800; font-size: .92rem; }
+.dz-plan-uso {
+    display: flex;
+    justify-content: space-between;
+    font-size: .82rem;
+    color: var(--muted);
+    margin: 12px 0 6px;
+}
+.dz-barra {
+    height: 9px;
+    border-radius: 999px;
+    background: #eef2f7;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.dz-barra-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: width .5s ease;
+}
+
+/* ── Modal del dashboard ── */
+.dz-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 30, 50, .55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    padding: 18px;
+    animation: dzAparecer .2s ease;
+}
+.dz-modal-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 440px;
+    padding: 22px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.dz-modal-x {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: #f2f5f9;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.dz-modal-x:hover { background: #e5eaf1; color: var(--text); }
+.dz-label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 12px 0 5px;
+}
+.dz-textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: .86rem;
+    font-family: inherit;
+    color: var(--text);
+    resize: vertical;
+}
+.dz-textarea:focus { outline: none; border-color: var(--primary); }
+.dz-modal-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: var(--radius-md);
+    padding: 9px 12px;
+    font-size: .8rem;
+    margin-top: 10px;
+}
