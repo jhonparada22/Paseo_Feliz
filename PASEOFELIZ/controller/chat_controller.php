@@ -132,16 +132,18 @@ if ($accion === 'listar_chats') {
             $stmt->bind_param("iiis", $id_sesion, $id_sesion, $id_sesion, $param);
         } elseif ($rol_sesion === 'usuario') {
             // Usuario: solo puede buscar entre los paseadores que tiene asignados por ruta
+            // (la relación cliente-ruta vive en ruta_clientes, rutas no tiene id_usuario)
             $sql = "SELECT DISTINCT u.id AS id_receptor, u.nombre, iu.avatar_url,
                         (SELECT c.id_conversacion FROM conversaciones c
                          WHERE (c.id_usuario_1 = ? AND c.id_usuario_2 = u.id)
                             OR (c.id_usuario_1 = u.id AND c.id_usuario_2 = ?)
                          LIMIT 1) AS id_conv
-                    FROM rutas r
+                    FROM ruta_clientes rc
+                    INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
                     INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
                     INNER JOIN usuarios u ON u.id = p.id_usuario
                     LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
-                    WHERE r.id_usuario = ? AND u.nombre LIKE ?
+                    WHERE rc.id_usuario_cliente = ? AND u.nombre LIKE ?
                     LIMIT 15";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iiis", $id_sesion, $id_sesion, $id_sesion, $param);
@@ -152,9 +154,10 @@ if ($accion === 'listar_chats') {
                          WHERE (c.id_usuario_1 = ? AND c.id_usuario_2 = u.id)
                             OR (c.id_usuario_1 = u.id AND c.id_usuario_2 = ?)
                          LIMIT 1) AS id_conv
-                    FROM rutas r
+                    FROM ruta_clientes rc
+                    INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
                     INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
-                    INNER JOIN usuarios u ON u.id = r.id_usuario
+                    INNER JOIN usuarios u ON u.id = rc.id_usuario_cliente
                     LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
                     WHERE p.id_usuario = ? AND u.nombre LIKE ?
                     LIMIT 15";
@@ -547,9 +550,10 @@ function obtenerRolPorId($conn, $id_usuario) {
 // $id_usuario_paseador = id (usuarios.id) de la cuenta del paseador
 function existeAsignacion($conn, $id_usuario_cliente, $id_usuario_paseador) {
     $stmt = $conn->prepare("SELECT r.id_ruta
-                             FROM rutas r
+                             FROM ruta_clientes rc
+                             INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
                              INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
-                             WHERE r.id_usuario = ? AND p.id_usuario = ?
+                             WHERE rc.id_usuario_cliente = ? AND p.id_usuario = ?
                              LIMIT 1");
     $stmt->bind_param("ii", $id_usuario_cliente, $id_usuario_paseador);
     $stmt->execute();
