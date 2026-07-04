@@ -78,21 +78,21 @@ $en30dias = date('Y-m-d H:i:s', strtotime('+30 days'));
 
 $colFlag   = $tipo;
 $colInicio = "fecha_inicio_{$tipo}";
-$colFin    = "fecha_fin_{$tipo}";
 $colPago   = "id_pago_{$tipo}";
 
 // ── Upsert membresía ─────────────────────────────────────────────
+// fecha_fin_* NO se escribe: es una columna calculada por MySQL
+// (fecha_inicio_* + 30 días), igual que en el resto del sistema.
 $sqlMem = "
-    INSERT INTO membresias (id_usuario, {$colFlag}, {$colInicio}, {$colFin}, {$colPago})
-    VALUES (?, 1, ?, ?, ?)
+    INSERT INTO membresias (id_usuario, {$colFlag}, {$colInicio}, {$colPago})
+    VALUES (?, 1, ?, ?)
     ON DUPLICATE KEY UPDATE
         {$colFlag}   = 1,
         {$colInicio} = VALUES({$colInicio}),
-        {$colFin}    = VALUES({$colFin}),
         {$colPago}   = VALUES({$colPago})
 ";
 $stmtM = $conn->prepare($sqlMem);
-$stmtM->bind_param('issi', $id_usuario, $ahora, $en30dias, $id_pago);
+$stmtM->bind_param('isi', $id_usuario, $ahora, $id_pago);
 if (!$stmtM->execute()) {
     echo json_encode(['success' => false, 'message' => 'Pago guardado pero error al activar membresía: ' . $stmtM->error]);
     $stmtM->close();
