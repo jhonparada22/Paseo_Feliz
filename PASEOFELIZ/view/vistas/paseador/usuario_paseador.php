@@ -67,13 +67,13 @@ function normalizarRutaAsset($url) {
                 </div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="./sub_menu/conocenos.php">
+                        <a href="../../pagina_principal/sub_menu/conocenos.php">
                             <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
                         </a>
-                        <a href="./sub_menu/direccion_oficial.php">
+                        <a href="../../pagina_principal/sub_menu/direccion_oficial.php">
                             <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
                         </a>
-                        <a href="./sub_menu/centro_de_ayuda.php">
+                        <a href="../../pagina_principal/sub_menu/centro_de_ayuda.php">
                             <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
                         </a>
                         <li>
