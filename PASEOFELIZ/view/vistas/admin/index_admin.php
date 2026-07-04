@@ -68,7 +68,7 @@
                 <!-- Header -->
                 <div class="page-header">
                     <div>
-                        <div class="greeting">¡Bienvenido, Admin! 👋</div>
+                        <div class="greeting">¡Bienvenido, <?php echo htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Admin'); ?>! 👋</div>
                         <div class="sub">Aquí tienes un resumen general de Paseo Feliz.</div>
                     </div>
                     <div class="date-pill">
@@ -194,45 +194,44 @@
                         <div class="card">
                             <div class="card-head">
                                 <span class="c-title">Reportes Recientes</span>
-                                <a href="reportes_admin.php" class="ver-todos">Ver todos</a>
                             </div>
                             <div class="card-body" style="padding-top:4px;padding-bottom:4px">
-                                <div class="report-item">
+                                <a href="paseos_admin.php" class="report-item" data-tipo="paseo" style="text-decoration:none;color:inherit">
                                     <div class="r-icon ri-green"><i class="fas fa-route"></i></div>
                                     <div class="r-info">
                                         <div class="r-name">Paseos completados</div>
-                                        <div class="r-date">25 may, 2025</div>
+                                        <div class="r-date" id="r-date-paseo">–</div>
                                     </div>
                                     <i class="fas fa-chevron-right"
                                         style="font-size:.68rem;color:var(--text-light)"></i>
-                                </div>
-                                <div class="report-item">
+                                </a>
+                                <a href="pagos_admin.php" class="report-item" data-tipo="ingreso" style="text-decoration:none;color:inherit">
                                     <div class="r-icon ri-blue"><i class="fas fa-dollar-sign"></i></div>
                                     <div class="r-info">
                                         <div class="r-name">Ingresos semanales</div>
-                                        <div class="r-date">25 may, 2025</div>
+                                        <div class="r-date" id="r-date-ingreso">–</div>
                                     </div>
                                     <i class="fas fa-chevron-right"
                                         style="font-size:.68rem;color:var(--text-light)"></i>
-                                </div>
-                                <div class="report-item">
+                                </a>
+                                <a href="usuarios_admin.php" class="report-item" data-tipo="usuario" style="text-decoration:none;color:inherit">
                                     <div class="r-icon ri-red"><i class="fas fa-user-plus"></i></div>
                                     <div class="r-info">
                                         <div class="r-name">Usuarios nuevos</div>
-                                        <div class="r-date">24 may, 2025</div>
+                                        <div class="r-date" id="r-date-usuario">–</div>
                                     </div>
                                     <i class="fas fa-chevron-right"
                                         style="font-size:.68rem;color:var(--text-light)"></i>
-                                </div>
-                                <div class="report-item">
+                                </a>
+                                <a href="paseadores_admin.php" class="report-item" data-tipo="paseador" style="text-decoration:none;color:inherit">
                                     <div class="r-icon ri-orange"><i class="fas fa-person-walking"></i></div>
                                     <div class="r-info">
                                         <div class="r-name">Paseadores activos</div>
-                                        <div class="r-date">24 may, 2025</div>
+                                        <div class="r-date" id="r-date-paseador">–</div>
                                     </div>
                                     <i class="fas fa-chevron-right"
                                         style="font-size:.68rem;color:var(--text-light)"></i>
-                                </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -282,7 +281,7 @@
 
     <!-- ══ SCRIPTS ════════════════════════════════════════════════ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script src="../../js/admin/admin.js"></script>
+    <script src="../../js/admin/dashboard_admin.js?v=1"></script>
 
 </body>
 
