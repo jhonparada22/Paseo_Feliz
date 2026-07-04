@@ -28,7 +28,7 @@ include_once '../../../controller/chat_controller.php';
     <link rel="stylesheet" href="../../css/principal_css/global.css">
     <link rel="stylesheet" href="../../css/paseador/sidebar_paseador.css">
     <link rel="stylesheet" href="../../css/principal_css/paseos.css">
-    <link rel="stylesheet" href="../../css/principal_css/Chat.css">
+    <link rel="stylesheet" href="../../css/principal_css/Chat.css?v=<?php echo @filemtime(__DIR__ . '/../../css/principal_css/Chat.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -41,13 +41,13 @@ include_once '../../../controller/chat_controller.php';
                 </div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="../../pagina_principal/sub_menu/conocenos.php">
+                        <a href="./sub_menu/conocenos.php">
                             <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
                         </a>
-                        <a href="../../pagina_principal/sub_menu/direccion_oficial.php">
+                        <a href="./sub_menu/direccion_oficial.php">
                             <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
                         </a>
-                        <a href="../../pagina_principal/sub_menu/centro_de_ayuda.php">
+                        <a href="./sub_menu/centro_de_ayuda.php">
                             <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
                         </a>
                         <li>
@@ -127,8 +127,9 @@ include_once '../../../controller/chat_controller.php';
 
     <script>
         const idSesionActual = <?php echo json_encode($id_sesion); ?>;
+        const rolSesionActual = <?php echo json_encode($rol_sesion); ?>;
     </script>
 
-    <script src="../../js/chats/Chat.js"></script>
+    <script src="../../js/chats/Chat.js?v=<?php echo @filemtime(__DIR__ . '/../../js/chats/Chat.js'); ?>"></script>
 </body>
 </html>

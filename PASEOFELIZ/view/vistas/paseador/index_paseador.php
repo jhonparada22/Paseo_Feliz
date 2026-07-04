@@ -31,13 +31,13 @@
                 </div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="../../pagina_principal/sub_menu/conocenos.php">
+                        <a href="./sub_menu/conocenos.php">
                             <li><i class="fas fa-camera"></i><span>Conócenos</span></li>
                         </a>
-                        <a href="../../pagina_principal/sub_menu/direccion_oficial.php">
+                        <a href="./sub_menu/direccion_oficial.php">
                             <li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li>
                         </a>
-                        <a href="../../pagina_principal/sub_menu/centro_de_ayuda.php">
+                        <a href="./sub_menu/centro_de_ayuda.php">
                             <li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li>
                         </a>
                         <li>
@@ -87,21 +87,21 @@
                     <div class="stat-icon blue"><i class="fas fa-dog"></i></div>
                     <div class="stat-info">
                         <div class="label">Paseos de Hoy</div>
-                        <div class="value" id="countHoy">0</div>
+                        <div class="value" id="countHoy">3</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon green"><i class="fas fa-paw"></i></div>
                     <div class="stat-info">
                         <div class="label">Total Perros Asignados</div>
-                        <div class="value" id="countPerros">0</div>
+                        <div class="value">8</div>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon orange"><i class="fas fa-star"></i></div>
                     <div class="stat-info">
                         <div class="label">Calificación Promedio</div>
-                        <div class="value" id="countRating">0.0 <span class="star-small">★</span></div>
+                        <div class="value">4.9 <span class="star-small">★</span></div>
                     </div>
                 </div>
             </div>
@@ -114,8 +114,43 @@
                     <div class="card-head">
                         <span class="title"><i class="fas fa-calendar-week"></i> Cronograma de la Semana</span>
                     </div>
-                    <!-- Las pills se generan desde la BD (paseador.js -> obtener_cronograma.php) -->
-                    <div class="calendar-week-grid" id="calendarGrid"></div>
+                    <div class="calendar-week-grid">
+                        <div class="day-pill active" onclick="cambiarDia('Lunes', this)">
+                            <span class="day-name">Lun</span>
+                            <span class="day-num">1</span>
+                            <span class="badge-count">3 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Martes', this)">
+                            <span class="day-name">Mar</span>
+                            <span class="day-num">2</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Miércoles', this)">
+                            <span class="day-name">Mié</span>
+                            <span class="day-num">3</span>
+                            <span class="badge-count">4 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Jueves', this)">
+                            <span class="day-name">Jue</span>
+                            <span class="day-num">4</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Viernes', this)">
+                            <span class="day-name">Vie</span>
+                            <span class="day-num">5</span>
+                            <span class="badge-count">3 Perros</span>
+                        </div>
+                        <div class="day-pill" onclick="cambiarDia('Sábado', this)">
+                            <span class="day-name">Sáb</span>
+                            <span class="day-num">6</span>
+                            <span class="badge-count">2 Perros</span>
+                        </div>
+                        <div class="day-pill weekend" onclick="cambiarDia('Domingo', this)">
+                            <span class="day-name">Dom</span>
+                            <span class="day-num">7</span>
+                            <span class="badge-count">Descanso</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Lista Dinámica de Perros -->
@@ -143,15 +178,29 @@
                         <span class="title"><i class="fas fa-triangle-exclamation"></i> Notas Importantes de
                             Comportamiento</span>
                     </div>
-                    <!-- Notas reales desde los pedidos (comportamiento + observaciones) -->
-                    <div class="alerts-container" id="alertsContainer"></div>
+                    <div class="alerts-container">
+                        <div class="alert-item hazard">
+                            <i class="fas fa-shield-dog"></i>
+                            <div>
+                                <strong>Rocky (Golden Retriever):</strong> Tiende a jalar mucho de la correa si ve
+                                gatos. Llevar arnés de control.
+                            </div>
+                        </div>
+                        <div class="alert-item medical">
+                            <i class="fas fa-capsules"></i>
+                            <div>
+                                <strong>Luna (Pug):</strong> No cansar demasiado debido al calor de Cúcuta. Llevar
+                                hidratación constante y hacer pausas en la sombra.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <script src="../../js/paseador/paseador.js?v=2"></script>
+    <script src="../../js/paseador/paseador.js"></script>
 
 </body>
 
