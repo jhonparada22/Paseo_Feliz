@@ -10,11 +10,12 @@
     <link rel="stylesheet" href="../../css/principal_css/global.css">
     <link rel="stylesheet" href="../../css/principal_css/paseos.css">
     <link rel="stylesheet" href="../../css/paseador/paseos_paseador.css">
+    <link rel="stylesheet" href="../../css/paseador/sidebar_paseador.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="paseador-page">
 
     <div id="contenedor_general" class="app-container">
 
@@ -61,53 +62,15 @@
                 </button>
             </div>
 
+            <!-- Aviso cuando aún no se ha creado la ruta de hoy (ver Inicio > Empezar paseos) -->
+            <div id="sinRutaBanner" class="sin-ruta-banner" style="display:none">
+                <i class="fas fa-circle-info"></i>
+                <span>Aún no has iniciado tus paseos de hoy. Ve a <a href="index_paseador.php">Inicio</a> y presiona "Empezar paseos" para trazar la ruta del día.</span>
+            </div>
+
             <div id="tab-hoy" class="tab-content active">
-                <div class="walks-grid">
-
-                    <div class="walk-card live">
-                        <div class="card-status-badge badge-live">
-                            <span class="pulse-dot"></span> En Curso
-                        </div>
-                        <div class="walk-card-header">
-                            <div class="dog-avatar">🐾</div>
-                            <div class="dog-details">
-                                <h3>Rocky</h3>
-                                <p>Golden Retriever • 3 años</p>
-                            </div>
-                        </div>
-                        <div class="walk-card-body">
-                            <div class="info-row"><i class="fas fa-user"></i> <span><strong>Dueño:</strong> María Fernanda N.</span></div>
-                            <div class="info-row"><i class="fas fa-clock"></i> <span><strong>Horario:</strong> 07:30 AM - 08:30 AM</span></div>
-                            <div class="info-row"><i class="fas fa-location-dot"></i> <span><strong>Zona:</strong> Prados del Este</span></div>
-                            <div class="info-row alert-notes"><i class="fas fa-comment-medical"></i> <span><strong>Nota:</strong> Llevar hidratación, se cansa rápido.</span></div>
-                        </div>
-                        <div class="walk-card-actions">
-                            <a href="mapa_paseador.php" class="btn-card primary"><i class="fas fa-location-arrow"></i> Ver Mapa / GPS</a>
-                            <button class="btn-card success" onclick="finalizarPaseo(201)">Finalizar Paseo</button>
-                        </div>
-                    </div>
-
-                    <div class="walk-card">
-                        <div class="card-status-badge badge-pending">Pendiente</div>
-                        <div class="walk-card-header">
-                            <div class="dog-avatar">🐾</div>
-                            <div class="dog-details">
-                                <h3>Luna</h3>
-                                <p>Pug • 1 año</p>
-                            </div>
-                        </div>
-                        <div class="walk-card-body">
-                            <div class="info-row"><i class="fas fa-user"></i> <span><strong>Dueño:</strong> Pedro Julio Gómez</span></div>
-                            <div class="info-row"><i class="fas fa-clock"></i> <span><strong>Horario:</strong> 09:00 AM - 10:00 AM</span></div>
-                            <div class="info-row"><i class="fas fa-location-dot"></i> <span><strong>Zona:</strong> Barrio La Ceiba</span></div>
-                            <div class="info-row alert-notes"><i class="fas fa-shield-dog"></i> <span><strong>Nota:</strong> Usar arnés de pecho únicamente.</span></div>
-                        </div>
-                        <div class="walk-card-actions">
-                            <a href="Chat_paseador.php" class="btn-card secondary"><i class="far fa-comment-alt"></i> Chat Dueño</a>
-                            <button class="btn-card primary" onclick="iniciarPaseo(202)">Iniciar Ruta</button>
-                        </div>
-                    </div>
-
+                <div class="walks-grid" id="walksGridHoy">
+                    <div class="no-walks-msg"><i class="fas fa-spinner fa-spin"></i> Cargando tus paseos de hoy...</div>
                 </div>
             </div>
 
@@ -120,36 +83,13 @@
                                     <th>Fecha</th>
                                     <th>Mascota</th>
                                     <th>Dueño</th>
-                                    <th>Zona / Barrio</th>
+                                    <th>Dirección</th>
                                     <th>Duración</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>04/Jun/2026</td>
-                                    <td><strong>Zeus</strong> (Pastor Al.)</td>
-                                    <td>Carlos R.</td>
-                                    <td>Quinta Vélez</td>
-                                    <td>1 Hora</td>
-                                    <td><span class="badge-status-done">Completado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>04/Jun/2026</td>
-                                    <td><strong>Coco</strong> (Poodle)</td>
-                                    <td>Aníbal M.</td>
-                                    <td>Centro</td>
-                                    <td>1 Hora</td>
-                                    <td><span class="badge-status-done">Completado</span></td>
-                                </tr>
-                                <tr>
-                                    <td>03/Jun/2026</td>
-                                    <td><strong>Toby</strong> (Criollo)</td>
-                                    <td>Laura S.</td>
-                                    <td>San Eduardo</td>
-                                    <td>2 Horas</td>
-                                    <td><span class="badge-status-done">Completado</span></td>
-                                </tr>
+                            <tbody id="historialBody">
+                                <tr><td colspan="6" class="no-walks-msg"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -159,33 +99,6 @@
         </main>
     </div>
 
-    <script>
-        // Hamburguesa
-        const btnMenu = document.getElementById('btn-menu');
-        const menuLatente = document.getElementById('menu-latente');
-        btnMenu.addEventListener('click', () => menuLatente.classList.toggle('show'));
-
-        // Cambio de Pestañas (Tabs)
-        function switchTab(event, tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // Acciones operativas: el flujo real de iniciar/finalizar paseo vive en el mapa
-        function iniciarPaseo(id) {
-            // Marca la intención de iniciar y lleva al mapa, donde corre el GPS real
-            localStorage.setItem('paseoIniciado', 'true');
-            window.location.href = 'mapa_paseador.php';
-        }
-
-        function finalizarPaseo(id) {
-            if (confirm('¿Estás seguro de que deseas finalizar este paseo? Asegúrate de haber entregado la mascota a su dueño.')) {
-                window.location.href = 'mapa_paseador.php';
-            }
-        }
-    </script>
+    <script src="../../js/paseador/paseos_paseador.js?v=1"></script>
 </body>
 </html>
