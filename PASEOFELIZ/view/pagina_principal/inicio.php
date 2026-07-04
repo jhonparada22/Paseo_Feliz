@@ -18,6 +18,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <link rel="stylesheet" href="../css/principal_css/wizard_paseos.css?v=1">
     <!-- Dashboard post-compra del servicio de Paseos -->
     <link rel="stylesheet" href="../css/principal_css/dashboard_paseos.css?v=1">
+    <link rel="stylesheet" href="../css/responsive/responsive_principal.css?v=<?php echo @filemtime(__DIR__ . '/../css/responsive/responsive_principal.css'); ?>">
 </head>
 <body class="usuario-page">
 

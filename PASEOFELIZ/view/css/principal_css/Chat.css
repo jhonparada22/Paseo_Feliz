@@ -144,6 +144,38 @@ body {
     color: #222; 
 }
 
+/* ── ETIQUETA DE ROL (Paseador / Admin) ── */
+.conv-name .rol-tag,
+.chat-header-name .rol-tag {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 0.68rem !important;
+    font-weight: 600 !important;
+    padding: 1px 8px !important;
+    border-radius: 10px !important;
+    vertical-align: middle !important;
+    margin-left: 6px !important;
+    line-height: 1.5 !important;
+    border: none !important;
+}
+
+.conv-name .rol-tag.rol-paseador,
+.chat-header-name .rol-tag.rol-paseador {
+    background: #E3F3EA !important;
+    color: #1F8A4C !important;
+}
+
+.conv-name .rol-tag.rol-admin,
+.chat-header-name .rol-tag.rol-admin {
+    background: #FDEAEA !important;
+    color: #C0392B !important;
+}
+
+.chat-header-name .rol-tag {
+    font-size: 0.7rem !important;
+}
+
 .conv-last { 
     font-size: 0.85rem; 
     color: #666; 
@@ -219,6 +251,62 @@ body {
     font-size: 0.8rem;
     color: #25D366;
     font-style: italic;
+}
+
+/* ── AVISO DE CHAT DESACTIVADO (usuario / paseador) ── */
+.chat-desactivado-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: #FFF5F5;
+    border-top: 1px solid #FED7D7;
+    color: #C53030;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.chat-desactivado-banner i {
+    font-size: 0.9rem;
+}
+
+/* ── BOTÓN ADMIN: ACTIVAR / DESACTIVAR CHAT ── */
+.chat-toggle-btn {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-toggle-btn i {
+    font-size: 1rem;
+}
+
+.chat-toggle-btn.chat-toggle-activo {
+    background: #E3F3EA;
+    color: #1F8A4C;
+}
+
+.chat-toggle-btn.chat-toggle-activo:hover {
+    background: #d1ecdd;
+}
+
+.chat-toggle-btn.chat-toggle-inactivo {
+    background: #FDEAEA;
+    color: #C0392B;
+}
+
+.chat-toggle-btn.chat-toggle-inactivo:hover {
+    background: #fbdada;
 }
 
 /* ── ÁREA DE MENSAJES Y BURBUJAS ── */

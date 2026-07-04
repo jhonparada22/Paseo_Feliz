@@ -24,7 +24,8 @@ include_once '../../controller/chat_controller.php';
     <link rel="stylesheet" href="../css/principal_css/global.css">
     <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
     <link rel="stylesheet" href="../css/principal_css/paseos.css">
-    <link rel="stylesheet" href="../css/principal_css/Chat.css">
+    <link rel="stylesheet" href="../css/principal_css/Chat.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/Chat.css'); ?>">
+    <link rel="stylesheet" href="../css/responsive/responsive_principal.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/responsive_principal.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -102,8 +103,9 @@ include_once '../../controller/chat_controller.php';
 
     <script>
         const idSesionActual = <?php echo json_encode($id_sesion); ?>;
+        const rolSesionActual = <?php echo json_encode($rol_sesion); ?>;
     </script>
 
-    <script src="../js/chats/Chat.js"></script>
+    <script src="../js/chats/Chat.js?v=<?php echo @filemtime(__DIR__ . '/../js/chats/Chat.js'); ?>"></script>
 </body>
 </html>

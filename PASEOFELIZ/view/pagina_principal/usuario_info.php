@@ -37,6 +37,7 @@ if ($id_usuario) {
     <link rel="stylesheet" href="../css/principal_css/global.css">
     <link rel="stylesheet" href="../css/principal_css/usuario_info.css">
     <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
+    <link rel="stylesheet" href="../css/responsive/responsive_principal.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/responsive_principal.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="usuario-page">

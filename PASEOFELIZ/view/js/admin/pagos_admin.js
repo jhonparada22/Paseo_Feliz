@@ -69,9 +69,11 @@ async function init() {
 // STATS
 // ══════════════════════════════════════════════════════════════
 function renderStats(stats) {
-  document.getElementById('statTotalPagos').textContent  = stats.total_pagos ?? 0;
-  document.getElementById('statActivas').textContent     = stats.membresias_activas ?? 0;
-  document.getElementById('statIngresosMes').textContent = '$' + formatMonto(stats.ingresos_mes ?? 0);
+  document.getElementById('statMiembros').textContent         = stats.miembros_con_membresia ?? 0;
+  document.getElementById('statPaseos').textContent           = stats.paseos_activos ?? 0;
+  document.getElementById('statAdiestramiento').textContent   = stats.adiestramiento_activos ?? 0;
+  document.getElementById('statHospedaje').textContent        = stats.hospedaje_activos ?? 0;
+  document.getElementById('statIngresosTotales').textContent  = '$' + formatMonto(stats.ingresos_totales ?? 0);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -96,8 +98,8 @@ function buildPagoRow(p) {
   const initials = p.nombre.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
   const color    = COLORS[p.id_usuario % COLORS.length];
   const src      = avatarSrc(p.avatar_url);
-  const labelMap = { paseos:'🐶 Paseos', adiestramiento:'🎓 Adiestramiento', hospedaje:'🏠 Hospedaje' };
-  const clsMap   = { paseos:'tipo-paseos', adiestramiento:'tipo-adiestramiento', hospedaje:'tipo-hospedaje' };
+  const labelMapPago = { paseos:'🐶 Paseos', adiestramiento:'🎓 Adiestramiento', hospedaje:'🏠 Hospedaje' };
+  const clsMapPago   = { paseos:'tipo-paseos', adiestramiento:'tipo-adiestramiento', hospedaje:'tipo-hospedaje' };
 
   div.innerHTML = `
     <div class="pago-avatar" style="background:${color}">
@@ -109,7 +111,7 @@ function buildPagoRow(p) {
       <div class="pago-nombre">${esc(p.nombre)}</div>
       <div class="pago-email">${esc(p.email)}</div>
     </div>
-    <span class="pago-tipo ${clsMap[p.tipo_membresia]}">${labelMap[p.tipo_membresia]}</span>
+    <span class="pago-tipo ${clsMapPago[p.tipo_membresia]}">${labelMapPago[p.tipo_membresia]}</span>
     <div class="pago-monto">$${formatMonto(p.monto)}</div>
     <div class="pago-fecha">${formatFecha(p.fecha_pago)}</div>
   `;
@@ -166,28 +168,44 @@ function buildUsuarioRow(u) {
   const color    = COLORS[u.id % COLORS.length];
   const src      = avatarSrc(u.avatar_url);
 
-  let svHtml = '';
-  if (u.servicios && u.servicios.length > 0) {
-    const cls = { 'Paseos':'sv-paseos', 'Adiestramiento':'sv-adiestramiento', 'Hospedaje':'sv-hospedaje' };
-    u.servicios.forEach(sv => { svHtml += `<span class="sv-tag ${cls[sv] || ''}">${sv}</span>`; });
-  } else {
-    svHtml = `<span class="sv-tag sv-ninguno">Sin membresía</span>`;
+  const clsMap = { 'Paseos':'sv-paseos', 'Adiestramiento':'sv-adiestramiento', 'Hospedaje':'sv-hospedaje' };
+
+  // Soporta ambos formatos del backend:
+  // - Objeto nuevo: { "Paseos": 28, "Adiestramiento": 15 }
+  // - Array viejo:  ["Paseos", "Adiestramiento"]
+  let entries = [];
+  if (u.servicios && typeof u.servicios === 'object' && !Array.isArray(u.servicios)) {
+    entries = Object.entries(u.servicios); // formato nuevo
+  } else if (Array.isArray(u.servicios) && u.servicios.length > 0) {
+    // formato viejo: array sin días → usamos dias_restantes para todos
+    entries = u.servicios.map(sv => [sv, u.dias_restantes ?? '?']);
   }
 
+  let svHtml   = '';
   let diasHtml = '';
-  if (u.activa && u.dias_restantes !== null) {
-    const clsDias = u.dias_restantes <= 5 ? 'dias-proximo' : '';
-    diasHtml = `
-      <div class="umem-dias">
-        <div class="dias-num ${clsDias}">${u.dias_restantes}</div>
-        <div class="dias-lbl">día${u.dias_restantes !== 1 ? 's' : ''} restante${u.dias_restantes !== 1 ? 's' : ''}</div>
-      </div>`;
+
+  if (entries.length > 0) {
+    // Badges con días debajo de cada uno
+    svHtml = '<div class="umem-servicios-wrap">';
+    entries.forEach(([sv, dias]) => {
+      const clsDias = (typeof dias === 'number' && dias <= 5) ? 'dias-proximo' : '';
+      svHtml += `
+        <div class="sv-item">
+          <span class="sv-tag ${clsMap[sv] || ''}">${sv}</span>
+          <span class="sv-dias ${clsDias}">${dias}d</span>
+        </div>`;
+    });
+    svHtml += '</div>';
+    diasHtml = ''; // ya no se necesita columna separada
   } else {
-    diasHtml = `
-      <div class="umem-dias">
-        <div class="dias-num dias-vencido">—</div>
-        <div class="dias-lbl">sin vigencia</div>
+    svHtml = `
+      <div class="umem-servicios-wrap">
+        <div class="sv-item">
+          <span class="sv-tag sv-ninguno">Sin membresía</span>
+          <span class="sv-dias dias-vencido">—</span>
+        </div>
       </div>`;
+    diasHtml = '';
   }
 
   const statusHtml = u.activa
@@ -205,7 +223,6 @@ function buildUsuarioRow(u) {
       <div class="umem-email">${esc(u.email)}</div>
     </div>
     <div class="umem-servicios">${svHtml}</div>
-    ${diasHtml}
     ${statusHtml}
     <button class="btn-asignar" data-id="${u.id}">
       <i class="fas fa-plus"></i> Asignar

@@ -29,7 +29,7 @@ include '../../../controller/chat_controller.php';
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/principal_css/paseos.css">
-    <link rel="stylesheet" href="../../css/principal_css/Chat.css">
+    <link rel="stylesheet" href="../../css/principal_css/Chat.css?v=<?php echo @filemtime(__DIR__ . '/../../css/principal_css/Chat.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
@@ -41,10 +41,10 @@ include '../../../controller/chat_controller.php';
                 <div class="profile-circle" id="btn-menu"><i class="fas fa-bars"></i></div>
                 <nav class="menu-desplegable" id="menu-latente">
                     <ul>
-                        <a href="../../pagina_principal/sub_menu/conocenos.php"><li><i class="fas fa-camera"></i><span>Conócenos</span></li></a>
-                        <a href="../../pagina_principal/sub_menu/direccion_oficial.php"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
-                        <a href="../../pagina_principal/sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
-                        <a href="../../pagina_principal/sub_menu/configuracion.php"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
+                        <a href="./sub_menu/conocenos.php"><li><i class="fas fa-camera"></i><span>Conócenos</span></li></a>
+                        <a href="./sub_menu/direccion_oficial.php"><li><i class="fas fa-book-open"></i><span>Dirección oficial</span></li></a>
+                        <a href="./sub_menu/centro_de_ayuda.php"><li><i class="fas fa-sliders-h"></i><span>Centro de ayuda</span></li></a>
+                        <a href="./sub_menu/configuracion.php"><li><i class="fas fa-gear"></i><span>Configuración</span></li></a>
                         <li>
                             <a href="../../../controller/logout.php" style="color: #000000;">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -120,8 +120,9 @@ include '../../../controller/chat_controller.php';
 
     <script>
         const idSesionActual = <?php echo json_encode($id_sesion); ?>;
+        const rolSesionActual = <?php echo json_encode($rol_sesion); ?>;
     </script>
 
-    <script src="../../js/chats/Chat.js"></script>
+    <script src="../../js/chats/Chat.js?v=<?php echo @filemtime(__DIR__ . '/../../js/chats/Chat.js'); ?>"></script>
 </body>
 </html>

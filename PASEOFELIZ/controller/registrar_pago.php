@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 require_once __DIR__ . '/../model/helpers_membresia.php';
@@ -37,7 +40,7 @@ $stmtP = $conn->prepare("
     INSERT INTO pagos (id_usuario, tipo_membresia, monto, metodo_pago)
     VALUES (?, ?, ?, ?)
 ");
-$stmtP->bind_param('idss', $id_usuario, $tipo, $monto, $metodo);
+$stmtP->bind_param('isds', $id_usuario, $tipo, $monto, $metodo);
 if (!$stmtP->execute()) {
     echo json_encode(['success' => false, 'message' => 'Error al guardar el pago: ' . $stmtP->error]);
     $stmtP->close();
@@ -45,6 +48,28 @@ if (!$stmtP->execute()) {
 }
 $id_pago = $stmtP->insert_id;
 $stmtP->close();
+
+// ── Verificación de seguridad: confirmar que el ENUM guardó bien el tipo ─
+// (evita filas "fantasma" con tipo_membresia vacío si algo falla)
+$check = $conn->prepare("SELECT tipo_membresia FROM pagos WHERE id_pago = ? LIMIT 1");
+$check->bind_param('i', $id_pago);
+$check->execute();
+$rowCheck = $check->get_result()->fetch_assoc();
+$check->close();
+
+if (!$rowCheck || empty($rowCheck['tipo_membresia'])) {
+    // Algo falló al guardar el tipo: eliminar la fila corrupta y avisar
+    $del = $conn->prepare("DELETE FROM pagos WHERE id_pago = ?");
+    $del->bind_param('i', $id_pago);
+    $del->execute();
+    $del->close();
+
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error al guardar el tipo de membresía. Intenta de nuevo. (tipo recibido: "' . $tipo . '")',
+    ]);
+    exit;
+}
 
 // ── Calcular fechas (+30 días) ───────────────────────────────────
 date_default_timezone_set('America/Bogota');
