@@ -82,9 +82,33 @@ body {
     outline: none; 
 }
 
-.conv-list { 
-    flex: 1; 
-    overflow-y: auto; 
+.conv-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ── DIVISOR DE GRUPO (Administradores / Paseadores / Clientes) ── */
+.conv-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 16px 6px;
+    color: #999;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.conv-divider::before,
+.conv-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ECECEC;
+}
+
+.conv-divider:first-child {
+    margin-top: 6px;
 }
 
 .conv-item { 
@@ -95,6 +119,23 @@ body {
     border-bottom: 1px solid #F5F5F5; 
     transition: background 0.2s; 
     position: relative;
+}
+
+/* ── COLUMNA DERECHA: HORA DEL ÚLTIMO MENSAJE + BADGE DE NO LEÍDOS ── */
+.conv-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.conv-time {
+    font-size: 0.7rem;
+    color: #999;
+    white-space: nowrap;
 }
 
 .conv-badge {
@@ -110,26 +151,43 @@ body {
     justify-content: center;
     padding: 0 6px;
     flex-shrink: 0;
-    margin-left: 8px;
 }
 
 .conv-item:hover, .conv-item.active { 
     background: #F0F4FF; 
 }
 
-.conv-avatar { 
-    width: 44px; 
-    height: 44px; 
-    border-radius: 50%; 
-    overflow: hidden; 
-    margin-right: 12px; 
-    background: #ccc; 
+.conv-avatar {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin-right: 12px;
+    background: #ccc;
 }
 
-.conv-avatar img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
+.conv-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* ── PUNTO DE ESTADO EN LÍNEA / DESCONECTADO ── */
+.estado-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #B0B7C0;
+    border: 2px solid #fff;
+    z-index: 2;
+}
+
+.estado-dot.en-linea {
+    background: #25D366;
 }
 
 .conv-info { 
@@ -227,18 +285,19 @@ body {
     color: #333; 
 }
 
-.chat-header-avatar { 
-    width: 40px; 
-    height: 40px; 
-    border-radius: 50%; 
-    overflow: hidden; 
-    margin-right: 12px; 
+.chat-header-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 12px;
 }
 
-.chat-header-avatar img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
+.chat-header-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .chat-header-name { 

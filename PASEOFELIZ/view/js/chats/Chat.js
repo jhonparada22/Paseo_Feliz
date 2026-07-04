@@ -1,6 +1,21 @@
 /* =========================================================================
    LÓGICA DE JAVASCRIPT DEL CHAT - PASEO FELIZ
    ========================================================================= */
+// Avatar por defecto (SVG embebido) para usuarios sin foto de perfil.
+// Al ir embebido no depende de rutas relativas, así que se ve igual sin
+// importar la profundidad de carpeta de la página (Chat.php / Chat_admin.php / Chat_paseador.php).
+const AVATAR_DEFAULT = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<circle cx="50" cy="50" r="50" fill="#E1E4E8"/>' +
+    '<circle cx="50" cy="40" r="18" fill="#B0B7C0"/>' +
+    '<path d="M50 62c-20 0-32 11-32 25v3h64v-3c0-14-12-25-32-25z" fill="#B0B7C0"/>' +
+    '</svg>'
+);
+
+function avatarSrc(url) {
+    return url ? url : AVATAR_DEFAULT;
+}
+
 let convActivaId = null;
 let intervalChat = null;
 let msgSeleccionadoId = null;
@@ -92,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new FormData();
         params.append('id_mensaje', msgSeleccionadoId);
 
-        fetch('Chat.php?accion=borrar_mensaje', { method: 'POST', body: params })
+        fetch('?accion=borrar_mensaje', { method: 'POST', body: params })
             .then(res => res.json())
             .then(() => {
                 const area = document.getElementById('messages-area');
@@ -107,62 +122,96 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(cargarConversaciones, 8000);
 });
 
-// Función para listar las conversaciones o buscar nuevos usuarios
+// Función para listar los contactos permitidos, agrupados por rol
+// (Administradores / Paseadores / Clientes, con línea divisoria entre
+// cada grupo). "buscar" solo filtra por nombre dentro de esos mismos
+// grupos, ya no es un modo aparte.
 function cargarConversaciones(terminoBusqueda = '') {
-    let url = 'Chat.php?accion=listar_chats';
+    let url = '?accion=listar_chats';
     if(terminoBusqueda) { url += '&buscar=' + encodeURIComponent(terminoBusqueda); }
 
     fetch(url)
         .then(res => res.json())
-        .then(chats => {
+        .then(data => {
+            const grupos = data.grupos || [];
             const lista = document.getElementById('conv-list');
             lista.innerHTML = '';
-            
-            if(chats.length === 0) {
+
+            const totalContactos = grupos.reduce((acc, g) => acc + g.contactos.length, 0);
+            if (totalContactos === 0) {
                 lista.innerHTML = '<div style="padding: 20px; text-align: center; color: #888; font-size: 0.9rem;">No se encontraron usuarios</div>';
                 return;
             }
 
-            chats.forEach(conv => {
-                const item = document.createElement('div');
-                item.className = 'conv-item' + (convActivaId === conv.id && conv.id ? ' active' : '');
-                item.innerHTML = `
-                  <div class="conv-avatar"><img src="${conv.avatar}" onerror="this.src='../assets/images/logo.png'"></div>
-                  <div class="conv-info">
-                    <div class="conv-name">${conv.nombre}</div>
-                    <div class="conv-last">${conv.ultimo}</div>
-                  </div>`;
-                
-                item.addEventListener('click', () => {
-                    if(conv.id) {
-                        abrirConversacion(conv.id, conv.nombre, conv.avatar);
-                    } else {
-                        fetch(`Chat.php?accion=obtener_o_crear_chat&id_receptor=${conv.id_receptor}`)
-                            .then(r => r.json())
-                            .then(data => {
-                                if(data.id_conversacion) {
-                                    document.getElementById('search-input').value = ''; 
-                                    abrirConversacion(data.id_conversacion, conv.nombre, conv.avatar);
-                                }
-                            });
-                    }
+            grupos.forEach(grupo => {
+                const divisor = document.createElement('div');
+                divisor.className = 'conv-divider';
+                divisor.innerHTML = `<span>${grupo.titulo}</span>`;
+                lista.appendChild(divisor);
+
+                grupo.contactos.forEach(conv => {
+                    const item = document.createElement('div');
+                    item.className = 'conv-item' + (convActivaId === conv.id && conv.id ? ' active' : '');
+                    item.innerHTML = `
+                      <div class="conv-avatar">
+                        <img src="${avatarSrc(conv.avatar)}" onerror="this.onerror=null;this.src='${AVATAR_DEFAULT}'">
+                        <span class="estado-dot ${conv.en_linea ? 'en-linea' : ''}"></span>
+                      </div>
+                      <div class="conv-info">
+                        <div class="conv-name">${conv.nombre}</div>
+                        <div class="conv-last">${conv.ultimo}</div>
+                      </div>
+                      <div class="conv-meta">
+                        ${conv.hora ? `<div class="conv-time">${conv.hora}</div>` : ''}
+                        ${conv.no_leidos > 0 ? `<div class="conv-badge">${conv.no_leidos > 99 ? '99+' : conv.no_leidos}</div>` : ''}
+                      </div>`;
+
+                    item.addEventListener('click', () => {
+                        // Feedback visual inmediato: resaltar este item y quitarle
+                        // el badge de no leídos sin esperar al próximo refresco
+                        // automático de la lista (que corre cada 8s).
+                        document.querySelectorAll('.conv-item.active').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        const badge = item.querySelector('.conv-badge');
+                        if (badge) badge.remove();
+
+                        if(conv.id) {
+                            abrirConversacion(conv.id, conv.nombre, conv.avatar, conv.en_linea);
+                        } else {
+                            fetch(`?accion=obtener_o_crear_chat&id_receptor=${conv.id_receptor}`)
+                                .then(r => r.json())
+                                .then(data => {
+                                    if(data.id_conversacion) {
+                                        document.getElementById('search-input').value = '';
+                                        abrirConversacion(data.id_conversacion, conv.nombre, conv.avatar, conv.en_linea);
+                                    } else if (data.error) {
+                                        alert(data.error);
+                                    }
+                                });
+                        }
+                    });
+                    lista.appendChild(item);
                 });
-                lista.appendChild(item);
             });
         }).catch(err => console.error("Error panel:", err));
 }
 
 // Configura la interfaz al seleccionar un chat activo
-function abrirConversacion(id, nombre, avatar) {
+function abrirConversacion(id, nombre, avatar, enLinea = false) {
     convActivaId = id;
-    document.getElementById('header-avatar').innerHTML = `<img src="${avatar}" onerror="this.src='../assets/images/logo.png'">`;
+    document.getElementById('header-avatar').innerHTML = `
+        <img src="${avatarSrc(avatar)}" onerror="this.onerror=null;this.src='${AVATAR_DEFAULT}'">
+        <span class="estado-dot ${enLinea ? 'en-linea' : ''}"></span>`;
     document.getElementById('header-name').textContent = nombre;
     document.getElementById('empty-state').style.display = 'none';
     document.getElementById('chat-header').style.display = 'flex';
     document.getElementById('messages-area').style.display = 'flex';
     document.getElementById('input-area').style.display = 'flex';
 
-    cargarMensajes(id);
+    // Al abrir, el backend marca los mensajes como leídos; refrescamos la
+    // lista de contactos justo después para que el badge quede sincronizado
+    // con el servidor (no solo el ajuste visual instantáneo del click).
+    cargarMensajes(id, true);
     clearInterval(intervalChat);
     intervalChat = setInterval(() => cargarMensajes(id), 3000);
 
@@ -171,11 +220,19 @@ function abrirConversacion(id, nombre, avatar) {
     }
 }
 
-// Carga asíncronamente el historial de mensajes de la conversación activa
-function cargarMensajes(idChat) {
-    fetch(`Chat.php?accion=cargar_mensajes&id_chat=${idChat}`)
+// Carga asíncronamente el historial de mensajes de la conversación activa.
+// "refrescarLista" se pasa en true solo al abrir la conversación (no en cada
+// sondeo de 3s): el backend ya marcó los mensajes como leídos en esta misma
+// petición, así que aprovechamos para sincronizar el badge de la lista.
+function cargarMensajes(idChat, refrescarLista = false) {
+    fetch(`?accion=cargar_mensajes&id_chat=${idChat}`)
         .then(res => res.json())
-        .then(mensajes => {
+        .then(data => {
+            if (data.error) return;
+            const dot = document.querySelector('#header-avatar .estado-dot');
+            if (dot) dot.classList.toggle('en-linea', !!data.en_linea);
+            if (refrescarLista) cargarConversaciones(document.getElementById('search-input').value);
+            const mensajes = data.mensajes || [];
             const area = document.getElementById('messages-area');
             if(area.children.length === mensajes.length) return;
 
@@ -184,15 +241,15 @@ function cargarMensajes(idChat) {
                 const row = document.createElement('div');
                 row.className = `msg-row ${msg.de === 'yo' ? 'sent' : 'received'}`;
                 
-                let avatarHTML = `<div class="burbuja-avatar"><img src="${msg.avatar_burbuja}" onerror="this.src='../assets/images/logo.png'"></div>`;
+                let avatarHTML = `<div class="burbuja-avatar"><img src="${avatarSrc(msg.avatar_burbuja)}" onerror="this.onerror=null;this.src='${AVATAR_DEFAULT}'"></div>`;
                 
                 let contenido = '';
                 if (msg.imagen) {
-                    let urlLimpia = msg.imagen.replace(/^\.\.\//, '');
-                    if(!urlLimpia.startsWith('../')) {
-                        urlLimpia = '../' + urlLimpia;
-                    }
-                    contenido += `<img src="${urlLimpia}" class="msg-image" onclick="window.open('${urlLimpia}')" onerror="this.src='../assets/images/logo.png'"/>`;
+                    // El backend solo manda el nombre del archivo; la imagen
+                    // se sirve siempre a través de ?accion=servir_imagen
+                    // (evita el 403 de acceso directo a la carpeta en byethost).
+                    const urlImg = `?accion=servir_imagen&archivo=${encodeURIComponent(msg.imagen)}`;
+                    contenido += `<img src="${urlImg}" class="msg-image" onclick="window.open('${urlImg}')" onerror="this.onerror=null;this.src='${AVATAR_DEFAULT}'"/>`;
                 }
                 
                 if (msg.texto) {
@@ -242,7 +299,7 @@ function enviarMensaje(archivo = null) {
     if (texto) formData.append('mensaje', texto);
     if (archivo) formData.append('foto_adjunta', archivo);
 
-    fetch('Chat.php?accion=enviar', { method: 'POST', body: formData })
+    fetch('?accion=enviar', { method: 'POST', body: formData })
     .then(res => res.json())
     .then(() => {
         input.value = '';

@@ -3,16 +3,26 @@
 // CONTROLADOR DEL CHAT - PASEO FELIZ
 // =========================================================================
 //
-// REGLAS DE QUIÉN PUEDE HABLAR CON QUIÉN:
+// REGLAS DE QUIÉN PUEDE HABLAR CON QUIÉN (para INICIAR una conversación
+// nueva; una conversación que ya existe nunca se oculta ni se pierde):
 //  - usuario  ↔ usuario  : NUNCA permitido.
-//  - paseador ↔ paseador : NUNCA permitido.
-//  - usuario  ↔ paseador : solo si existe una fila en `rutas` que los
-//                           relacione (asignación de ruta/servicio).
-//  - usuario  ↔ admin    : el usuario NO puede iniciar la conversación,
-//                           solo puede continuarla si el admin ya escribió.
+//  - paseador ↔ paseador : permitido, sin restricción.
+//  - usuario  ↔ paseador : solo si HOY es uno de los días asignados en el
+//                           cronograma de ese paseador para ese cliente
+//                           (cronograma_paseos.dia_semana = hoy).
+//  - usuario  ↔ admin    : el usuario necesita tener algún servicio activo
+//                           (membresias.paseos/adiestramiento/hospedaje = 1).
 //  - paseador ↔ admin    : sin restricción.
 //  - admin    ↔ cualquiera: sin restricción, y puede activar/desactivar
 //                           cualquier conversación con el botón del chat.
+//
+// El listado de contactos (listar_chats) se agrupa por rol —
+// Administradores / Paseadores / Clientes — mostrando primero a quien
+// ya tiene una conversación activa (ordenado por el mensaje más reciente,
+// como WhatsApp) y luego, alfabéticamente, al resto de contactos con los
+// que SÍ se podría iniciar una conversación nueva según las reglas de
+// arriba. Una conversación que ya existe siempre aparece, aunque la
+// ventana de elegibilidad para iniciar una nueva ya haya pasado.
 //
 // Una vez que una conversación EXISTE, su disponibilidad para escribir
 // (para usuario/paseador) depende de la columna `conversaciones.activo`:
@@ -52,6 +62,15 @@ if (!isset($conn) || !$conn) {
 
 $conn->query("SET time_zone = '-05:00'");
 $conn->set_charset("utf8mb4");
+
+// ── MARCA DE ACTIVIDAD (para el estado en línea / desconectado) ──────────
+// Toda petición a este controlador (listar_chats, cargar_mensajes, etc.)
+// refresca la marca de tiempo; no hace falta un endpoint de "latido" aparte
+// porque mientras el chat está abierto ya se está consultando cada 3-8s.
+$stmt_act = $conn->prepare("UPDATE usuarios SET ultima_actividad = NOW() WHERE id = ?");
+$stmt_act->bind_param("i", $id_sesion);
+$stmt_act->execute();
+$stmt_act->close();
 
 // ── ROL DEL USUARIO EN SESIÓN (admin / paseador / usuario) ────────────────
 $rol_sesion = 'usuario';
@@ -107,140 +126,87 @@ if ($accion === 'servir_imagen') {
     exit;
 }
 
-// ── [B] LISTAR CONVERSACIONES O BUSCAR USUARIOS ───────────────────────────
+// ── [B] LISTAR CONTACTOS, AGRUPADOS POR ROL ───────────────────────────────
+// "buscar" ya no es un modo aparte: solo filtra por nombre dentro de la
+// MISMA lista de contactos permitidos (mismas reglas, con o sin término).
 if ($accion === 'listar_chats') {
     $buscar = trim($_GET['buscar'] ?? '');
+    $conversaciones = conversacionesDeSesion($conn, $id_sesion);
 
-    if ($buscar !== '') {
-        // ── Modo búsqueda ──
-        $param = '%' . $buscar . '%';
+    // $gruposBase[rol][id_usuario] = ['id'=>, 'nombre'=>, 'avatar_url'=>, ...]
+    $gruposBase = ['admin' => [], 'paseador' => [], 'usuario' => []];
 
-        if ($rol_sesion === 'admin') {
-            // Admin: puede buscar y escribirle a cualquiera
-            $sql = "SELECT u.id AS id_receptor, u.nombre, iu.avatar_url,
-                        (SELECT c.id_conversacion FROM conversaciones c
-                         WHERE (c.id_usuario_1 = ? AND c.id_usuario_2 = u.id)
-                            OR (c.id_usuario_1 = u.id AND c.id_usuario_2 = ?)
-                         LIMIT 1) AS id_conv,
-                        (SELECT COUNT(*) FROM admin a WHERE a.id_usuario = u.id) AS es_admin,
-                        (SELECT COUNT(*) FROM paseadores p WHERE p.id_usuario = u.id) AS es_paseador
-                    FROM usuarios u
-                    LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
-                    WHERE u.id != ? AND u.nombre LIKE ?
-                    LIMIT 15";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iiis", $id_sesion, $id_sesion, $id_sesion, $param);
-        } elseif ($rol_sesion === 'usuario') {
-            // Usuario: solo puede buscar entre los paseadores que tiene asignados por ruta
-            // (la relación cliente-ruta vive en ruta_clientes, rutas no tiene id_usuario)
-            $sql = "SELECT DISTINCT u.id AS id_receptor, u.nombre, iu.avatar_url,
-                        (SELECT c.id_conversacion FROM conversaciones c
-                         WHERE (c.id_usuario_1 = ? AND c.id_usuario_2 = u.id)
-                            OR (c.id_usuario_1 = u.id AND c.id_usuario_2 = ?)
-                         LIMIT 1) AS id_conv
-                    FROM ruta_clientes rc
-                    INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
-                    INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
-                    INNER JOIN usuarios u ON u.id = p.id_usuario
-                    LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
-                    WHERE rc.id_usuario_cliente = ? AND u.nombre LIKE ?
-                    LIMIT 15";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iiis", $id_sesion, $id_sesion, $id_sesion, $param);
-        } else { // paseador
-            // Paseador: solo puede buscar entre los usuarios que tiene asignados por ruta
-            $sql = "SELECT DISTINCT u.id AS id_receptor, u.nombre, iu.avatar_url,
-                        (SELECT c.id_conversacion FROM conversaciones c
-                         WHERE (c.id_usuario_1 = ? AND c.id_usuario_2 = u.id)
-                            OR (c.id_usuario_1 = u.id AND c.id_usuario_2 = ?)
-                         LIMIT 1) AS id_conv
-                    FROM ruta_clientes rc
-                    INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
-                    INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
-                    INNER JOIN usuarios u ON u.id = rc.id_usuario_cliente
-                    LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
-                    WHERE p.id_usuario = ? AND u.nombre LIKE ?
-                    LIMIT 15";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iiis", $id_sesion, $id_sesion, $id_sesion, $param);
-        }
-
+    if ($rol_sesion === 'admin') {
+        // El admin ve y puede iniciar con CUALQUIER usuario registrado.
+        $stmt = $conn->prepare(
+            "SELECT u.id, u.nombre, iu.avatar_url,
+                    (SELECT COUNT(*) FROM admin a WHERE a.id_usuario = u.id) AS es_admin,
+                    (SELECT COUNT(*) FROM paseadores p WHERE p.id_usuario = u.id) AS es_paseador,
+                    (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea
+             FROM usuarios u
+             LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+             WHERE u.id != ?"
+        );
+        $stmt->bind_param("i", $id_sesion);
         $stmt->execute();
-        $rows = $stmt->get_result();
+        $res = $stmt->get_result();
+        while ($r = $res->fetch_assoc()) {
+            $rolR = obtenerRol($r['es_admin'], $r['es_paseador']);
+            $gruposBase[$rolR][(int)$r['id']] = $r;
+        }
+        $stmt->close();
+    } else {
+        // Paseador: siempre puede iniciarle a un admin. Cliente: solo si
+        // tiene algún servicio activo (paseos/adiestramiento/hospedaje).
+        $puedeUsarChat = ($rol_sesion === 'paseador') ? true : tieneServicioActivo($conn, $id_sesion);
 
-        $resultado = [];
-        while ($r = $rows->fetch_assoc()) {
-            if ($rol_sesion === 'admin') {
-                $rol = obtenerRol($r['es_admin'], $r['es_paseador']);
-            } else {
-                // Ya vienen filtrados por rutas: usuario ve paseadores, paseador ve usuarios
-                $rol = ($rol_sesion === 'usuario') ? 'paseador' : 'usuario';
+        $admins = todosLosAdmins($conn, $id_sesion);
+        foreach ($admins as $idR => $datos) {
+            if ($puedeUsarChat || isset($conversaciones[$idR])) {
+                $gruposBase['admin'][$idR] = $datos;
             }
-
-            $resultado[] = [
-                'id'          => $r['id_conv'],          // null si no existe aún
-                'id_receptor' => $r['id_receptor'],
-                'nombre'      => $r['nombre'],
-                'avatar'      => normalizarAvatar($r['avatar_url']),
-                'rol'         => $rol,
-                'ultimo'      => $r['id_conv'] ? 'Chat activo' : 'Iniciar conversación',
-                'no_leidos'   => 0
-            ];
-        }
-        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    // ── Modo normal: lista conversaciones existentes ──
-    $sql = "SELECT c.id_conversacion, c.activo,
-                u.id AS id_receptor, u.nombre, iu.avatar_url,
-                (SELECT m.mensaje    FROM mensajes m WHERE m.id_conversacion = c.id_conversacion ORDER BY m.id_mensaje DESC LIMIT 1) AS ultimo_msg,
-                (SELECT m.ruta_imagen FROM mensajes m WHERE m.id_conversacion = c.id_conversacion ORDER BY m.id_mensaje DESC LIMIT 1) AS ultima_img,
-                (SELECT COUNT(*) FROM mensajes m WHERE m.id_conversacion = c.id_conversacion AND m.id_emisor != ? AND m.leido = 0) AS no_leidos,
-                (SELECT COUNT(*) FROM admin a WHERE a.id_usuario = u.id) AS es_admin,
-                (SELECT COUNT(*) FROM paseadores p WHERE p.id_usuario = u.id) AS es_paseador
-            FROM conversaciones c
-            INNER JOIN usuarios u ON (u.id = c.id_usuario_1 OR u.id = c.id_usuario_2) AND u.id != ?
-            LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
-            WHERE c.id_usuario_1 = ? OR c.id_usuario_2 = ?
-            ORDER BY (SELECT MAX(m2.id_mensaje) FROM mensajes m2 WHERE m2.id_conversacion = c.id_conversacion) DESC";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiii", $id_sesion, $id_sesion, $id_sesion, $id_sesion);
-    $stmt->execute();
-    $rows = $stmt->get_result();
-
-    $chats = [];
-    while ($r = $rows->fetch_assoc()) {
-        $rol = obtenerRol($r['es_admin'], $r['es_paseador']);
-
-        // Nadie puede ver/usar conversaciones con alguien de su mismo rol
-        // (usuario-usuario y paseador-paseador están totalmente prohibidos)
-        if ($rol_sesion === 'usuario' && $rol === 'usuario') continue;
-        if ($rol_sesion === 'paseador' && $rol === 'paseador') continue;
-
-        if (!empty($r['ultima_img'])) {
-            $previa = '📷 Imagen';
-        } elseif (!empty($r['ultimo_msg'])) {
-            $previa = mb_strlen($r['ultimo_msg']) > 35
-                ? mb_substr($r['ultimo_msg'], 0, 35) . '...'
-                : $r['ultimo_msg'];
-        } else {
-            $previa = 'Escribe un mensaje...';
         }
 
-        $chats[] = [
-            'id'          => $r['id_conversacion'],
-            'id_receptor' => $r['id_receptor'],
-            'nombre'      => $r['nombre'],
-            'avatar'      => normalizarAvatar($r['avatar_url']),
-            'rol'         => $rol,
-            'activo'      => (int)$r['activo'],
-            'ultimo'      => $previa,
-            'no_leidos'   => (int)$r['no_leidos']
-        ];
+        if ($rol_sesion === 'paseador') {
+            // Otros paseadores: sin restricción.
+            foreach (todosLosPaseadores($conn, $id_sesion) as $idR => $datos) {
+                $gruposBase['paseador'][$idR] = $datos;
+            }
+            // Clientes: solo los asignados HOY en su cronograma.
+            foreach (clientesAsignadosHoy($conn, $id_sesion) as $idR => $datos) {
+                $gruposBase['usuario'][$idR] = $datos;
+            }
+        } elseif ($puedeUsarChat) {
+            // Cliente: su paseador asignado HOY (si tiene servicio activo).
+            foreach (paseadorAsignadoHoy($conn, $id_sesion) as $idR => $datos) {
+                $gruposBase['paseador'][$idR] = $datos;
+            }
+        }
+
+        // Una conversación que ya existe nunca se pierde, aunque la
+        // ventana de elegibilidad para iniciarla de nuevo ya haya pasado.
+        foreach ($conversaciones as $idR => $conv) {
+            $rolR = obtenerRol($conv['es_admin'], $conv['es_paseador']);
+            if ($rol_sesion === 'usuario' && $rolR === 'usuario') continue; // nunca, ni con historial
+            if (!isset($gruposBase[$rolR][$idR])) {
+                $gruposBase[$rolR][$idR] = $conv;
+            }
+        }
     }
-    echo json_encode($chats, JSON_UNESCAPED_UNICODE);
+
+    $titulos = ['admin' => 'Administradores', 'paseador' => 'Paseadores', 'usuario' => 'Clientes'];
+    $grupos = [];
+    foreach (['admin', 'paseador', 'usuario'] as $rolClave) {
+        $contactos = [];
+        foreach ($gruposBase[$rolClave] as $idR => $datos) {
+            if ($buscar !== '' && stripos($datos['nombre'], $buscar) === false) continue;
+            $contactos[] = construirContacto($idR, $datos, $conversaciones[$idR] ?? null);
+        }
+        if (!$contactos) continue;
+        $grupos[] = ['rol' => $rolClave, 'titulo' => $titulos[$rolClave], 'contactos' => ordenarContactos($contactos)];
+    }
+
+    echo json_encode(['grupos' => $grupos], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -270,23 +236,21 @@ if ($accion === 'obtener_o_crear_chat') {
                 echo json_encode(['error' => 'No puedes escribirle a otro usuario']);
                 exit;
             }
-            if ($rol_receptor === 'admin') {
-                echo json_encode(['error' => 'No puedes iniciar una conversación con un administrador']);
+            if (!tieneServicioActivo($conn, $id_sesion)) {
+                echo json_encode(['error' => 'Necesitas tener un servicio activo (paseos, adiestramiento u hospedaje) para usar el chat.']);
                 exit;
             }
-            if ($rol_receptor === 'paseador' && !existeAsignacion($conn, $id_sesion, $id_receptor)) {
-                echo json_encode(['error' => 'Solo puedes escribirle a un paseador asignado']);
+            if ($rol_receptor === 'paseador' && !asignadoHoy($conn, $id_sesion, $id_receptor)) {
+                echo json_encode(['error' => 'Solo puedes escribirle a tu paseador asignado el día de su servicio.']);
                 exit;
             }
+            // usuario → admin: permitido si tiene servicio activo (ya validado arriba)
         } elseif ($rol_sesion === 'paseador') {
-            if ($rol_receptor === 'paseador') {
-                echo json_encode(['error' => 'No puedes escribirle a otro paseador']);
+            if ($rol_receptor === 'usuario' && !asignadoHoy($conn, $id_receptor, $id_sesion)) {
+                echo json_encode(['error' => 'Solo puedes escribirle a un cliente asignado hoy en tu cronograma.']);
                 exit;
             }
-            if ($rol_receptor === 'usuario' && !existeAsignacion($conn, $id_receptor, $id_sesion)) {
-                echo json_encode(['error' => 'Solo puedes escribirle a un usuario asignado']);
-                exit;
-            }
+            // paseador → paseador: permitido, sin restricción
             // paseador → admin: sin restricción
         }
         // admin: sin restricción
@@ -334,6 +298,17 @@ if ($accion === 'cargar_mensajes') {
         exit;
     }
 
+    // Estado en línea/desconectado del otro participante, para el encabezado
+    $id_otro = ($conv['id_usuario_1'] == $id_sesion) ? $conv['id_usuario_2'] : $conv['id_usuario_1'];
+    $stmt_en = $conn->prepare(
+        "SELECT (ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, ultima_actividad, NOW()) <= 45) AS en_linea
+         FROM usuarios WHERE id = ?"
+    );
+    $stmt_en->bind_param("i", $id_otro);
+    $stmt_en->execute();
+    $en_linea_otro = (bool)($stmt_en->get_result()->fetch_assoc()['en_linea'] ?? 0);
+    $stmt_en->close();
+
     // Marcar como leídos
     $stmt_r = $conn->prepare("UPDATE mensajes SET leido = 1
                                WHERE id_conversacion = ? AND id_emisor != ? AND leido = 0");
@@ -376,7 +351,8 @@ if ($accion === 'cargar_mensajes') {
     echo json_encode([
         'mensajes' => $mensajes,
         'activo'   => (int)$conv['activo'],
-        'es_admin' => ($rol_sesion === 'admin')
+        'es_admin' => ($rol_sesion === 'admin'),
+        'en_linea' => $en_linea_otro
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -545,21 +521,198 @@ function obtenerRolPorId($conn, $id_usuario) {
     return 'usuario';
 }
 
-// ── FUNCIÓN AUXILIAR: VERIFICAR ASIGNACIÓN DE RUTA usuario ↔ paseador ─────
-// $id_usuario_cliente = id (usuarios.id) del cliente
+// ── FUNCIÓN AUXILIAR: ¿HOY es un día asignado en el cronograma? ───────────
+// $id_usuario_cliente  = id (usuarios.id) del cliente
 // $id_usuario_paseador = id (usuarios.id) de la cuenta del paseador
-function existeAsignacion($conn, $id_usuario_cliente, $id_usuario_paseador) {
-    $stmt = $conn->prepare("SELECT r.id_ruta
-                             FROM ruta_clientes rc
-                             INNER JOIN rutas r ON r.id_ruta = rc.id_ruta
-                             INNER JOIN paseadores p ON p.id_paseador = r.id_paseador
-                             WHERE rc.id_usuario_cliente = ? AND p.id_usuario = ?
-                             LIMIT 1");
-    $stmt->bind_param("ii", $id_usuario_cliente, $id_usuario_paseador);
+// El chat cliente↔paseador solo se habilita el día de la semana en que
+// el cronograma los relaciona (todo el día, no solo mientras el paseo
+// puntual está en curso).
+function asignadoHoy($conn, $id_usuario_cliente, $id_usuario_paseador) {
+    $hoy = (int)date('N'); // 1=lunes ... 7=domingo
+    $stmt = $conn->prepare(
+        "SELECT cp.id_cronograma
+         FROM cronograma_paseos cp
+         JOIN pedidos_paseo pp ON pp.id_pedido = cp.id_pedido
+         JOIN paseadores pa    ON pa.id_paseador = cp.id_paseador
+         WHERE pp.id_usuario = ? AND pa.id_usuario = ? AND cp.dia_semana = ?
+         LIMIT 1"
+    );
+    $stmt->bind_param("iii", $id_usuario_cliente, $id_usuario_paseador, $hoy);
     $stmt->execute();
     $existe = $stmt->get_result()->num_rows > 0;
     $stmt->close();
     return $existe;
+}
+
+// ── FUNCIÓN AUXILIAR: ¿el usuario tiene algún servicio activo? ────────────
+function tieneServicioActivo($conn, $id_usuario) {
+    $stmt = $conn->prepare("SELECT paseos, adiestramiento, hospedaje FROM membresias WHERE id_usuario = ? LIMIT 1");
+    $stmt->bind_param("i", $id_usuario);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$row) return false;
+    return (int)$row['paseos'] === 1 || (int)$row['adiestramiento'] === 1 || (int)$row['hospedaje'] === 1;
+}
+
+// ── LISTAS BASE PARA "listar_chats" (todas indexadas por id de usuario) ───
+
+function todosLosAdmins($conn, $excluir_id) {
+    $stmt = $conn->prepare(
+        "SELECT u.id, u.nombre, iu.avatar_url,
+                (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea
+         FROM admin a JOIN usuarios u ON u.id = a.id_usuario
+         LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+         WHERE u.id != ?"
+    );
+    $stmt->bind_param("i", $excluir_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($r = $res->fetch_assoc()) $out[(int)$r['id']] = $r;
+    $stmt->close();
+    return $out;
+}
+
+function todosLosPaseadores($conn, $excluir_id) {
+    $stmt = $conn->prepare(
+        "SELECT u.id, u.nombre, iu.avatar_url,
+                (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea
+         FROM paseadores p JOIN usuarios u ON u.id = p.id_usuario
+         LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+         WHERE u.id != ?"
+    );
+    $stmt->bind_param("i", $excluir_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($r = $res->fetch_assoc()) $out[(int)$r['id']] = $r;
+    $stmt->close();
+    return $out;
+}
+
+// Clientes asignados HOY (por día de la semana) a este paseador
+function clientesAsignadosHoy($conn, $id_usuario_paseador) {
+    $hoy = (int)date('N');
+    $stmt = $conn->prepare(
+        "SELECT DISTINCT u.id, u.nombre, iu.avatar_url,
+                (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea
+         FROM cronograma_paseos cp
+         JOIN pedidos_paseo pp ON pp.id_pedido = cp.id_pedido
+         JOIN usuarios u       ON u.id = pp.id_usuario
+         LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+         JOIN paseadores pa    ON pa.id_paseador = cp.id_paseador
+         WHERE pa.id_usuario = ? AND cp.dia_semana = ?"
+    );
+    $stmt->bind_param("ii", $id_usuario_paseador, $hoy);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($r = $res->fetch_assoc()) $out[(int)$r['id']] = $r;
+    $stmt->close();
+    return $out;
+}
+
+// Paseador(es) asignado(s) HOY (por día de la semana) a este cliente
+function paseadorAsignadoHoy($conn, $id_usuario_cliente) {
+    $hoy = (int)date('N');
+    $stmt = $conn->prepare(
+        "SELECT DISTINCT u.id, u.nombre, iu.avatar_url,
+                (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea
+         FROM cronograma_paseos cp
+         JOIN pedidos_paseo pp ON pp.id_pedido = cp.id_pedido
+         JOIN paseadores pa    ON pa.id_paseador = cp.id_paseador
+         JOIN usuarios u       ON u.id = pa.id_usuario
+         LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+         WHERE pp.id_usuario = ? AND cp.dia_semana = ?"
+    );
+    $stmt->bind_param("ii", $id_usuario_cliente, $hoy);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($r = $res->fetch_assoc()) $out[(int)$r['id']] = $r;
+    $stmt->close();
+    return $out;
+}
+
+// Todas las conversaciones de la sesión, indexadas por id del otro usuario
+function conversacionesDeSesion($conn, $id_sesion) {
+    $stmt = $conn->prepare(
+        "SELECT c.id_conversacion, c.activo,
+                u.id AS id_receptor, u.nombre, iu.avatar_url,
+                (u.ultima_actividad IS NOT NULL AND TIMESTAMPDIFF(SECOND, u.ultima_actividad, NOW()) <= 45) AS en_linea,
+                (SELECT COUNT(*) FROM admin a WHERE a.id_usuario = u.id) AS es_admin,
+                (SELECT COUNT(*) FROM paseadores p WHERE p.id_usuario = u.id) AS es_paseador,
+                (SELECT m.mensaje FROM mensajes m WHERE m.id_conversacion = c.id_conversacion ORDER BY m.id_mensaje DESC LIMIT 1) AS ultimo_msg,
+                (SELECT m.ruta_imagen FROM mensajes m WHERE m.id_conversacion = c.id_conversacion ORDER BY m.id_mensaje DESC LIMIT 1) AS ultima_img,
+                (SELECT DATE_FORMAT(m.fecha_envio, '%H:%i') FROM mensajes m WHERE m.id_conversacion = c.id_conversacion ORDER BY m.id_mensaje DESC LIMIT 1) AS ultima_hora,
+                (SELECT MAX(m.id_mensaje) FROM mensajes m WHERE m.id_conversacion = c.id_conversacion) AS ultimo_id_msg,
+                (SELECT COUNT(*) FROM mensajes m WHERE m.id_conversacion = c.id_conversacion AND m.id_emisor != ? AND m.leido = 0) AS no_leidos
+         FROM conversaciones c
+         INNER JOIN usuarios u ON (u.id = c.id_usuario_1 OR u.id = c.id_usuario_2) AND u.id != ?
+         LEFT JOIN info_usuario iu ON iu.id_usuario = u.id
+         WHERE c.id_usuario_1 = ? OR c.id_usuario_2 = ?"
+    );
+    $stmt->bind_param("iiii", $id_sesion, $id_sesion, $id_sesion, $id_sesion);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $out = [];
+    while ($r = $res->fetch_assoc()) $out[(int)$r['id_receptor']] = $r;
+    $stmt->close();
+    return $out;
+}
+
+// Arma la tarjeta de contacto que consume el front (con o sin conversación previa)
+function construirContacto($id_receptor, $datos, $conv) {
+    $previa       = 'Iniciar conversación';
+    $activo       = 1;
+    $id_conv      = null;
+    $no_leidos    = 0;
+    $ultimo_orden = 0;
+    $hora         = '';
+
+    if ($conv) {
+        $id_conv      = (int)$conv['id_conversacion'];
+        $activo       = (int)$conv['activo'];
+        $no_leidos    = (int)$conv['no_leidos'];
+        $ultimo_orden = (int)($conv['ultimo_id_msg'] ?? 0);
+        $hora         = $conv['ultima_hora'] ?? '';
+
+        if (!empty($conv['ultima_img'])) {
+            $previa = '📷 Imagen';
+        } elseif (!empty($conv['ultimo_msg'])) {
+            $previa = mb_strlen($conv['ultimo_msg']) > 35
+                ? mb_substr($conv['ultimo_msg'], 0, 35) . '...'
+                : $conv['ultimo_msg'];
+        } else {
+            $previa = 'Escribe un mensaje...';
+        }
+    }
+
+    return [
+        'id'          => $id_conv,
+        'id_receptor' => $id_receptor,
+        'nombre'      => $datos['nombre'],
+        'avatar'      => normalizarAvatar($datos['avatar_url']),
+        'en_linea'    => (bool)($datos['en_linea'] ?? 0),
+        'activo'      => $activo,
+        'ultimo'      => $previa,
+        'hora'        => $hora,
+        'no_leidos'   => $no_leidos,
+        '_orden'      => $ultimo_orden, // interno, se descarta antes de responder
+    ];
+}
+
+// Conversaciones con mensajes recientes primero (como WhatsApp);
+// los contactos sin conversación aún van después, en orden alfabético.
+function ordenarContactos($contactos) {
+    usort($contactos, function ($a, $b) {
+        if ($a['_orden'] > 0 || $b['_orden'] > 0) return $b['_orden'] - $a['_orden'];
+        return strcasecmp($a['nombre'], $b['nombre']);
+    });
+    foreach ($contactos as &$c) unset($c['_orden']);
+    unset($c);
+    return $contactos;
 }
 
 // ── FUNCIÓN AUXILIAR: NORMALIZAR RUTA DE AVATAR ───────────────────────────
