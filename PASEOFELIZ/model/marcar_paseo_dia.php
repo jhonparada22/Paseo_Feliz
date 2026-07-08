@@ -1,19 +1,34 @@
 <?php
 /**
  * marcar_paseo_dia.php
- * (PASEADOR) Cambia el estado diario de un paseo (segmentos Individual /
- * Grupal del mapa del paseador).
+ * (PASEADOR) Cambia el estado de un paseo (segmentos Individual/Grupal del
+ * mapa del paseador), operando directamente sobre ruta_paradas — ya no usa
+ * la tabla paseos_dia (retirada, ver Fase 3 del plan de consolidación de
+ * "ruta del día").
  *
  * POST JSON, acciones soportadas:
  *   { "accion": "recogido",  "id_pedido": 5 }
  *   { "accion": "pendiente", "id_pedido": 5 }              <- deshacer
+ *   { "accion": "entregar",  "id_pedido": 5 }              <- solo si ya está recogido
  *   { "accion": "cancelar",  "id_pedido": 5, "motivo": "Está lloviendo" }
- *   { "accion": "iniciar_grupal", "ids_pedidos": [5,8,9] } <- recogidos -> en_paseo
+ *   { "accion": "iniciar_grupal", "ids_pedidos": [5,8,9] } <- no-op de
+ *     compatibilidad: con el modelo de timestamps, "en curso" ya se deriva
+ *     automáticamente de hora_recogida sin hora_entrega.
+ *   { "accion": "entregar_grupal", "ids_pedidos": [5,8,9] } <- solo si TODAS
+ *     las recogidas del grupo seleccionado ya están confirmadas.
+ *
+ * Gating (server-side, no solo cosmético en el frontend):
+ *   recogido           requiere hora_recogida NULL y hora_cancelacion NULL
+ *   pendiente (deshacer) requiere hora_entrega NULL
+ *   entregar            requiere hora_recogida NOT NULL y hora_entrega/hora_cancelacion NULL
+ *   cancelar            requiere hora_entrega NULL
+ *   entregar_grupal     requiere que TODAS las recogidas del grupo estén confirmadas
  *
  * Efectos secundarios:
- *   - cancelar: notificación interna al cliente con el motivo, y si ya
- *     existe la ruta de hoy, sus paradas de esa mascota pasan a "omitida".
- *   - recogido: si existe la parada de recogida de hoy, se marca completada.
+ *   - cancelar: notificación interna al cliente con el motivo, cancela
+ *     tanto la parada de recogida como la de entrega de esa mascota.
+ *   - recogido: marca la parada de recogida de hoy como completada.
+ *   - entregar: notificación interna al cliente confirmando la entrega.
  */
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
@@ -21,111 +36,143 @@ include_once 'helpers.php';
 include_once '../model/conexion.php';
 
 $idPaseador = obtenerIdPaseadorSesion($conn);
-asegurarTablaPaseosDia($conn);
 
 $data   = leerJsonBody();
 $accion = $data['accion'] ?? '';
 $hoy    = date('Y-m-d');
 
-// ── Acción por lote: iniciar paseo grupal ─────────────────────────────
+// ── Acción de compatibilidad: "iniciar paseo grupal" ya no cambia nada,
+// el estado "en curso" se deriva solo de hora_recogida/hora_entrega.
 if ($accion === 'iniciar_grupal') {
-    $ids = array_values(array_filter(array_map('intval', $data['ids_pedidos'] ?? [])));
-    if (!$ids) responder(false, [], 'Selecciona al menos un perro recogido.');
+    responder(true, ['marcados' => 0], 'Los perros recogidos ya se muestran en curso automáticamente.');
+}
 
-    $marcados = 0;
+// ── Acción por lote: entregar a todo el grupo (gating: todas las recogidas
+// del grupo seleccionado deben estar confirmadas antes de habilitarla) ────
+if ($accion === 'entregar_grupal') {
+    $ids = array_values(array_filter(array_map('intval', $data['ids_pedidos'] ?? [])));
+    if (!$ids) responder(false, [], 'Selecciona al menos un perro del grupo.');
+
+    $idRuta = obtenerRutaActivaHoy($conn, $idPaseador, $hoy);
+    if (!$idRuta) responder(false, [], 'No tienes una ruta activa hoy.');
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
     $stmt = $conn->prepare(
-        "UPDATE paseos_dia SET estado = 'en_paseo'
-         WHERE fecha = ? AND id_pedido = ? AND id_paseador = ? AND estado = 'recogido'"
+        "SELECT COUNT(*) AS total,
+                SUM(CASE WHEN hora_recogida IS NOT NULL THEN 1 ELSE 0 END) AS recogidos
+         FROM ruta_paradas
+         WHERE id_ruta = ? AND tipo = 'recogida' AND id_pedido IN ($placeholders)
+           AND hora_cancelacion IS NULL"
     );
-    foreach ($ids as $idPedido) {
-        $stmt->bind_param("sii", $hoy, $idPedido, $idPaseador);
-        $stmt->execute();
-        $marcados += $stmt->affected_rows;
-    }
+    $tipos = 'i' . str_repeat('i', count($ids));
+    $params = array_merge([$idRuta], $ids);
+    $stmt->bind_param($tipos, ...$params);
+    $stmt->execute();
+    $chk = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 
-    if (!$marcados) responder(false, [], 'Ninguno de los perros seleccionados está marcado como recogido.');
-    responder(true, ['marcados' => $marcados], "Paseo grupal iniciado con $marcados perro(s).");
+    if (!$chk['total'] || (int)$chk['recogidos'] < (int)$chk['total']) {
+        responder(false, [], 'No todos los perros del grupo están recogidos todavía.');
+    }
+
+    $stmt = $conn->prepare(
+        "UPDATE ruta_paradas
+         SET hora_entrega = NOW(), id_estado = 3, hora_completado = NOW()
+         WHERE id_ruta = ? AND tipo = 'entrega' AND id_pedido IN ($placeholders)
+           AND hora_entrega IS NULL AND hora_cancelacion IS NULL"
+    );
+    $stmt->bind_param($tipos, ...$params);
+    $stmt->execute();
+    $marcados = $stmt->affected_rows;
+    $stmt->close();
+
+    responder(true, ['marcados' => $marcados], "Grupo entregado: $marcados perro(s).");
 }
 
 // ── Acciones individuales ─────────────────────────────────────────────
 $idPedido = intval($data['id_pedido'] ?? 0);
 if (!$idPedido) responder(false, [], 'id_pedido requerido.');
 
-// El pedido debe estar en el cronograma de ESTE paseador para hoy
-$diaSemana = (int)date('N');
+$idRuta = obtenerRutaActivaHoy($conn, $idPaseador, $hoy);
+if (!$idRuta) responder(false, [], 'No tienes una ruta activa hoy.');
+
+// El pedido debe pertenecer a la ruta activa de ESTE paseador
 $stmt = $conn->prepare(
-    "SELECT pp.id_usuario, pp.id_mascota, mu.nombre_mascota
-     FROM cronograma_paseos c
-     JOIN pedidos_paseo pp ON pp.id_pedido = c.id_pedido
-     LEFT JOIN mascota_usuario mu ON mu.id_mascota = pp.id_mascota
-     WHERE c.id_pedido = ? AND c.id_paseador = ? AND c.dia_semana = ?"
+    "SELECT rp.id_usuario_cliente, rp.id_mascota, mu.nombre_mascota
+     FROM ruta_paradas rp
+     LEFT JOIN mascota_usuario mu ON mu.id_mascota = rp.id_mascota
+     WHERE rp.id_ruta = ? AND rp.id_pedido = ? LIMIT 1"
 );
-$stmt->bind_param("iii", $idPedido, $idPaseador, $diaSemana);
+$stmt->bind_param("ii", $idRuta, $idPedido);
 $stmt->execute();
 $pedido = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$pedido) responder(false, [], 'Ese paseo no está en tu cronograma de hoy.');
+if (!$pedido) responder(false, [], 'Ese paseo no está en tu ruta de hoy.');
 
-$idCliente = (int)$pedido['id_usuario'];
-$idMascota = (int)$pedido['id_mascota'];
+$idCliente = (int)$pedido['id_usuario_cliente'];
 $mascota   = $pedido['nombre_mascota'] ?: 'tu mascota';
-
-// Ruta de hoy de este paseador (si ya fue generada), para sincronizar paradas
-function rutaDeHoy($conn, $idPaseador, $hoy) {
-    $stmt = $conn->prepare(
-        "SELECT id_ruta FROM rutas
-         WHERE id_paseador = ? AND fecha_paseo = ? AND id_estado IN (1,2,3)
-         ORDER BY hora_inicio ASC LIMIT 1"
-    );
-    $stmt->bind_param("is", $idPaseador, $hoy);
-    $stmt->execute();
-    $r = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    return $r ? (int)$r['id_ruta'] : null;
-}
 
 if ($accion === 'recogido') {
     $stmt = $conn->prepare(
-        "INSERT INTO paseos_dia (fecha, id_pedido, id_paseador, estado, hora_recogida)
-         VALUES (?, ?, ?, 'recogido', NOW())
-         ON DUPLICATE KEY UPDATE estado = 'recogido', hora_recogida = NOW(),
-                                 motivo_cancelacion = NULL, hora_cancelacion = NULL"
+        "UPDATE ruta_paradas
+         SET hora_recogida = NOW(), id_estado = 3,
+             hora_llegada = COALESCE(hora_llegada, NOW()), hora_completado = NOW()
+         WHERE id_ruta = ? AND id_pedido = ? AND tipo = 'recogida'
+           AND hora_recogida IS NULL AND hora_cancelacion IS NULL"
     );
-    $stmt->bind_param("sii", $hoy, $idPedido, $idPaseador);
+    $stmt->bind_param("ii", $idRuta, $idPedido);
     $stmt->execute();
+    $ok = $stmt->affected_rows > 0;
     $stmt->close();
 
-    // Sincronizar la parada de recogida de la ruta de hoy (si existe)
-    $idRuta = rutaDeHoy($conn, $idPaseador, $hoy);
-    if ($idRuta && $idMascota) {
-        $u = $conn->prepare(
-            "UPDATE ruta_paradas
-             SET id_estado = 3, hora_llegada = COALESCE(hora_llegada, NOW()), hora_completado = NOW()
-             WHERE id_ruta = ? AND id_mascota = ? AND tipo = 'recogida' AND id_estado IN (1,2)"
-        );
-        $u->bind_param("ii", $idRuta, $idMascota);
-        $u->execute();
-        $u->close();
-    }
+    if (!$ok) responder(false, [], 'No se pudo marcar como recogido (ya estaba recogido o cancelado).');
 
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'llegada_parada', "El paseador recogió a $mascota. ¡El paseo está por comenzar!");
 
     responder(true, ['estado' => 'recogido'], "$mascota marcado como recogido.");
 
-} elseif ($accion === 'pendiente') {
-    // Deshacer (por si el paseador se equivocó)
+} elseif ($accion === 'entregar') {
     $stmt = $conn->prepare(
-        "INSERT INTO paseos_dia (fecha, id_pedido, id_paseador, estado)
-         VALUES (?, ?, ?, 'pendiente')
-         ON DUPLICATE KEY UPDATE estado = 'pendiente', hora_recogida = NULL,
-                                 motivo_cancelacion = NULL, hora_cancelacion = NULL"
+        "UPDATE ruta_paradas rp
+         JOIN rutas r ON r.id_ruta = rp.id_ruta
+         SET rp.hora_entrega = NOW(), rp.id_estado = 3,
+             rp.hora_llegada = COALESCE(rp.hora_llegada, NOW()), rp.hora_completado = NOW()
+         WHERE rp.id_ruta = ? AND rp.id_pedido = ? AND rp.tipo = 'entrega'
+           AND rp.hora_entrega IS NULL AND rp.hora_cancelacion IS NULL
+           AND EXISTS (
+             SELECT 1 FROM ruta_paradas rp2
+             WHERE rp2.id_ruta = rp.id_ruta AND rp2.id_pedido = rp.id_pedido
+               AND rp2.tipo = 'recogida' AND rp2.hora_recogida IS NOT NULL
+           )"
     );
-    $stmt->bind_param("sii", $hoy, $idPedido, $idPaseador);
+    $stmt->bind_param("ii", $idRuta, $idPedido);
     $stmt->execute();
+    $ok = $stmt->affected_rows > 0;
     $stmt->close();
+
+    if (!$ok) responder(false, [], 'No se puede entregar: falta confirmar la recogida, o ya fue entregado/cancelado.');
+
+    crearNotificacionInterna($conn, $idCliente, $idRuta,
+        'sistema', "$mascota fue entregado. ¡Gracias por confiar en Paseo Feliz!");
+
+    responder(true, ['estado' => 'entregado'], "$mascota marcado como entregado.");
+
+} elseif ($accion === 'pendiente') {
+    // Deshacer (por si el paseador se equivocó) — no se puede si ya se entregó
+    $stmt = $conn->prepare(
+        "UPDATE ruta_paradas
+         SET hora_recogida = NULL, id_estado = 1, hora_llegada = NULL, hora_completado = NULL
+         WHERE id_ruta = ? AND id_pedido = ? AND tipo = 'recogida' AND hora_entrega IS NULL"
+    );
+    $stmt->bind_param("ii", $idRuta, $idPedido);
+    $stmt->execute();
+    $ok = $stmt->affected_rows > 0;
+    $stmt->close();
+
+    if (!$ok) responder(false, [], 'No se puede deshacer: el paseo ya fue entregado.');
 
     responder(true, ['estado' => 'pendiente'], 'Paseo devuelto a pendiente.');
 
@@ -135,27 +182,19 @@ if ($accion === 'recogido') {
         responder(false, [], 'Debes indicar el motivo de la cancelación.');
     }
 
+    // Cancela ambas paradas del pedido (recogida y entrega), solo si aún no se entregó
     $stmt = $conn->prepare(
-        "INSERT INTO paseos_dia (fecha, id_pedido, id_paseador, estado, motivo_cancelacion, hora_cancelacion)
-         VALUES (?, ?, ?, 'cancelado', ?, NOW())
-         ON DUPLICATE KEY UPDATE estado = 'cancelado', motivo_cancelacion = VALUES(motivo_cancelacion),
-                                 hora_cancelacion = NOW(), hora_recogida = NULL"
+        "UPDATE ruta_paradas
+         SET hora_cancelacion = NOW(), motivo_cancelacion = ?, id_estado = 4
+         WHERE id_ruta = ? AND id_pedido = ? AND tipo IN ('recogida','entrega')
+           AND hora_entrega IS NULL AND hora_cancelacion IS NULL"
     );
-    $stmt->bind_param("siis", $hoy, $idPedido, $idPaseador, $motivo);
+    $stmt->bind_param("sii", $motivo, $idRuta, $idPedido);
     $stmt->execute();
+    $afectadas = $stmt->affected_rows;
     $stmt->close();
 
-    // Si la ruta de hoy ya existe, omitir las paradas de esa mascota
-    $idRuta = rutaDeHoy($conn, $idPaseador, $hoy);
-    if ($idRuta && $idMascota) {
-        $u = $conn->prepare(
-            "UPDATE ruta_paradas SET id_estado = 4
-             WHERE id_ruta = ? AND id_mascota = ? AND id_estado IN (1,2)"
-        );
-        $u->bind_param("ii", $idRuta, $idMascota);
-        $u->execute();
-        $u->close();
-    }
+    if (!$afectadas) responder(false, [], 'No se puede cancelar: el paseo ya fue entregado o ya estaba cancelado.');
 
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'sistema', "El paseo de hoy de $mascota fue cancelado. Motivo: $motivo. El paseador puede darte más detalles por el chat.");

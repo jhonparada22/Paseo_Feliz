@@ -73,29 +73,15 @@ function crearNotificacionInterna($conn, $idUsuarioDestino, $idRuta, $tipo, $men
 }
 
 /**
- * Crea la tabla paseos_dia si aún no existe (ver sql/modulo_paseos_dia.sql).
- * Se llama al inicio de los endpoints que la usan, así el módulo funciona
- * sin tener que ejecutar SQL a mano en phpMyAdmin.
+ * Deriva el estado visible de un pedido a partir únicamente de los
+ * timestamps de sus paradas (sin depender de ningún enum/tabla de estado
+ * global). Reemplaza la antigua paseos_dia.estado.
  */
-function asegurarTablaPaseosDia($conn) {
-    $conn->query(
-        "CREATE TABLE IF NOT EXISTS `paseos_dia` (
-          `id_paseo_dia` int(11) NOT NULL AUTO_INCREMENT,
-          `fecha` date NOT NULL,
-          `id_pedido` int(11) NOT NULL,
-          `id_paseador` int(11) NOT NULL,
-          `estado` enum('pendiente','recogido','en_paseo','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
-          `motivo_cancelacion` varchar(120) DEFAULT NULL,
-          `hora_recogida` datetime DEFAULT NULL,
-          `hora_cancelacion` datetime DEFAULT NULL,
-          `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-          PRIMARY KEY (`id_paseo_dia`),
-          UNIQUE KEY `uq_dia_pedido` (`fecha`,`id_pedido`),
-          KEY `idx_pd_paseador_fecha` (`id_paseador`,`fecha`),
-          CONSTRAINT `fk_pd_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos_paseo` (`id_pedido`) ON DELETE CASCADE ON UPDATE CASCADE,
-          CONSTRAINT `fk_pd_paseador` FOREIGN KEY (`id_paseador`) REFERENCES `paseadores` (`id_paseador`) ON DELETE CASCADE ON UPDATE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
-    );
+function estadoDerivadoPedido($horaRecogida, $horaEntrega, $horaCancelacion) {
+    if ($horaCancelacion) return 'cancelado';
+    if ($horaEntrega)     return 'entregado';
+    if ($horaRecogida)    return 'recogido'; // cubre también el antiguo "en_paseo"
+    return 'pendiente';
 }
 
 /**
@@ -108,5 +94,195 @@ function horaInicioDeFranja($franja) {
     $h = (int)$m[1] % 12;
     if (strtolower($m[3]) === 'p') $h += 12;
     return sprintf('%02d:%s', $h, $m[2]);
+}
+
+/** Devuelve el id_ruta activa (id_estado 1/2/3) de un paseador para una fecha, o null */
+function obtenerRutaActivaHoy($conn, $idPaseador, $fecha) {
+    $stmt = $conn->prepare(
+        "SELECT id_ruta FROM rutas WHERE id_paseador = ? AND fecha_paseo = ? AND id_estado IN (1,2,3) LIMIT 1"
+    );
+    $stmt->bind_param("is", $idPaseador, $fecha);
+    $stmt->execute();
+    $r = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    return $r ? (int)$r['id_ruta'] : null;
+}
+
+/**
+ * Devuelve la ruta activa de un paseador para $fecha, o la crea si no existe.
+ * Usa el UNIQUE KEY uq_ruta_activa (ver sql/migraciones/2026_07_fase1_consolidar_rutas.sql)
+ * para resolver la condición de carrera entre el cronograma automático y la
+ * asignación manual del admin: si ambos intentan crearla casi al mismo
+ * tiempo, uno gana el INSERT y el otro reutiliza la que ganó.
+ * Devuelve ['id_ruta' => int, 'nueva' => bool].
+ */
+function obtenerOCrearRutaHoy($conn, $idAdmin, $idPaseador, $fecha, $horaInicio) {
+    $idRuta = obtenerRutaActivaHoy($conn, $idPaseador, $fecha);
+    if ($idRuta) return ['id_ruta' => $idRuta, 'nueva' => false];
+
+    try {
+        $stmt = $conn->prepare(
+            "INSERT INTO rutas (id_admin_creador, id_paseador, id_estado, fecha_paseo, hora_inicio, distancia_estimada_km, duracion_estimada_min)
+             VALUES (?, ?, 1, ?, ?, 0, 0)"
+        );
+        $stmt->bind_param("iiss", $idAdmin, $idPaseador, $fecha, $horaInicio);
+        $stmt->execute();
+        $idRuta = $conn->insert_id;
+        $stmt->close();
+        return ['id_ruta' => $idRuta, 'nueva' => true];
+    } catch (mysqli_sql_exception $e) {
+        $idRuta = obtenerRutaActivaHoy($conn, $idPaseador, $fecha);
+        if ($idRuta) return ['id_ruta' => $idRuta, 'nueva' => false];
+        throw $e;
+    }
+}
+
+/**
+ * Reordena las paradas PENDIENTES de una ruta: agrupa primero por franja
+ * horaria del pedido de origen (pedidos_paseo.franja_horaria) y, dentro de
+ * cada franja, encadena por vecino más cercano (Haversine) desde la última
+ * posición GPS conocida del paseador. Las paradas ya completadas/omitidas
+ * o con algún timestamp de cierre (hora_recogida/hora_entrega/hora_cancelacion)
+ * NO se tocan, conservan su 'orden' original. Recalcula orden, etiqueta y
+ * hora_estimada (a ~80 m/min caminando) de las paradas reordenadas.
+ */
+function reordenarParadasPendientes($conn, $idRuta) {
+    $stmt = $conn->prepare("SELECT fecha_paseo, hora_inicio, id_estado, id_paseador FROM rutas WHERE id_ruta = ?");
+    $stmt->bind_param("i", $idRuta);
+    $stmt->execute();
+    $ruta = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if (!$ruta) return;
+
+    $stmt = $conn->prepare(
+        "SELECT COUNT(*) AS n FROM ruta_paradas
+         WHERE id_ruta = ? AND (id_estado IN (3,4) OR hora_recogida IS NOT NULL
+               OR hora_entrega IS NOT NULL OR hora_cancelacion IS NOT NULL)"
+    );
+    $stmt->bind_param("i", $idRuta);
+    $stmt->execute();
+    $siguienteOrden = (int)$stmt->get_result()->fetch_assoc()['n'];
+    $stmt->close();
+
+    $stmt = $conn->prepare(
+        "SELECT rp.id_parada, rp.tipo, rp.lat, rp.lng, rp.id_pedido,
+                COALESCE(pp.franja_horaria, '') AS franja
+         FROM ruta_paradas rp
+         LEFT JOIN pedidos_paseo pp ON pp.id_pedido = rp.id_pedido
+         WHERE rp.id_ruta = ? AND rp.id_estado NOT IN (3,4)
+           AND rp.hora_recogida IS NULL AND rp.hora_entrega IS NULL AND rp.hora_cancelacion IS NULL"
+    );
+    $stmt->bind_param("i", $idRuta);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $filas = [];
+    while ($row = $res->fetch_assoc()) $filas[] = $row;
+    $stmt->close();
+    if (!$filas) return;
+
+    // Agrupar por pedido (cada pedido trae 1 parada de recogida + 1 de entrega)
+    $porPedido = [];
+    foreach ($filas as $f) {
+        $key = $f['id_pedido'] !== null ? $f['id_pedido'] : ('np' . $f['id_parada']);
+        if (!isset($porPedido[$key])) {
+            $porPedido[$key] = ['horaFranja' => horaInicioDeFranja($f['franja']) ?: '99:99', 'recogida' => null, 'entrega' => null];
+        }
+        $porPedido[$key][$f['tipo']] = $f;
+    }
+
+    // Agrupar por franja horaria y ordenar los grupos por hora de inicio
+    $porFranja = [];
+    foreach ($porPedido as $pedido) {
+        $porFranja[$pedido['horaFranja']][] = $pedido;
+    }
+    ksort($porFranja);
+
+    // Origen: última posición GPS conocida del paseador
+    $origen = null;
+    $stmt = $conn->prepare("SELECT lat, lng FROM gps_paseadores WHERE id_paseador = ?");
+    $stmt->bind_param("i", $ruta['id_paseador']);
+    $stmt->execute();
+    $gps = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($gps) $origen = ['lat' => (float)$gps['lat'], 'lng' => (float)$gps['lng']];
+
+    // Vecino más cercano DENTRO de cada grupo de franja, encadenado entre grupos
+    $actual = $origen;
+    $secuencia = [];
+    foreach ($porFranja as $grupo) {
+        $restantes = $grupo;
+        while ($restantes) {
+            if ($actual === null) {
+                $elegido = array_shift($restantes);
+            } else {
+                $mejorIdx = 0; $mejorDist = PHP_FLOAT_MAX;
+                foreach ($restantes as $idx => $ped) {
+                    if (!$ped['recogida']) continue;
+                    $d = distanciaMetros($actual['lat'], $actual['lng'], (float)$ped['recogida']['lat'], (float)$ped['recogida']['lng']);
+                    if ($d < $mejorDist) { $mejorDist = $d; $mejorIdx = $idx; }
+                }
+                $elegido = $restantes[$mejorIdx];
+                array_splice($restantes, $mejorIdx, 1);
+            }
+            if ($elegido['recogida']) {
+                $secuencia[] = $elegido;
+                $actual = ['lat' => (float)$elegido['recogida']['lat'], 'lng' => (float)$elegido['recogida']['lng']];
+            }
+        }
+    }
+
+    // Reasignar orden/etiqueta/hora_estimada: todas las recogidas primero, luego todas las entregas
+    $etiquetas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $horaBase = ((int)$ruta['id_estado'] === 1)
+        ? strtotime($ruta['fecha_paseo'] . ' ' . $ruta['hora_inicio'])
+        : time();
+
+    $stmtUpd = $conn->prepare("UPDATE ruta_paradas SET orden = ?, etiqueta = ?, hora_estimada = ? WHERE id_parada = ?");
+
+    $orden = $siguienteOrden;
+    foreach (['recogida', 'entrega'] as $tipoFase) {
+        $acumSeg = 0;
+        $prevPunto = $origen;
+        foreach ($secuencia as $ped) {
+            $p = $ped[$tipoFase];
+            if (!$p) continue;
+            if ($prevPunto) {
+                $d = distanciaMetros($prevPunto['lat'], $prevPunto['lng'], (float)$p['lat'], (float)$p['lng']);
+                $acumSeg += (int)round(($d / 80) * 60); // ~80 m/min caminando
+            }
+            $etiqueta = $etiquetas[$orden % 26];
+            $horaEstimada = date('H:i:s', $horaBase + $acumSeg);
+            $stmtUpd->bind_param("issi", $orden, $etiqueta, $horaEstimada, $p['id_parada']);
+            $stmtUpd->execute();
+            $orden++;
+            $prevPunto = ['lat' => (float)$p['lat'], 'lng' => (float)$p['lng']];
+        }
+    }
+    $stmtUpd->close();
+}
+
+/** Recalcula distancia_estimada_km y duracion_estimada_min de una ruta a partir de sus paradas ordenadas */
+function recalcularDistanciaYDuracion($conn, $idRuta) {
+    $stmt = $conn->prepare("SELECT lat, lng FROM ruta_paradas WHERE id_ruta = ? ORDER BY orden ASC");
+    $stmt->bind_param("i", $idRuta);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $puntos = [];
+    while ($row = $res->fetch_assoc()) $puntos[] = $row;
+    $stmt->close();
+
+    $distanciaKm = 0;
+    for ($i = 0; $i < count($puntos) - 1; $i++) {
+        $distanciaKm += distanciaMetros(
+            (float)$puntos[$i]['lat'], (float)$puntos[$i]['lng'],
+            (float)$puntos[$i + 1]['lat'], (float)$puntos[$i + 1]['lng']
+        ) / 1000;
+    }
+    $duracionMin = (int)round($distanciaKm * 12);
+
+    $stmt = $conn->prepare("UPDATE rutas SET distancia_estimada_km = ?, duracion_estimada_min = ? WHERE id_ruta = ?");
+    $stmt->bind_param("dii", $distanciaKm, $duracionMin, $idRuta);
+    $stmt->execute();
+    $stmt->close();
 }
 ?>

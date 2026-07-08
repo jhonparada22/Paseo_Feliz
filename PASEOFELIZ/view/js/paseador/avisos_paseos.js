@@ -1,9 +1,9 @@
 /* =========================================================================
    AVISOS DE PASEOS PENDIENTES — Paseo Feliz (paseador)
-   Revisa cada minuto los paseos INDIVIDUALES de hoy y, cuando faltan
-   30 minutos o menos para la hora de inicio de la franja, avisa al
-   paseador con una notificación del navegador + un toast en pantalla.
-   Cada paseo se avisa una sola vez por día (se recuerda en localStorage).
+   Revisa cada minuto los paseos de hoy (individuales y grupales) y, cuando
+   faltan 30 minutos o menos para la hora de inicio, avisa al paseador con
+   una notificación del navegador + un toast en pantalla. Cada mascota se
+   avisa por separado (una sola vez por día, se recuerda en localStorage).
 
    Se incluye en las páginas del paseador (view/vistas/paseador/*), por
    eso la ruta al modelo sube tres niveles.
@@ -62,7 +62,6 @@
                 const ahora = new Date();
 
                 data.paseos.forEach(p => {
-                    if (p.modalidad !== 'individual') return;
                     if (p.estado !== 'pendiente') return;
                     if (!p.hora_inicio) return;
 

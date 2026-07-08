@@ -582,11 +582,12 @@ function botonesPaseo(p) {
     if (p.estado === 'cancelado') {
         return `<button class="pi-btn deshacer" title="Deshacer cancelación" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>${chat}`;
     }
-    if (p.estado === 'en_paseo' || p.estado === 'entregado') {
+    if (p.estado === 'entregado') {
         return chat;
     }
     if (p.estado === 'recogido') {
         return `
+            <button class="pi-btn entregar" onclick="marcarEntregado(${p.id_pedido})">Entregado</button>
             <button class="pi-btn deshacer" title="Deshacer recogida" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>
             <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
             ${chat}`;
@@ -655,8 +656,8 @@ function toggleSeleccionGrupal(idPedido, checked) {
     actualizarBtnGrupal();
 }
 
-// El paseo grupal solo puede arrancar cuando TODOS los seleccionados
-// ya están marcados como recogidos (el paseador los va recibiendo uno a uno)
+// "Entregar grupo" solo se habilita cuando TODOS los seleccionados ya
+// están marcados como recogidos (el paseador los va recibiendo uno a uno)
 function actualizarBtnGrupal() {
     const btn = document.getElementById('btnIniciarGrupal');
     if (!btn) return;
@@ -665,8 +666,8 @@ function actualizarBtnGrupal() {
     const pendientes = seleccionados.filter(p => p.estado === 'pendiente');
     btn.disabled = !(listos.length > 0 && pendientes.length === 0);
     btn.innerHTML = listos.length > 0
-        ? `<i class="fas fa-play"></i> Iniciar paseo grupal (${listos.length})`
-        : `<i class="fas fa-play"></i> Iniciar paseo grupal`;
+        ? `<i class="fas fa-house"></i> Entregar grupo (${listos.length})`
+        : `<i class="fas fa-house"></i> Entregar grupo`;
 }
 
 function marcarRecogido(idPedido) {
@@ -702,33 +703,42 @@ function deshacerEstado(idPedido) {
     .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
 }
 
-function iniciarPaseoGrupal() {
+function marcarEntregado(idPedido) {
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'entregar', id_pedido: idPedido }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo entregar', 'warning'); return; }
+        seleccionGrupal.delete(idPedido);
+        showNotif('🏠 ' + (data.message || 'Entregado'), 'success');
+        cargarPaseosHoy();
+        cargarRutaDeHoy(); // la parada de entrega pudo cambiar de estado
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
+// "Entregar grupo": solo los perros ya recogidos del grupo seleccionado
+function entregarGrupo() {
     const ids = PASEOS_HOY
         .filter(p => p.modalidad === 'grupal' && seleccionGrupal.has(p.id_pedido) && p.estado === 'recogido')
         .map(p => p.id_pedido);
-    if (!ids.length) { showNotif('Marca como recogido al menos un perro', 'warning'); return; }
+    if (!ids.length) { showNotif('Selecciona perros ya recogidos para entregar', 'warning'); return; }
 
     fetch(API + 'marcar_paseo_dia.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'iniciar_grupal', ids_pedidos: ids }),
+        body: JSON.stringify({ accion: 'entregar_grupal', ids_pedidos: ids }),
     })
     .then(r => r.json())
     .then(data => {
-        if (!data.success) { showNotif(data.message || 'No se pudo iniciar', 'warning'); return; }
-        showNotif('🐾 ' + data.message, 'success');
+        if (!data.success) { showNotif(data.message || 'No se pudo entregar', 'warning'); return; }
+        ids.forEach(id => seleccionGrupal.delete(id));
+        showNotif('🏠 ' + data.message, 'success');
         cargarPaseosHoy();
-
-        // Asegurar que exista la ruta del día y arrancar el GPS del paseo
-        const arrancar = () => { if (RUTA.id && !paseoActivo) { iniciarPaseo(); fitRoute(); } };
-        if (!RUTA.id) {
-            fetch(API + 'iniciar_dia_paseador.php', { method: 'POST' })
-                .then(r => r.json())
-                .then(d => { if (d.success) cargarRutaDeHoy().then(arrancar); })
-                .catch(() => {});
-        } else {
-            arrancar();
-        }
+        cargarRutaDeHoy();
     })
     .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
 }

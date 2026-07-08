@@ -177,6 +177,9 @@ if ($crono) {
 }
 
 // ── 3. Ruta de HOY con parada del cliente (paseo en vivo) ─────────────
+// Se filtra por id_pedido (no solo por id_usuario_cliente): un mismo
+// cliente puede tener varias mascotas con paradas en la MISMA ruta del
+// paseador, y cada una necesita su propio progreso sin mezclarse.
 $hoy = date('Y-m-d');
 $stmt = $conn->prepare(
     "SELECT DISTINCT r.id_ruta, r.id_paseador, r.id_estado, er.nombre AS estado_ruta,
@@ -184,48 +187,70 @@ $stmt = $conn->prepare(
      FROM rutas r
      JOIN ruta_paradas rp ON rp.id_ruta = r.id_ruta
      JOIN estados_ruta er ON er.id_estado = r.id_estado
-     WHERE rp.id_usuario_cliente = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3)
+     WHERE rp.id_pedido = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3)
      ORDER BY r.hora_inicio ASC
      LIMIT 1"
 );
-$stmt->bind_param("is", $idUsuario, $hoy);
+$stmt->bind_param("is", $idPedido, $hoy);
 $stmt->execute();
 $ruta = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 $rutaHoy = null;
 if ($ruta) {
-    // Paradas del cliente dentro de esa ruta (recogida y entrega)
+    // Paradas de ESTE pedido (mascota) dentro de esa ruta (recogida y entrega)
     $stmt = $conn->prepare(
-        "SELECT rp.tipo, rp.id_estado, ep.nombre AS estado, rp.hora_llegada, rp.hora_completado
+        "SELECT rp.tipo, rp.id_estado, ep.nombre AS estado, rp.hora_llegada, rp.hora_completado,
+                rp.hora_recogida, rp.hora_entrega, rp.hora_cancelacion, rp.motivo_cancelacion
          FROM ruta_paradas rp
          JOIN estados_parada ep ON ep.id_estado = rp.id_estado
-         WHERE rp.id_ruta = ? AND rp.id_usuario_cliente = ?
+         WHERE rp.id_ruta = ? AND rp.id_pedido = ?
          ORDER BY rp.orden ASC"
     );
     $idRuta = (int)$ruta['id_ruta'];
-    $stmt->bind_param("ii", $idRuta, $idUsuario);
+    $stmt->bind_param("ii", $idRuta, $idPedido);
     $stmt->execute();
     $res = $stmt->get_result();
     $recogida = null;
     $entrega  = null;
     while ($p = $res->fetch_assoc()) {
         $dato = [
-            'estado'          => $p['estado'],
-            'hora_llegada'    => $p['hora_llegada'],
-            'hora_completado' => $p['hora_completado'],
+            'estado'             => $p['estado'],
+            'hora_llegada'       => $p['hora_llegada'],
+            'hora_completado'    => $p['hora_completado'],
+            'hora_recogida'      => $p['hora_recogida'],
+            'hora_entrega'       => $p['hora_entrega'],
+            'hora_cancelacion'   => $p['hora_cancelacion'],
+            'motivo_cancelacion' => $p['motivo_cancelacion'],
         ];
         if ($p['tipo'] === 'recogida' && !$recogida) $recogida = $dato;
-        if ($p['tipo'] === 'entrega') $entrega = $dato;
+        if ($p['tipo'] === 'entrega' && (!$entrega || $p['hora_entrega'])) $entrega = $dato;
     }
     $stmt->close();
 
-    // Fase del paseo derivada de las paradas del cliente
+    // Fase del paseo derivada de los timestamps de la parada (Fase 5 del
+    // plan de consolidación de rutas), no de id_estado.
     $fase = 'en_camino'; // el paseador va hacia la recogida
-    if ($entrega && $entrega['estado'] === 'completada') {
+    if ($recogida && $recogida['hora_cancelacion']) {
+        $fase = 'cancelado';
+    } elseif ($entrega && $entrega['hora_entrega']) {
         $fase = 'finalizado';
-    } elseif ($recogida && $recogida['estado'] === 'completada') {
+    } elseif ($recogida && $recogida['hora_recogida']) {
         $fase = 'en_curso'; // mascota recogida, paseo en marcha
+    }
+
+    // Si ya se entregó hoy, saber si el cliente ya lo calificó (para no
+    // volver a pedir estrellas una vez calificado).
+    $calificacion = null;
+    if ($fase === 'finalizado') {
+        $stmt = $conn->prepare(
+            "SELECT estrellas, comentario FROM calificaciones_paseo WHERE id_pedido = ? AND id_ruta = ?"
+        );
+        $stmt->bind_param("ii", $idPedido, $idRuta);
+        $stmt->execute();
+        $c = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($c) $calificacion = ['estrellas' => (int)$c['estrellas'], 'comentario' => $c['comentario']];
     }
 
     $rutaHoy = [
@@ -238,6 +263,7 @@ if ($ruta) {
         'fase'                  => $fase,
         'recogida'              => $recogida,
         'entrega'               => $entrega,
+        'calificacion'          => $calificacion,
     ];
 }
 
@@ -304,8 +330,13 @@ usort($historial, function ($a, $b) {
 });
 
 // ── 6. Estado global del servicio ─────────────────────────────────────
-// En curso solo cuando el paseador ya arrancó (ruta en_curso o pausada).
-if ($rutaHoy && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true)) {
+// En curso solo cuando el paseador ya arrancó (ruta en_curso o pausada) Y
+// el paseo de ESTA mascota sigue en marcha (ni cancelado ni ya entregado
+// hoy). Si ya se canceló o ya se entregó, no tiene sentido mostrarle el
+// timeline/cronómetro "en curso" aunque la ruta del paseador siga activa
+// para otros clientes del mismo grupo.
+if ($rutaHoy && in_array($rutaHoy['fase'], ['en_camino', 'en_curso'], true)
+    && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true)) {
     $estadoServicio = 'paseo_en_curso';
 } elseif ($asignacion) {
     $estadoServicio = 'paseador_asignado';

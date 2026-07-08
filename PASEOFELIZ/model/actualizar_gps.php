@@ -13,6 +13,9 @@ header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once '../model/conexion.php';
 
+define('RADIO_AVISO_PROXIMIDAD_M', 200); // aviso al cliente antes de llegar
+define('RADIO_LLEGADA_M', 40);           // detección automática de llegada/salida
+
 $idPaseador = obtenerIdPaseadorSesion($conn);
 $data = leerJsonBody();
 
@@ -73,8 +76,8 @@ if ($idRuta) {
         $dist = distanciaMetros($lat, $lng, $parada['lat'], $parada['lng']);
 
         if ($parada['estado'] === 'pendiente') {
-            // Aviso de proximidad (300m) antes de llegar
-            if ($dist <= 300) {
+            // Aviso de proximidad antes de llegar
+            if ($dist <= RADIO_AVISO_PROXIMIDAD_M) {
                 $minutos = max(1, round($dist / 80)); // ~80m/min caminando
                 if ($parada['id_usuario_cliente']) {
                     $tipoNotif = $parada['tipo'] === 'entrega' ? 'proximidad_entrega' : 'proximidad_recogida';
@@ -99,14 +102,14 @@ if ($idRuta) {
                     }
                 }
             }
-            // Llegó (<40m) -> marcar "llegada"
-            if ($dist <= 40) {
+            // Llegó -> marcar "llegada"
+            if ($dist <= RADIO_LLEGADA_M) {
                 $u = $conn->prepare("UPDATE ruta_paradas SET id_estado = 2, hora_llegada = NOW() WHERE id_parada = ?");
                 $u->bind_param("i", $parada['id_parada']);
                 $u->execute(); $u->close();
                 $eventos[] = ['tipo' => 'llegada', 'id_parada' => (int)$parada['id_parada']];
             }
-        } elseif ($parada['estado'] === 'llegada' && $dist > 40) {
+        } elseif ($parada['estado'] === 'llegada' && $dist > RADIO_LLEGADA_M) {
             // Salió del punto -> marcar "completada"
             $u = $conn->prepare("UPDATE ruta_paradas SET id_estado = 3, hora_completado = NOW() WHERE id_parada = ?");
             $u->bind_param("i", $parada['id_parada']);

@@ -128,6 +128,9 @@ INSERT IGNORE INTO `estados_parada` (`id_estado`, `nombre`) VALUES
 (4, 'omitida');
 
 -- ── rutas ─────────────────────────────────────────────────────────────
+-- `activa_key` + su UNIQUE KEY garantizan que solo pueda existir 1 ruta
+-- activa (id_estado 1/2/3) por (paseador, fecha_paseo) — ver
+-- sql/migraciones/2026_07_fase1_consolidar_rutas.sql para el porqué.
 CREATE TABLE IF NOT EXISTS `rutas` (
   `id_ruta` int(11) NOT NULL AUTO_INCREMENT,
   `id_admin_creador` int(11) NOT NULL,
@@ -140,33 +143,50 @@ CREATE TABLE IF NOT EXISTS `rutas` (
   `fecha_inicio_real` datetime DEFAULT NULL,
   `fecha_fin_real` datetime DEFAULT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `activa_key` varchar(30) GENERATED ALWAYS AS (
+    CASE WHEN `id_estado` in (1,2,3) THEN CONCAT(`id_paseador`,'-',`fecha_paseo`) ELSE NULL END
+  ) STORED,
   PRIMARY KEY (`id_ruta`),
+  UNIQUE KEY `uq_ruta_activa` (`activa_key`),
   KEY `idx_ruta_paseador` (`id_paseador`),
   KEY `idx_ruta_fecha` (`fecha_paseo`),
   KEY `fk_ruta_admin` (`id_admin_creador`),
   KEY `fk_ruta_estado` (`id_estado`),
   CONSTRAINT `fk_ruta_admin` FOREIGN KEY (`id_admin_creador`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_ruta_estado` FOREIGN KEY (`id_estado`) REFERENCES `estados_ruta` (`id_estado`) ON UPDATE CASCADE,
-  CONSTRAINT `fk_ruta_paseador` FOREIGN KEY (`id_paseador`) REFERENCES `paseadores` (`id_paseador`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_ruta_estado` FOREIGN KEY (`id_estado`) REFERENCES `estados_ruta` (`id_estado`) ON UPDATE RESTRICT,
+  CONSTRAINT `fk_ruta_paseador` FOREIGN KEY (`id_paseador`) REFERENCES `paseadores` (`id_paseador`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ── ruta_paradas ──────────────────────────────────────────────────────
+-- `id_pedido` referencia el pedido de origen (cronograma o asignación
+-- manual) y sirve como agrupador de paseo grupal. `hora_estimada` es la
+-- ETA calculada al generar/reordenar la ruta. `hora_recogida`/`hora_entrega`/
+-- `hora_cancelacion` son las confirmaciones manuales del paseador (distintas
+-- de `hora_llegada`/`hora_completado`, que las sigue usando la detección
+-- automática por GPS).
 CREATE TABLE IF NOT EXISTS `ruta_paradas` (
   `id_parada` int(11) NOT NULL AUTO_INCREMENT,
   `id_ruta` int(11) NOT NULL,
   `orden` tinyint(2) NOT NULL,
   `etiqueta` varchar(2) NOT NULL,
+  `hora_estimada` time DEFAULT NULL,
   `tipo` enum('recogida','paseo','entrega') NOT NULL DEFAULT 'paseo',
   `direccion` varchar(255) NOT NULL,
   `lat` decimal(10,7) NOT NULL,
   `lng` decimal(10,7) NOT NULL,
   `id_usuario_cliente` int(11) DEFAULT NULL,
   `id_mascota` int(11) DEFAULT NULL,
+  `id_pedido` int(11) DEFAULT NULL,
   `id_estado` int(11) NOT NULL DEFAULT 1,
   `hora_llegada` datetime DEFAULT NULL,
   `hora_completado` datetime DEFAULT NULL,
+  `hora_recogida` datetime DEFAULT NULL,
+  `hora_entrega` datetime DEFAULT NULL,
+  `hora_cancelacion` datetime DEFAULT NULL,
+  `motivo_cancelacion` varchar(120) DEFAULT NULL,
   PRIMARY KEY (`id_parada`),
   KEY `idx_parada_ruta` (`id_ruta`),
+  KEY `idx_parada_pedido` (`id_pedido`),
   KEY `fk_parada_cliente` (`id_usuario_cliente`),
   KEY `fk_parada_mascota` (`id_mascota`),
   KEY `fk_parada_estado` (`id_estado`),
@@ -234,6 +254,28 @@ CREATE TABLE IF NOT EXISTS `notificaciones` (
   KEY `fk_notif_ruta` (`id_ruta`),
   CONSTRAINT `fk_notif_ruta` FOREIGN KEY (`id_ruta`) REFERENCES `rutas` (`id_ruta`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_notif_usuario` FOREIGN KEY (`id_usuario_destino`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ── calificaciones_paseo (cliente califica 1-5 estrellas al paseador) ─
+-- paseadores.puntuacion ya NO se edita a mano: se recalcula como el
+-- promedio de estas calificaciones (ver model/calificar_paseo.php).
+CREATE TABLE IF NOT EXISTS `calificaciones_paseo` (
+  `id_calificacion` int(11) NOT NULL AUTO_INCREMENT,
+  `id_pedido` int(11) NOT NULL,
+  `id_ruta` int(11) NOT NULL,
+  `id_paseador` int(11) NOT NULL,
+  `id_usuario_cliente` int(11) NOT NULL,
+  `estrellas` tinyint(1) NOT NULL,
+  `comentario` varchar(255) DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_calificacion`),
+  UNIQUE KEY `uq_calificacion_pedido_ruta` (`id_pedido`, `id_ruta`),
+  KEY `idx_calif_paseador` (`id_paseador`),
+  KEY `idx_calif_cliente` (`id_usuario_cliente`),
+  CONSTRAINT `fk_calif_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos_paseo` (`id_pedido`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_calif_ruta` FOREIGN KEY (`id_ruta`) REFERENCES `rutas` (`id_ruta`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_calif_paseador` FOREIGN KEY (`id_paseador`) REFERENCES `paseadores` (`id_paseador`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_calif_cliente` FOREIGN KEY (`id_usuario_cliente`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ── (resto de tablas del proyecto, no relacionadas con mapas) ─────────

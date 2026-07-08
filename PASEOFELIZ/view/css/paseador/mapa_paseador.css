@@ -1106,6 +1106,7 @@
     .pi-btn:hover { filter: brightness(.94); }
 
     .pi-btn.recoger  { background: #2563eb; color: #fff; }
+    .pi-btn.entregar { background: #16a34a; color: #fff; }
     .pi-btn.cancelar { background: #dc2626; color: #fff; }
     .pi-btn.chat     { background: #eef2f7; color: #334155; }
     .pi-btn.deshacer { background: #f1f5f9; color: #64748b; }

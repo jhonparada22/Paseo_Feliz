@@ -157,8 +157,8 @@
                         <div class="seg-vacio">Sin paseos grupales hoy.</div>
                     </div>
                     <div class="seg-foot" id="footGrupal" style="display:none">
-                        <button class="btn-grupal" id="btnIniciarGrupal" onclick="iniciarPaseoGrupal()" disabled>
-                            <i class="fas fa-play"></i> Iniciar paseo grupal
+                        <button class="btn-grupal" id="btnIniciarGrupal" onclick="entregarGrupo()" disabled>
+                            <i class="fas fa-house"></i> Entregar grupo
                         </button>
                     </div>
                 </div>

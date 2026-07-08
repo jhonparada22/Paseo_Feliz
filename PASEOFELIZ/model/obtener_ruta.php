@@ -71,7 +71,8 @@ if (!$ruta) responder(false, [], 'Ruta no encontrada.');
 // Paradas + datos de cliente/mascota
 $stmt = $conn->prepare(
     "SELECT rp.id_parada, rp.orden, rp.etiqueta, rp.tipo, rp.direccion, rp.lat, rp.lng,
-            rp.id_usuario_cliente, rp.id_mascota,
+            rp.id_usuario_cliente, rp.id_mascota, rp.id_pedido, rp.hora_estimada,
+            rp.hora_recogida, rp.hora_entrega, rp.hora_cancelacion, rp.motivo_cancelacion,
             ep.nombre AS estado_parada, rp.hora_llegada, rp.hora_completado,
             u.nombre AS cliente_nombre, iu.telefono AS cliente_telefono,
             mu.nombre_mascota, mu.avatar_mascota,
@@ -100,8 +101,14 @@ while ($row = $res->fetch_assoc()) {
         'estado'    => $row['estado_parada'],
         'hora_llegada'    => $row['hora_llegada'],
         'hora_completado' => $row['hora_completado'],
+        'hora_estimada'      => $row['hora_estimada'],
+        'hora_recogida'      => $row['hora_recogida'],
+        'hora_entrega'       => $row['hora_entrega'],
+        'hora_cancelacion'   => $row['hora_cancelacion'],
+        'motivo_cancelacion' => $row['motivo_cancelacion'],
         'id_usuario_cliente' => $row['id_usuario_cliente'] ? (int)$row['id_usuario_cliente'] : null,
         'id_mascota'         => $row['id_mascota'] ? (int)$row['id_mascota'] : null,
+        'id_pedido'          => $row['id_pedido'] ? (int)$row['id_pedido'] : null,
         'cliente'   => $row['cliente_nombre'] ? [
             'nombre'      => $row['cliente_nombre'],
             'telefono'    => $row['cliente_telefono'],

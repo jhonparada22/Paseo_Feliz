@@ -145,7 +145,7 @@ function renderClientesMapa() {
 function usarClienteEnRuta(lat, lng, idPedido) {
     const c = listaClientes.find(x => x.id_pedido === idPedido);
     const addr = c ? `${c.cliente} — ${c.direccion}${c.barrio ? ', ' + c.barrio : ''}` : 'Ubicación de cliente';
-    agregarPunto(lat, lng, addr);
+    agregarPunto(lat, lng, addr, c ? { id_pedido: c.id_pedido, id_usuario_cliente: c.id_cliente, id_mascota: c.id_mascota } : null);
     map.closePopup();
 
     // Mostrar el tab de rutas para que se vea el punto agregado
@@ -412,12 +412,17 @@ function renderRutasHoy() {
 // ═══════════════════════════════════════════════════════════════
 // AGREGAR PUNTO DE RUTA (sin cambios)
 // ═══════════════════════════════════════════════════════════════
-function agregarPunto(lat, lng, addr) {
+function agregarPunto(lat, lng, addr, cliente = null) {
     if (puntosRuta.length >= 5) { showToast('Máximo 5 puntos por ruta', 'warning'); return; }
     const idx   = puntosRuta.length;
     const label = LABELS[idx];
     const color = DOT_COLORS[idx];
-    puntosRuta.push({ lat, lng, label, addr, color });
+    puntosRuta.push({
+        lat, lng, label, addr, color,
+        id_pedido: cliente ? cliente.id_pedido : null,
+        id_usuario_cliente: cliente ? cliente.id_usuario_cliente : null,
+        id_mascota: cliente ? cliente.id_mascota : null,
+    });
     renderRouteSteps();
     renderRouteOnMap();
     showToast(`Punto ${label} agregado`, 'success');
@@ -571,6 +576,9 @@ document.getElementById('confirmAssign').addEventListener('click', () => {
             lat: p.lat, lng: p.lng, addr: p.addr,
             etiqueta: p.label,
             tipo: i === 0 ? 'recogida' : (i === puntosRuta.length - 1 ? 'entrega' : 'paseo'),
+            id_pedido: p.id_pedido || null,
+            id_usuario_cliente: p.id_usuario_cliente || null,
+            id_mascota: p.id_mascota || null,
         })),
     };
 
@@ -588,7 +596,10 @@ document.getElementById('confirmAssign').addEventListener('click', () => {
     .then(data => {
         document.getElementById('assignModal').classList.remove('open');
         if (data.success) {
-            showToast(`✅ Ruta #${data.id_ruta} asignada correctamente`, 'success');
+            const msg = data.ruta_nueva === false
+                ? `✅ Se agregaron ${puntosRuta.length} parada(s) a la ruta activa del paseador`
+                : `✅ Ruta #${data.id_ruta} creada y asignada correctamente`;
+            showToast(msg, 'success');
             puntosRuta = [];
             renderRouteSteps();
             routeLayer.clearLayers();
