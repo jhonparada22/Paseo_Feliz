@@ -865,82 +865,379 @@
         }
     }
 
-    @media (max-width: 660px) {
+    /* En ≤540px el sidebar pasa a barra inferior FIJA de 58px
+       (lo controla sidebar_paseador.css con !important, por eso aquí
+       no se toca el sidebar). El layout pasa a columna: mapa arriba
+       a pantalla completa y panel de info como hoja inferior. */
+    @media (max-width: 540px) {
         .app-shell {
             flex-direction: column;
-        }
-
-        .sidebar {
-            order: 3;
-            width: 100%;
-            height: 56px;
-            flex-direction: row;
-            padding: 0;
-            justify-content: space-around;
-            align-items: center;
-        }
-
-        .menu-hamburguesa-container {
-            padding: 4px;
-        }
-
-        .nav-links {
-            display: flex;
-            flex-direction: row;
-            width: auto;
-        }
-
-        .nav-links li {
-            margin-bottom: 0;
-            width: auto;
-        }
-
-        .nav-links li a {
-            padding: 4px 8px;
-            font-size: .6rem;
-        }
-
-        .nav-links li a span {
-            display: block;
-            font-size: .58rem;
-        }
-
-        .nav-links li i {
-            font-size: .95rem;
-            margin-bottom: 2px;
-        }
-
-        .nav-links li.active a {
-            width: auto;
-            border-radius: 8px;
-        }
-
-        .menu-desplegable {
-            top: auto;
-            bottom: 56px;
-            left: 0;
-            border-radius: 0 10px 0 0;
-        }
-
-        .info-panel {
-            order: 1;
-            width: 100%;
-            height: auto;
-            border-right: none;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .panel-scroll {
-            max-height: 36vh;
+            height: calc(100vh - 58px);
+            height: calc(100dvh - 58px);
         }
 
         .map-area {
-            order: 2;
-            min-height: 200px;
+            order: 1;
+            min-height: 0;
             flex: 1;
+        }
+
+        .info-panel {
+            order: 2;
+            width: 100%;
+            height: auto;
+            max-height: 52%;
+            border-right: none;
+            margin-top: -14px;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -6px 18px rgba(0, 0, 0, .14);
+            z-index: 500;
+        }
+
+        .panel-header {
+            border-radius: 16px 16px 0 0;
+        }
+
+        .panel-scroll {
+            max-height: none;
+            flex: 1;
+            min-height: 0;
         }
 
         .stats-row-panel {
             grid-template-columns: repeat(3, 1fr);
         }
+    }
+    /* ══════════════════════════════════════════════════════
+       PASEOS DE HOY — segmentos Individual / Grupal
+    ══════════════════════════════════════════════════════ */
+    .seg-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .seg-head {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 14px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .seg-titulo {
+        font-size: .86rem;
+        font-weight: 800;
+        color: var(--text, #1e293b);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .seg-count {
+        background: #eef2f7;
+        color: #475569;
+        font-size: .68rem;
+        font-weight: 800;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+    }
+
+    .seg-chevron {
+        color: #94a3b8;
+        font-size: .8rem;
+        transition: transform .2s;
+    }
+
+    .seg-chevron.girado {
+        transform: rotate(-90deg);
+    }
+
+    .seg-body {
+        border-top: 1px solid var(--border);
+    }
+
+    .seg-vacio {
+        padding: 14px;
+        font-size: .78rem;
+        color: var(--muted, #64748b);
+        text-align: center;
+    }
+
+    .seg-foot {
+        padding: 10px 12px;
+        border-top: 1px solid var(--border);
+        background: #f8fafc;
+        text-align: right;
+    }
+
+    .btn-grupal {
+        background: #22c55e;
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 9px 16px;
+        font-size: .8rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background .15s;
+    }
+
+    .btn-grupal:hover:not(:disabled) {
+        background: #16a34a;
+    }
+
+    .btn-grupal:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+    }
+
+    /* ── Item de paseo (fila) ── */
+    .paseo-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 11px 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .paseo-item:last-child {
+        border-bottom: none;
+    }
+
+    .paseo-item.cancelado {
+        background: #fff7f7;
+    }
+
+    .paseo-item.en_paseo {
+        background: #f0fdf4;
+    }
+
+    .pi-hora {
+        flex-shrink: 0;
+        background: #eef2f7;
+        color: #334155;
+        font-size: .72rem;
+        font-weight: 800;
+        border-radius: 8px;
+        padding: 5px 7px;
+        margin-top: 2px;
+    }
+
+    .pi-check {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        margin-top: 6px;
+    }
+
+    .pi-check input {
+        width: 17px;
+        height: 17px;
+        accent-color: #22c55e;
+        cursor: pointer;
+    }
+
+    .pi-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pi-nombre {
+        font-size: .84rem;
+        font-weight: 800;
+        color: var(--text, #1e293b);
+    }
+
+    .pi-sub {
+        font-size: .72rem;
+        color: var(--muted, #64748b);
+        margin: 2px 0 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pi-chip {
+        display: inline-block;
+        font-size: .64rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 10px;
+        line-height: 1.5;
+    }
+
+    .pi-chip.pendiente  { background: #fef3c7; color: #92400e; }
+    .pi-chip.recogido   { background: #dbeafe; color: #1d4ed8; }
+    .pi-chip.enpaseo    { background: #dcfce7; color: #166534; }
+    .pi-chip.entregado  { background: #f1f5f9; color: #475569; }
+    .pi-chip.cancelado  { background: #fee2e2; color: #b91c1c; }
+
+    .pi-acciones {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex-shrink: 0;
+        align-items: stretch;
+    }
+
+    .pi-btn {
+        border: none;
+        border-radius: 7px;
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 6px 10px;
+        cursor: pointer;
+        transition: filter .15s;
+        text-align: center;
+    }
+
+    .pi-btn:hover { filter: brightness(.94); }
+
+    .pi-btn.recoger  { background: #2563eb; color: #fff; }
+    .pi-btn.cancelar { background: #dc2626; color: #fff; }
+    .pi-btn.chat     { background: #eef2f7; color: #334155; }
+    .pi-btn.deshacer { background: #f1f5f9; color: #64748b; }
+
+    /* ══════════════════════════════════════════════════════
+       MODAL: CANCELAR PASEO (motivo obligatorio)
+    ══════════════════════════════════════════════════════ */
+    .modal-cancelar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .5);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .modal-cancelar-overlay.open {
+        display: flex;
+    }
+
+    .modal-cancelar {
+        background: #fff;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 380px;
+        padding: 18px 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+    }
+
+    .mcx-head {
+        font-size: .95rem;
+        font-weight: 800;
+        color: #b91c1c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .mcx-sub {
+        font-size: .75rem;
+        color: var(--muted, #64748b);
+        line-height: 1.5;
+        margin-bottom: 12px;
+    }
+
+    .mcx-motivos {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .mcx-motivo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 11px;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+
+    .mcx-motivo:has(input:checked) {
+        border-color: #dc2626;
+        background: #fef2f2;
+    }
+
+    .mcx-motivo input {
+        accent-color: #dc2626;
+        width: 15px;
+        height: 15px;
+    }
+
+    .mcx-otro {
+        width: 100%;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 11px;
+        font-size: .8rem;
+        font-family: inherit;
+        outline: none;
+        margin-bottom: 10px;
+    }
+
+    .mcx-otro:focus {
+        border-color: #dc2626;
+    }
+
+    .mcx-actions {
+        display: flex;
+        gap: 7px;
+    }
+
+    .mcx-btn {
+        flex: 1;
+        border: none;
+        border-radius: 9px;
+        padding: 10px 6px;
+        font-size: .72rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        transition: filter .15s;
+    }
+
+    .mcx-btn:hover:not(:disabled) { filter: brightness(.94); }
+
+    .mcx-btn.volver    { background: #f1f5f9; color: #334155; }
+    .mcx-btn.chat      { background: #2563eb; color: #fff; }
+    .mcx-btn.confirmar { background: #dc2626; color: #fff; }
+
+    .mcx-btn.confirmar:disabled {
+        background: #fca5a5;
+        cursor: not-allowed;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       CABECERA PLEGABLE (chevron en ph-actions)
+       Al plegarla se ve mas lista y mas mapa, como la referencia
+    ══════════════════════════════════════════════════════ */
+    .info-panel.plegado .gps-chip,
+    .info-panel.plegado .btn-iniciar,
+    .info-panel.plegado .stats-row-panel,
+    .info-panel.plegado .progress-block {
+        display: none !important;
     }

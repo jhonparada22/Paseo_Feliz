@@ -26,7 +26,7 @@ let RUTA     = { id: null, fecha: '', hora_inicio: '', paradas: [] };
 // CARGAR RUTA DEL DÍA DESDE EL BACKEND
 // ═══════════════════════════════════════════════════════════════
 function cargarRutaDeHoy() {
-    fetch(API + 'obtener_ruta.php?modo=hoy')
+    return fetch(API + 'obtener_ruta.php?modo=hoy')
         .then(r => r.json())
         .then(data => {
             if (!data.success || !data.ruta) {
@@ -530,14 +530,320 @@ window.addEventListener('click', e => {
 });
 
 // ═══════════════════════════════════════════════════════════════
+// PASEOS DE HOY — segmentos Individual / Grupal
+// El paseador ve sus paseos del día separados por modalidad:
+//  - Individual: ordenados por la hora de su franja.
+//  - Grupal: va marcando "Recogido" perro por perro y arranca el
+//    paseo grupal cuando tiene a los seleccionados.
+// Cancelar exige un motivo (modal) y notifica al cliente.
+// ═══════════════════════════════════════════════════════════════
+let PASEOS_HOY = [];
+let seleccionGrupal = new Set();   // ids de pedido marcados para el paseo grupal
+let cancelTarget = null;           // paseo sobre el que se abre el modal de cancelar
+
+function cargarPaseosHoy() {
+    return fetch(API + 'obtener_paseos_hoy_paseador.php')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            PASEOS_HOY = data.paseos || [];
+            if (data.fecha) {
+                document.getElementById('fechaPaseosHoy').textContent =
+                    new Date(data.fecha + 'T00:00:00').toLocaleDateString('es-CO', {
+                        weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric',
+                    });
+            }
+            // Los perros ya recogidos entran seleccionados para el grupal
+            PASEOS_HOY.forEach(p => {
+                if (p.modalidad === 'grupal' && (p.estado === 'recogido' || p.estado === 'en_paseo')) {
+                    seleccionGrupal.add(p.id_pedido);
+                }
+                if (p.estado === 'cancelado' || p.estado === 'entregado') {
+                    seleccionGrupal.delete(p.id_pedido);
+                }
+            });
+            renderPaseosHoy();
+        })
+        .catch(() => { /* sin conexión: se reintenta en el próximo ciclo */ });
+}
+
+function chipEstadoPaseo(p) {
+    switch (p.estado) {
+        case 'recogido':  return '<span class="pi-chip recogido">✓ Recogido</span>';
+        case 'en_paseo':  return '<span class="pi-chip enpaseo">🚶 En paseo</span>';
+        case 'entregado': return '<span class="pi-chip entregado">🏠 Entregado</span>';
+        case 'cancelado': return `<span class="pi-chip cancelado">✖ Cancelado${p.motivo_cancelacion ? ' — ' + p.motivo_cancelacion : ''}</span>`;
+        default:          return '<span class="pi-chip pendiente">⏰ Pendiente</span>';
+    }
+}
+
+function botonesPaseo(p) {
+    const chat = `<button class="pi-btn chat" title="Chat con ${p.cliente}" onclick="abrirChatCliente(${p.id_cliente})"><i class="fas fa-comment-alt"></i></button>`;
+    if (p.estado === 'cancelado') {
+        return `<button class="pi-btn deshacer" title="Deshacer cancelación" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>${chat}`;
+    }
+    if (p.estado === 'en_paseo' || p.estado === 'entregado') {
+        return chat;
+    }
+    if (p.estado === 'recogido') {
+        return `
+            <button class="pi-btn deshacer" title="Deshacer recogida" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>
+            <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
+            ${chat}`;
+    }
+    return `
+        <button class="pi-btn recoger" onclick="marcarRecogido(${p.id_pedido})">Recogido</button>
+        <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
+        ${chat}`;
+}
+
+function renderPaseosHoy() {
+    // Individuales siempre por horario de la franja (sin hora, al final)
+    const indiv = PASEOS_HOY
+        .filter(p => p.modalidad === 'individual')
+        .sort((a, b) => (a.hora_inicio || '99:99').localeCompare(b.hora_inicio || '99:99'));
+    const grupal = PASEOS_HOY.filter(p => p.modalidad === 'grupal');
+
+    document.getElementById('countIndividual').textContent = indiv.length;
+    document.getElementById('countGrupal').textContent     = grupal.length;
+
+    // ── Individual: por horario ──
+    const bi = document.getElementById('bodyIndividual');
+    bi.innerHTML = indiv.length ? '' : '<div class="seg-vacio">Sin paseos individuales hoy.</div>';
+    indiv.forEach(p => {
+        const div = document.createElement('div');
+        div.className = `paseo-item ${p.estado}`;
+        div.innerHTML = `
+            <div class="pi-hora">${p.hora_inicio || '--:--'}</div>
+            <div class="pi-info">
+                <div class="pi-nombre">🦴 ${p.mascota}</div>
+                <div class="pi-sub">${p.cliente} · 📍 ${p.direccion}${p.barrio ? ', ' + p.barrio : ''}</div>
+                ${chipEstadoPaseo(p)}
+            </div>
+            <div class="pi-acciones">${botonesPaseo(p)}</div>`;
+        bi.appendChild(div);
+    });
+
+    // ── Grupal: selección perro por perro ──
+    const bg = document.getElementById('bodyGrupal');
+    bg.innerHTML = grupal.length ? '' : '<div class="seg-vacio">Sin paseos grupales hoy.</div>';
+    grupal.forEach(p => {
+        const bloqueado = p.estado === 'cancelado' || p.estado === 'entregado' || p.estado === 'en_paseo';
+        const div = document.createElement('div');
+        div.className = `paseo-item ${p.estado}`;
+        div.innerHTML = `
+            <label class="pi-check">
+                <input type="checkbox" ${seleccionGrupal.has(p.id_pedido) ? 'checked' : ''}
+                       ${bloqueado ? 'disabled' : ''}
+                       onchange="toggleSeleccionGrupal(${p.id_pedido}, this.checked)">
+            </label>
+            <div class="pi-info">
+                <div class="pi-nombre">🦴 ${p.mascota}</div>
+                <div class="pi-sub">${p.cliente} · 📍 ${p.direccion}${p.barrio ? ', ' + p.barrio : ''}</div>
+                ${chipEstadoPaseo(p)}
+            </div>
+            <div class="pi-acciones">${botonesPaseo(p)}</div>`;
+        bg.appendChild(div);
+    });
+
+    document.getElementById('footGrupal').style.display = grupal.length ? 'block' : 'none';
+    actualizarBtnGrupal();
+}
+
+function toggleSeleccionGrupal(idPedido, checked) {
+    if (checked) seleccionGrupal.add(idPedido); else seleccionGrupal.delete(idPedido);
+    actualizarBtnGrupal();
+}
+
+// El paseo grupal solo puede arrancar cuando TODOS los seleccionados
+// ya están marcados como recogidos (el paseador los va recibiendo uno a uno)
+function actualizarBtnGrupal() {
+    const btn = document.getElementById('btnIniciarGrupal');
+    if (!btn) return;
+    const seleccionados = PASEOS_HOY.filter(p => p.modalidad === 'grupal' && seleccionGrupal.has(p.id_pedido));
+    const listos = seleccionados.filter(p => p.estado === 'recogido');
+    const pendientes = seleccionados.filter(p => p.estado === 'pendiente');
+    btn.disabled = !(listos.length > 0 && pendientes.length === 0);
+    btn.innerHTML = listos.length > 0
+        ? `<i class="fas fa-play"></i> Iniciar paseo grupal (${listos.length})`
+        : `<i class="fas fa-play"></i> Iniciar paseo grupal`;
+}
+
+function marcarRecogido(idPedido) {
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'recogido', id_pedido: idPedido }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo marcar', 'warning'); return; }
+        seleccionGrupal.add(idPedido);
+        showNotif('🐾 ' + (data.message || 'Recogido'), 'success');
+        cargarPaseosHoy();
+        cargarRutaDeHoy();  // la parada de recogida pudo cambiar de estado
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
+function deshacerEstado(idPedido) {
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'pendiente', id_pedido: idPedido }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo deshacer', 'warning'); return; }
+        seleccionGrupal.delete(idPedido);
+        showNotif('↩️ Paseo devuelto a pendiente', 'info');
+        cargarPaseosHoy();
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
+function iniciarPaseoGrupal() {
+    const ids = PASEOS_HOY
+        .filter(p => p.modalidad === 'grupal' && seleccionGrupal.has(p.id_pedido) && p.estado === 'recogido')
+        .map(p => p.id_pedido);
+    if (!ids.length) { showNotif('Marca como recogido al menos un perro', 'warning'); return; }
+
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'iniciar_grupal', ids_pedidos: ids }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo iniciar', 'warning'); return; }
+        showNotif('🐾 ' + data.message, 'success');
+        cargarPaseosHoy();
+
+        // Asegurar que exista la ruta del día y arrancar el GPS del paseo
+        const arrancar = () => { if (RUTA.id && !paseoActivo) { iniciarPaseo(); fitRoute(); } };
+        if (!RUTA.id) {
+            fetch(API + 'iniciar_dia_paseador.php', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if (d.success) cargarRutaDeHoy().then(arrancar); })
+                .catch(() => {});
+        } else {
+            arrancar();
+        }
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
+// ── Modal de cancelación (motivo obligatorio) ──────────────────
+function abrirModalCancelar(idPedido) {
+    const p = PASEOS_HOY.find(x => x.id_pedido === idPedido);
+    if (!p) return;
+    cancelTarget = p;
+    document.getElementById('mcxMascota').textContent = `${p.mascota} (${p.cliente})`;
+    document.querySelectorAll('input[name="motivoCancel"]').forEach(r => (r.checked = false));
+    document.getElementById('mcxOtroTexto').value = '';
+    document.getElementById('mcxOtroTexto').style.display = 'none';
+    document.getElementById('mcxBtnConfirmar').disabled = true;
+    document.getElementById('modalCancelar').classList.add('open');
+}
+
+function cerrarModalCancelar() {
+    document.getElementById('modalCancelar').classList.remove('open');
+    cancelTarget = null;
+}
+
+function motivoSeleccionado() {
+    const sel = document.querySelector('input[name="motivoCancel"]:checked');
+    if (!sel) return '';
+    if (sel.value === '__otro__') return document.getElementById('mcxOtroTexto').value.trim();
+    return sel.value;
+}
+
+function confirmarCancelacion() {
+    if (!cancelTarget) return;
+    const motivo = motivoSeleccionado();
+    if (!motivo) { showNotif('Selecciona o escribe el motivo', 'warning'); return; }
+
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'cancelar', id_pedido: cancelTarget.id_pedido, motivo }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo cancelar', 'warning'); return; }
+        seleccionGrupal.delete(cancelTarget.id_pedido);
+        cerrarModalCancelar();
+        showNotif('✖ Paseo cancelado. El cliente fue notificado.', 'info');
+        cargarPaseosHoy();
+        cargarRutaDeHoy();  // sus paradas pasan a omitidas
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
+function abrirChatCliente(idCliente) {
+    if (!idCliente) return;
+    window.location.href = 'Chat_paseador.php?chat_con=' + idCliente;
+}
+
+function abrirChatClienteModal() {
+    if (cancelTarget) abrirChatCliente(cancelTarget.id_cliente);
+}
+
+// ── UI: plegar segmentos y cabecera del panel ──────────────────
+function toggleSegmento(nombre) {
+    const body = document.getElementById('body' + nombre);
+    const chev = document.getElementById('chev' + nombre);
+    const abierto = body.style.display !== 'none';
+    body.style.display = abierto ? 'none' : '';
+    chev.classList.toggle('girado', abierto);
+    const foot = nombre === 'Grupal' ? document.getElementById('footGrupal') : null;
+    if (foot) {
+        const hayGrupales = PASEOS_HOY.some(p => p.modalidad === 'grupal');
+        foot.style.display = (abierto || !hayGrupales) ? 'none' : 'block';
+    }
+}
+
+function togglePanelHeader() {
+    const panel = document.querySelector('.info-panel');
+    panel.classList.toggle('plegado');
+    document.getElementById('iconPlegar').className =
+        panel.classList.contains('plegado') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    setTimeout(() => { if (map) map.invalidateSize(); }, 250);
+}
+
+// Habilitar el botón "Cancelar paseo" del modal cuando hay motivo
+document.addEventListener('change', e => {
+    if (e.target.name === 'motivoCancel') {
+        const esOtro = e.target.value === '__otro__';
+        document.getElementById('mcxOtroTexto').style.display = esOtro ? 'block' : 'none';
+        document.getElementById('mcxBtnConfirmar').disabled = esOtro
+            ? document.getElementById('mcxOtroTexto').value.trim() === ''
+            : false;
+        if (esOtro) document.getElementById('mcxOtroTexto').focus();
+    }
+});
+document.addEventListener('input', e => {
+    if (e.target.id === 'mcxOtroTexto') {
+        document.getElementById('mcxBtnConfirmar').disabled = e.target.value.trim() === '';
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
+    cargarPaseosHoy();
+    setInterval(cargarPaseosHoy, 60000);
     // Si viene del dashboard con flag de "iniciar paseo"
     if (localStorage.getItem('paseoIniciado') === 'true') {
         localStorage.removeItem('paseoIniciado');
         // Esperar a que la ruta cargue antes de iniciar
         setTimeout(() => { if (RUTA.id) { iniciarPaseo(); fitRoute(); } }, 1500);
     }
+});
+// Reajustar el mapa cuando cambia el tamaño u orientación de la pantalla
+// (en móvil el layout pasa a columna y Leaflet necesita recalcular su área)
+window.addEventListener('resize', () => {
+    if (typeof map !== 'undefined' && map) map.invalidateSize();
 });

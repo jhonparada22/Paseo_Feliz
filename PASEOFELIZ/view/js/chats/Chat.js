@@ -120,7 +120,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // Carga inicial de los chats del panel izquierdo
     cargarConversaciones();
     setInterval(cargarConversaciones, 8000);
+
+    // Deep-link: ?chat_con=<id_usuario> abre directamente el chat con esa
+    // persona (lo usan los botones "Chat cliente" del mapa del paseador).
+    const chatCon = new URLSearchParams(window.location.search).get('chat_con');
+    if (chatCon) {
+        // Limpiar la URL para no reabrir el chat al recargar la página
+        history.replaceState(null, '', window.location.pathname);
+        abrirChatConUsuario(parseInt(chatCon, 10));
+    }
 });
+
+// Abre (o crea) la conversación con un usuario puntual y la muestra
+function abrirChatConUsuario(idReceptor) {
+    if (!idReceptor) return;
+    fetch(`?accion=obtener_o_crear_chat&id_receptor=${idReceptor}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.id_conversacion) {
+                if (data.error) alert(data.error);
+                return;
+            }
+            // Buscar nombre/avatar/estado del contacto en la lista de chats
+            fetch('?accion=listar_chats')
+                .then(r => r.json())
+                .then(lista => {
+                    let conv = null;
+                    (lista.grupos || []).forEach(g => (g.contactos || []).forEach(c => {
+                        if (c.id === data.id_conversacion || c.id_receptor === idReceptor) conv = c;
+                    }));
+                    abrirConversacion(
+                        data.id_conversacion,
+                        conv ? conv.nombre : 'Conversación',
+                        conv ? conv.avatar : null,
+                        conv ? !!conv.en_linea : false
+                    );
+                })
+                .catch(() => abrirConversacion(data.id_conversacion, 'Conversación', null, false));
+        })
+        .catch(() => {});
+}
 
 // Función para listar los contactos permitidos, agrupados por rol
 // (Administradores / Paseadores / Clientes, con línea divisoria entre

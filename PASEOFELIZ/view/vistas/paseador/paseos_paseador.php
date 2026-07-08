@@ -100,5 +100,6 @@
     </div>
 
     <script src="../../js/paseador/paseos_paseador.js?v=1"></script>
+    <script src="../../js/paseador/avisos_paseos.js?v=<?php echo @filemtime(__DIR__ . '/../../js/paseador/avisos_paseos.js'); ?>"></script>
 </body>
 </html>

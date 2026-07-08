@@ -8,9 +8,9 @@
     <title>Paseo Feliz – Mapa Paseador</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="../../css/paseador/mapa_paseador.css">
+    <link rel="stylesheet" href="../../css/paseador/mapa_paseador.css?v=<?php echo @filemtime(__DIR__ . '/../../css/paseador/mapa_paseador.css'); ?>">
     <!-- Sidebar unificado paseador (verde) — requiere id contenedor_general en el shell -->
-    <link rel="stylesheet" href="../../css/paseador/sidebar_paseador.css">
+    <link rel="stylesheet" href="../../css/paseador/sidebar_paseador.css?v=<?php echo @filemtime(__DIR__ . '/../../css/paseador/sidebar_paseador.css'); ?>">
 </head>
 
 <body>
@@ -80,6 +80,9 @@
                         <button class="ph-btn" title="Salir" onclick="window.location.href='../../../controller/logout.php'">
                             <i class="fas fa-sign-out-alt"></i>
                         </button>
+                        <button class="ph-btn" title="Plegar / expandir panel" id="btnPlegarHeader" onclick="togglePanelHeader()">
+                            <i class="fas fa-chevron-up" id="iconPlegar"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -127,10 +130,42 @@
                 </div>
             </div>
 
-            <!-- SCROLL: paradas + resumen -->
+            <!-- SCROLL: paseos de hoy + paradas + resumen -->
             <div class="panel-scroll">
 
+                <!-- ══ PASEOS DE HOY: Individual / Grupal ══ -->
                 <div class="sec-lbl" style="margin-top:2px">
+                    Paseos de hoy — <span id="fechaPaseosHoy">...</span>
+                </div>
+
+                <div class="seg-card" id="segIndividual">
+                    <button class="seg-head" onclick="toggleSegmento('Individual')">
+                        <span class="seg-titulo">🐕 Individual <span class="seg-count" id="countIndividual">0</span></span>
+                        <i class="fas fa-chevron-down seg-chevron" id="chevIndividual"></i>
+                    </button>
+                    <div class="seg-body" id="bodyIndividual">
+                        <div class="seg-vacio">Sin paseos individuales hoy.</div>
+                    </div>
+                </div>
+
+                <div class="seg-card" id="segGrupal">
+                    <button class="seg-head" onclick="toggleSegmento('Grupal')">
+                        <span class="seg-titulo">🐾 Grupal <span class="seg-count" id="countGrupal">0</span></span>
+                        <i class="fas fa-chevron-down seg-chevron" id="chevGrupal"></i>
+                    </button>
+                    <div class="seg-body" id="bodyGrupal">
+                        <div class="seg-vacio">Sin paseos grupales hoy.</div>
+                    </div>
+                    <div class="seg-foot" id="footGrupal" style="display:none">
+                        <button class="btn-grupal" id="btnIniciarGrupal" onclick="iniciarPaseoGrupal()" disabled>
+                            <i class="fas fa-play"></i> Iniciar paseo grupal
+                        </button>
+                    </div>
+                </div>
+
+                <div style="height:1px;background:var(--border);margin:14px 0"></div>
+
+                <div class="sec-lbl">
                     Ruta de hoy — <span id="fechaRuta"></span>
                 </div>
 
@@ -204,8 +239,46 @@
         <span id="notifMsg">Mensaje</span>
     </div>
 
+    <!-- ══ MODAL: CANCELAR PASEO (requiere motivo) ══ -->
+    <div class="modal-cancelar-overlay" id="modalCancelar">
+        <div class="modal-cancelar">
+            <div class="mcx-head">
+                <i class="fas fa-triangle-exclamation"></i>
+                Cancelar paseo de <span id="mcxMascota">—</span>
+            </div>
+            <div class="mcx-sub">
+                Solo cancela por circunstancias que impidan el paseo.
+                El cliente recibirá una notificación con el motivo.
+            </div>
+
+            <div class="mcx-motivos" id="mcxMotivos">
+                <label class="mcx-motivo"><input type="radio" name="motivoCancel" value="Está lloviendo"><span>🌧️ Está lloviendo</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoCancel" value="No me entregaron al perro"><span>🚪 No me entregaron al perro</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoCancel" value="El perro es agresivo"><span>🐕 El perro es agresivo</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoCancel" value="El perro está enfermo"><span>🤒 El perro está enfermo</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoCancel" value="__otro__"><span>✏️ Otro motivo</span></label>
+            </div>
+
+            <input type="text" class="mcx-otro" id="mcxOtroTexto" maxlength="100"
+                   placeholder="Escribe el motivo..." style="display:none">
+
+            <div class="mcx-actions">
+                <button class="mcx-btn volver" onclick="cerrarModalCancelar()">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+                <button class="mcx-btn chat" id="mcxBtnChat" onclick="abrirChatClienteModal()">
+                    <i class="fas fa-comment-alt"></i> Chat cliente
+                </button>
+                <button class="mcx-btn confirmar" id="mcxBtnConfirmar" onclick="confirmarCancelacion()" disabled>
+                    <i class="fas fa-ban"></i> Cancelar paseo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../../js/paseador/mapa_paseador.js?v=3"></script>
+    <script src="../../js/paseador/mapa_paseador.js?v=<?php echo @filemtime(__DIR__ . '/../../js/paseador/mapa_paseador.js'); ?>"></script>
+    <script src="../../js/paseador/avisos_paseos.js?v=<?php echo @filemtime(__DIR__ . '/../../js/paseador/avisos_paseos.js'); ?>"></script>
 </body>
 
 </html>
