@@ -8,9 +8,9 @@
     <title>Paseo Feliz – Mapa Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="../../css/admin/mapa_admin.css" />
+    <link rel="stylesheet" href="../../css/admin/mapa_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/mapa_admin.css'); ?>" />
     <!-- Sidebar unificado admin (rojo) — debe cargar DESPUÉS de mapa_admin.css -->
-    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css" />
+    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/sidebar_admin.css'); ?>" />
 
 </head>
 
@@ -154,7 +154,7 @@
                 </div>
 
                 <!-- ── MAPA ────────────────────── -->
-                <div style="flex:1;position:relative">
+                <div class="map-wrap">
                     <div id="map"></div>
 
                     <!-- Controls overlay -->
@@ -170,8 +170,8 @@
                         <button class="mc-btn" onclick="centerCucuta()">
                             <i class="fas fa-location-crosshairs"></i> Cúcuta
                         </button>
-                        <button class="mc-btn" onclick="toggleTraffic()">
-                            <i class="fas fa-traffic-light"></i> Tráfico
+                        <button class="mc-btn active-mode" id="btnClientes" onclick="toggleClientes()">
+                            <i class="fas fa-house-user"></i> Clientes
                         </button>
                     </div>
 
@@ -193,10 +193,10 @@
                             <div class="leg-dot" style="background:#ef4444"></div>Pausa
                         </div>
                         <div class="leg-item">
-                            <div class="leg-dot" style="background:#3E72A6"></div>Punto A
+                            <div class="leg-dot leg-cuadro" style="background:#7c3aed"></div>Cliente
                         </div>
                         <div class="leg-item">
-                            <div class="leg-dot" style="background:#f97316"></div>Punto B
+                            <div class="leg-dot" style="background:#3E72A6"></div>Punto A
                         </div>
                         <div class="leg-item">
                             <div class="leg-dot" style="background:#8b5cf6"></div>Punto C
@@ -209,6 +209,9 @@
                     <div class="rp-head">
                         <div class="rp-title" id="rp-name">Selecciona un paseador</div>
                         <div class="rp-sub" id="rp-sub">para ver su información</div>
+                        <button class="rp-close" id="rpClose" title="Cerrar" aria-label="Cerrar panel">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     <div class="rp-body" id="rp-body">
                         <div style="text-align:center;padding:24px;color:var(--muted)">
@@ -242,7 +245,7 @@
     <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../../js/admin/mapa_admin.js?v=3"></script>
+    <script src="../../js/admin/mapa_admin.js?v=<?php echo @filemtime(__DIR__ . '/../../js/admin/mapa_admin.js'); ?>"></script>
 
 </body>
 

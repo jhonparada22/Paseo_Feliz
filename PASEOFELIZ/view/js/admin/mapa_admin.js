@@ -7,7 +7,7 @@ const API = '../../../model/';
 // ═══════════════════════════════════════════════════════════════
 // ESTADO GLOBAL (igual que antes, sin cambios visuales)
 // ═══════════════════════════════════════════════════════════════
-let map, routeLayer, paseadoresLayer;
+let map, routeLayer, paseadoresLayer, clientesLayer;
 let modoActual = 'view';
 let puntosRuta      = [];        // [{lat, lng, label, addr, color}]
 let paseadorSelId   = null;
@@ -15,6 +15,8 @@ let paseadoresMarkers = {};
 let routePolyline   = null;
 let listaPaseadores = [];        // ← antes era const PASEADORES (hardcoded)
 let listaRutasHoy   = [];        // ← antes era const RUTAS_HOY (hardcoded)
+let listaClientes   = [];        // ubicaciones de clientes con pedidos activos
+let clientesVisibles = true;
 
 const LABELS     = ['A', 'B', 'C', 'D', 'E'];
 const DOT_COLORS = ['#ef4444', '#f97316', '#8b5cf6', '#0ea5e9', '#10b981'];
@@ -32,6 +34,7 @@ function initMap() {
 
     routeLayer     = L.layerGroup().addTo(map);
     paseadoresLayer = L.layerGroup().addTo(map);
+    clientesLayer   = L.layerGroup().addTo(map);
 
     map.on('click', e => {
         if (modoActual === 'route') {
@@ -43,6 +46,7 @@ function initMap() {
     cargarPaseadores();
     cargarRutasHoy();
     cargarSelectPaseador();
+    cargarClientesMapa();
 
     // Refresca posición GPS de paseadores cada 5 segundos (antes era simularGPS)
     setInterval(cargarPaseadores, 5000);
@@ -78,6 +82,81 @@ function cargarPaseadores() {
             }
         })
         .catch(() => { /* silencioso, el mapa sigue funcionando */ });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIENTES EN EL MAPA (cuadritos morados)
+// Ubicaciones de los pedidos de paseo activos: el admin puede ver
+// dónde está cada cliente y usar su ubicación como punto al trazar
+// una ruta para cualquier paseador, a cualquier hora del día.
+// ═══════════════════════════════════════════════════════════════
+function cargarClientesMapa() {
+    fetch(API + 'obtener_clientes_mapa.php')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            listaClientes = data.clientes || [];
+            renderClientesMapa();
+        })
+        .catch(() => { /* silencioso */ });
+}
+
+function renderClientesMapa() {
+    clientesLayer.clearLayers();
+    if (!clientesVisibles) return;
+
+    listaClientes.forEach(c => {
+        const icon = L.divIcon({
+            html: `<div style="
+                width:14px;height:14px;border-radius:4px;
+                background:#7c3aed;border:2px solid #fff;
+                box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`,
+            className: '', iconSize: [14, 14], iconAnchor: [7, 7],
+        });
+
+        const asignado = c.paseador_asignado
+            ? `<span class="cp-tag asignado">✓ ${c.paseador_asignado}</span>`
+            : `<span class="cp-tag sin-asignar">Sin paseador</span>`;
+
+        const marker = L.marker([c.lat, c.lng], { icon, zIndexOffset: -100 })
+            .addTo(clientesLayer)
+            .bindPopup(`
+                <div class="cp-nombre">🏠 ${c.cliente}</div>
+                <div class="cp-linea">🐾 ${c.mascota || 'Mascota'}</div>
+                <div class="cp-linea">📍 ${c.direccion}${c.barrio ? ', ' + c.barrio : ''}</div>
+                ${c.franja ? `<div class="cp-linea">🕐 ${c.franja}</div>` : ''}
+                <div class="cp-tags">
+                    <span class="cp-tag ${c.modalidad}">${c.modalidad === 'individual' ? '🐕 Individual' : '🐾 Grupal'}</span>
+                    ${asignado}
+                </div>
+                <button class="cp-btn" onclick="usarClienteEnRuta(${c.lat}, ${c.lng}, ${c.id_pedido})">
+                    <i class="fas fa-route"></i> Usar como punto de la ruta
+                </button>
+            `, { className: 'cliente-popup', minWidth: 210 });
+
+        marker.bindTooltip(`${c.cliente} · ${c.mascota || ''}`, {
+            direction: 'top', offset: [0, -8], className: 'custom-marker-label',
+        });
+    });
+}
+
+// Agrega la ubicación del cliente como punto de la ruta que se está
+// armando en el tab "Asignar ruta" (y lleva al admin a ese tab)
+function usarClienteEnRuta(lat, lng, idPedido) {
+    const c = listaClientes.find(x => x.id_pedido === idPedido);
+    const addr = c ? `${c.cliente} — ${c.direccion}${c.barrio ? ', ' + c.barrio : ''}` : 'Ubicación de cliente';
+    agregarPunto(lat, lng, addr);
+    map.closePopup();
+
+    // Mostrar el tab de rutas para que se vea el punto agregado
+    const tabRutas = document.querySelector('.panel-tab[data-tab="rutas"]');
+    if (tabRutas && !tabRutas.classList.contains('active')) tabRutas.click();
+}
+
+function toggleClientes() {
+    clientesVisibles = !clientesVisibles;
+    document.getElementById('btnClientes').classList.toggle('active-mode', clientesVisibles);
+    renderClientesMapa();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -146,7 +225,7 @@ function renderPaseadoresMarkers() {
 
         const marker = L.marker([p.lat, p.lng], { icon })
             .addTo(paseadoresLayer)
-            .on('click', () => seleccionarPaseador(p.id));
+            .on('click', () => seleccionarPaseador(p.id, true));
 
         marker.bindTooltip(`<b>${p.nombre}</b><br>${p.zona}`, {
             direction: 'top', offset: [0, -20], className: 'custom-marker-label',
@@ -158,11 +237,18 @@ function renderPaseadoresMarkers() {
 
 // ═══════════════════════════════════════════════════════════════
 // SELECCIONAR PASEADOR → panel derecho
+// "desdeUsuario" en true solo cuando lo dispara un toque/clic real:
+// en pantallas chicas el panel es un bottom-sheet y no debe
+// reabrirse solo por el refresco automático de GPS cada 5s.
 // ═══════════════════════════════════════════════════════════════
-function seleccionarPaseador(id) {
+function seleccionarPaseador(id, desdeUsuario = false) {
     paseadorSelId = id;
     const p = listaPaseadores.find(x => x.id == id);
     if (!p) return;
+
+    if (desdeUsuario && window.matchMedia('(max-width: 900px)').matches) {
+        document.getElementById('rightPanel').classList.add('open');
+    }
 
     document.getElementById('rp-name').textContent = p.nombre;
 
@@ -273,7 +359,7 @@ function renderPaseadoresList() {
                 ${p.velocidad ? ` · ${parseFloat(p.velocidad).toFixed(1)} km/h` : ''}
             </div>
         `;
-        div.addEventListener('click', () => seleccionarPaseador(p.id));
+        div.addEventListener('click', () => seleccionarPaseador(p.id, true));
         el.appendChild(div);
     });
 }
@@ -562,6 +648,20 @@ document.querySelectorAll('.panel-tab').forEach(tab => {
         document.getElementById('tab-paseadores').style.display = tab.dataset.tab === 'paseadores' ? 'block' : 'none';
         if (tab.dataset.tab === 'paseadores') renderPaseadoresList();
     });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// PANEL DERECHO EN MÓVIL (bottom-sheet): botón cerrar y reajuste
+// del mapa cuando cambia el tamaño/orientación de la pantalla
+// ═══════════════════════════════════════════════════════════════
+const rpCloseBtn = document.getElementById('rpClose');
+if (rpCloseBtn) {
+    rpCloseBtn.addEventListener('click', () =>
+        document.getElementById('rightPanel').classList.remove('open'));
+}
+
+window.addEventListener('resize', () => {
+    if (map) map.invalidateSize();
 });
 
 // ═══════════════════════════════════════════════════════════════
