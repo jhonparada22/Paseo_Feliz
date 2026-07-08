@@ -10,6 +10,8 @@
     const API = '../../model/';
 
     let S = null;             // servicio (respuesta del endpoint)
+    let pedidosActivos = [];  // [{id_pedido, id_mascota, nombre, avatar}] para el selector
+    let idPedidoSel = null;   // pedido elegido en el selector (persiste entre polls)
     let firmaRender = '';     // firma del último render (evita repintar sin cambios)
     let visible = false;
     let pollTimer = null;     // estado del servicio cada 15 s
@@ -97,7 +99,8 @@
 
     // ── Carga y polling ───────────────────────────────────────────
     async function cargarEstado() {
-        const r = await fetch(API + 'estado_servicio_paseos.php');
+        const url = API + 'estado_servicio_paseos.php' + (idPedidoSel ? '?id_pedido=' + idPedidoSel : '');
+        const r = await fetch(url);
         const data = await r.json();
         if (!data.success || !data.tiene_servicio) return false;
         if (data.ahora_servidor) {
@@ -105,12 +108,24 @@
             if (!isNaN(ahora)) skewMs = ahora.getTime() - Date.now();
         }
         S = data.servicio;
-        const firma = JSON.stringify(S);
+        pedidosActivos = data.pedidos_activos || [];
+        // Sincronizar la selección con lo que el servidor realmente devolvió
+        // (si el pedido elegido venció, cae al más reciente)
+        idPedidoSel = S.pedido && S.pedido.id_pedido ? S.pedido.id_pedido : null;
+        const firma = JSON.stringify(S) + '|' + JSON.stringify(pedidosActivos);
         if (firma !== firmaRender) {
             firmaRender = firma;
             render();
         }
         return true;
+    }
+
+    // Cambia la mascota mostrada en el dashboard (click en el selector)
+    function seleccionarPedido(idPedido) {
+        if (idPedido === idPedidoSel) return;
+        idPedidoSel = idPedido;
+        firmaRender = ''; // fuerza repintado con la respuesta nueva
+        cargarEstado().catch(function () {});
     }
 
     function iniciarTimers() {
@@ -151,17 +166,17 @@
 
         if (estado === 'paseo_en_curso') {
             sub  = 'El paseo de ' + esc(S.pedido.mascota) + ' está en curso. Puedes seguirlo en tiempo real.';
-            col1 = cardMapa(true) + cardInstrucciones();
+            col1 = cardMapa(true) + cardInstrucciones() + cardMascotas();
             col2 = cardEstadoPaseo() + cardInfoPaseo() + cardHistorial('Historial del paseo de hoy');
             col3 = cardPaseador(true) + cardAcciones() + cardPlan();
         } else if (estado === 'paseador_asignado') {
             sub  = 'Tu paseador ha sido asignado y tu próximo paseo está programado.';
-            col1 = cardMapa(false) + cardProximoPaseo();
+            col1 = cardMapa(false) + cardProximoPaseo() + cardMascotas();
             col2 = cardEstadoServicio() + cardResumen() + cardHistorial('Historial reciente');
             col3 = cardPaseador(false) + cardAcciones() + cardPlan();
         } else {
             sub  = 'Tu servicio de paseos está confirmado y estamos asignando un paseador.';
-            col1 = cardMapa(false) + cardDireccion();
+            col1 = cardMapa(false) + cardDireccion() + cardMascotas();
             col2 = cardEstadoServicio() + cardResumen() + cardHistorial('Historial reciente');
             col3 = cardBuscandoPaseador() + cardAcciones() + cardPlan();
         }
@@ -216,6 +231,64 @@
                     (p.referencia ? '<div class="dz-fila"><i class="ph ph-note"></i><span><strong>Referencia:</strong> ' + esc(p.referencia) + '</span></div>' : '') +
                     '<div class="dz-aviso"><i class="ph ph-bell"></i> Te notificaremos cuando tu paseador esté en camino a la recogida.</div>' +
                '</div>';
+    }
+
+    // Selector de mascotas en servicio + botón para añadir otra
+    function cardMascotas() {
+        const filas = pedidosActivos.map(function (pa) {
+            const sel = pa.id_pedido === (S.pedido && S.pedido.id_pedido);
+            const av = avatarUrl(pa.avatar, '');
+            return '<div class="dz-mascota-fila' + (sel ? ' sel' : '') + '" data-pedido="' + pa.id_pedido + '">' +
+                       (av ? '<img class="dz-mascota-av" src="' + esc(av) + '" onerror="this.outerHTML=\'<span class=dz-mascota-emoji>🐶</span>\'">'
+                           : '<span class="dz-mascota-emoji">🐶</span>') +
+                       '<span class="dz-mascota-nombre">' + esc(pa.nombre) + '</span>' +
+                       (sel ? '<i class="ph ph-check-circle dz-mascota-check"></i>' : '') +
+                   '</div>';
+        }).join('');
+
+        return '<div class="dz-card">' +
+                    filas +
+                    '<button class="dz-btn-add-mascota" data-accion="agregar-mascota">' +
+                        '<i class="ph ph-plus"></i> Añadir a otra mascota al servicio' +
+                    '</button>' +
+               '</div>';
+    }
+
+    // Mini-modal: cómo añadir la nueva mascota (exprés o servicio nuevo)
+    function abrirModalAgregarMascota() {
+        if (typeof abrirWizardPaseos !== 'function') return;
+        const p = S.pedido;
+        abrirModalDz(
+            '<button class="dz-modal-x" data-cerrar><i class="ph ph-x"></i></button>' +
+            '<h3 class="dz-h3"><i class="ph ph-paw-print"></i> Añadir otra mascota</h3>' +
+            '<p class="dz-modal-txt">¿Cómo quieres añadirla?</p>' +
+            '<button id="dz-add-express" class="dz-btn-opcion">' +
+                '<i class="ph ph-users-three"></i>' +
+                '<span><strong>Unirse al servicio actual</strong><br>' +
+                '<small>Mismos días, horario y paseador que ' + esc(p.mascota) + '. Solo eliges la mascota y pagas.</small></span>' +
+            '</button>' +
+            '<button id="dz-add-normal" class="dz-btn-opcion">' +
+                '<i class="ph ph-gear"></i>' +
+                '<span><strong>Configurar un servicio nuevo</strong><br>' +
+                '<small>Eliges plan, días, horario y dirección desde cero.</small></span>' +
+            '</button>'
+        );
+        document.getElementById('dz-add-express').addEventListener('click', function () {
+            cerrarModalDz();
+            abrirWizardPaseos({
+                modo: 'agregar_mascota',
+                base: S.pedido,
+                ocupadas: pedidosActivos.map(function (pa) { return pa.id_mascota; }),
+            });
+        });
+        document.getElementById('dz-add-normal').addEventListener('click', function () {
+            cerrarModalDz();
+            // También en el flujo normal: las mascotas que ya tienen servicio
+            // se muestran bloqueadas en el paso 1 del wizard
+            abrirWizardPaseos({
+                ocupadas: pedidosActivos.map(function (pa) { return pa.id_mascota; }),
+            });
+        });
     }
 
     function cardInstrucciones() {
@@ -531,6 +604,13 @@
                 else if (a === 'direccion') centrarMapa();
                 else if (a === 'perfil') abrirModalPerfil();
                 else if (a === 'renovar' && typeof abrirWizardPaseos === 'function') abrirWizardPaseos();
+                else if (a === 'agregar-mascota') abrirModalAgregarMascota();
+            });
+        });
+        // Selector de mascota en servicio (cambia el pedido mostrado)
+        document.querySelectorAll('#paseos-dashboard [data-pedido]').forEach(function (fila) {
+            fila.addEventListener('click', function () {
+                seleccionarPedido(parseInt(fila.getAttribute('data-pedido'), 10));
             });
         });
     }

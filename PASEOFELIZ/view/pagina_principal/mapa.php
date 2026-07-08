@@ -7,7 +7,7 @@
   <title>Paseo Feliz – Seguimiento de Max</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="../css/principal_css/mapa.css"/>
+  <link rel="stylesheet" href="../css/principal_css/mapa.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/mapa.css'); ?>"/>
 
 </head>
 <body>
@@ -289,6 +289,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../js/js pagina principal/mapa_cliente.js"></script>
+<script src="../js/js pagina principal/mapa_cliente.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/mapa_cliente.js'); ?>"></script>
 </body>
 </html>

@@ -511,3 +511,9 @@ setTimeout(() => {
 }, 1200);
 
 initMap();
+
+// Reajustar el mapa cuando cambia el tamaño u orientación de la pantalla
+// (en móvil el layout pasa a columna y Leaflet necesita recalcular su área)
+window.addEventListener('resize', () => {
+    if (typeof map !== 'undefined' && map) map.invalidateSize();
+});

@@ -63,6 +63,72 @@ $pago      = $data['pago'] ?? [];
 $fact      = $data['facturacion'] ?? [];
 $conf      = $data['confirmaciones'] ?? [];
 
+// ═══════════════════════════════════════════════════════════════════
+// MODO EXPRÉS: "añadir otra mascota al servicio activo"
+// Si viene pedido_base, la nueva mascota HEREDA toda la configuración
+// del pedido activo (plan, días, franja, duración, modalidad, dirección)
+// leída de la BD — lo que mande el cliente para esos campos se ignora.
+// Además NO se toca la membresía (ya vigente) y al final se clona el
+// cronograma del pedido base para que salgan a pasear juntas.
+// ═══════════════════════════════════════════════════════════════════
+$idPedidoBase = intval($data['pedido_base'] ?? 0);
+$pedidoBase   = null;
+
+if ($idPedidoBase > 0) {
+    $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
+    $stmt = $conn->prepare(
+        "SELECT p.id_pedido, p.id_plan, p.modalidad, p.duracion_min, p.dias_preferidos,
+                p.franja_horaria, p.comportamiento,
+                p.direccion, p.barrio, p.referencia, p.instrucciones, p.lat, p.lng
+         FROM pedidos_paseo p
+         JOIN membresias m ON m.id_usuario = p.id_usuario
+         WHERE p.id_pedido = ? AND p.id_usuario = ?
+           AND p.estado IN ('pagado', 'listo_para_asignar')
+           AND m.paseos = 1
+           AND m.fecha_inicio_paseos IS NOT NULL
+           AND DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) > $ahoraColombia"
+    );
+    $stmt->bind_param("ii", $idPedidoBase, $idUsuario);
+    $stmt->execute();
+    $pedidoBase = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$pedidoBase) {
+        responder(false, [], 'El servicio activo al que intentas unir la mascota no es válido o ya venció.');
+    }
+
+    // La mascota nueva no puede tener ya un servicio activo
+    $stmt = $conn->prepare(
+        "SELECT id_pedido FROM pedidos_paseo
+         WHERE id_mascota = ? AND estado IN ('pagado', 'listo_para_asignar') LIMIT 1"
+    );
+    $stmt->bind_param("i", $idMascota);
+    $stmt->execute();
+    $yaActiva = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    if ($yaActiva) {
+        responder(false, [], 'Esta mascota ya tiene un servicio de paseos activo.');
+    }
+
+    // Heredar configuración del pedido base (fuente de verdad: la BD)
+    $idPlan                    = (int)$pedidoBase['id_plan'];
+    $data['modalidad']         = $pedidoBase['modalidad'];
+    $data['duracion_min']      = (int)$pedidoBase['duracion_min'];
+    $data['dias_preferidos']   = $pedidoBase['dias_preferidos'];
+    $data['franja_horaria']    = $pedidoBase['franja_horaria'];
+    $data['comportamiento']    = $pedidoBase['comportamiento'];
+    $data['fecha_inicio']      = date('Y-m-d');
+    $ubicacion = [
+        'direccion'     => $pedidoBase['direccion'],
+        'barrio'        => $pedidoBase['barrio'],
+        'referencia'    => $pedidoBase['referencia'],
+        'instrucciones' => $pedidoBase['instrucciones'],
+        'lat'           => (float)$pedidoBase['lat'],
+        'lng'           => (float)$pedidoBase['lng'],
+        'validada'      => true, // ya se validó al comprar el servicio base
+    ];
+}
+
 // Confirmaciones obligatorias
 if (empty($conf['datos']) || empty($conf['terminos']) || empty($conf['autorizo'])) {
     responder(false, [], 'Debes aceptar todas las confirmaciones para continuar.');
@@ -222,13 +288,45 @@ try {
     $u->execute();
     $u->close();
 
-    // 2.5 Activar la membresía de paseos (el resto del sitio ya la reconoce
-    //     vía controller/membresia_estado.php: 30 días desde fecha_inicio_paseos)
-    $u = $conn->prepare("UPDATE membresias SET paseos = 1, fecha_inicio_paseos = ? WHERE id_usuario = ?");
-    $fechaInicioDT = $fechaInicio . ' 00:00:00';
-    $u->bind_param("si", $fechaInicioDT, $idUsuario);
-    $u->execute();
-    $u->close();
+    if ($pedidoBase) {
+        // 2.5 (modo exprés) La membresía YA está vigente: no se toca, porque
+        //     resetear fecha_inicio_paseos correría la renovación y el conteo
+        //     de paseos usados de la primera mascota.
+        //     En su lugar, clonar el cronograma del pedido base (mismo
+        //     paseador, mismos días) para que salgan a pasear juntas.
+        $stmt = $conn->prepare(
+            "SELECT id_paseador, dia_semana FROM cronograma_paseos WHERE id_pedido = ?"
+        );
+        $stmt->bind_param("i", $idPedidoBase);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $filasCrono = [];
+        while ($row = $res->fetch_assoc()) $filasCrono[] = $row;
+        $stmt->close();
+
+        if ($filasCrono) {
+            $ins = $conn->prepare(
+                "INSERT IGNORE INTO cronograma_paseos (id_paseador, id_pedido, dia_semana) VALUES (?, ?, ?)"
+            );
+            foreach ($filasCrono as $fila) {
+                $idPaseadorClon = (int)$fila['id_paseador'];
+                $diaClon        = (int)$fila['dia_semana'];
+                $ins->bind_param("iii", $idPaseadorClon, $idPedido, $diaClon);
+                $ins->execute();
+            }
+            $ins->close();
+        }
+        // Si el base aún no tiene cronograma (pendiente de asignación),
+        // el nuevo pedido también queda pendiente — coherente.
+    } else {
+        // 2.5 Activar la membresía de paseos (el resto del sitio ya la reconoce
+        //     vía controller/membresia_estado.php: 30 días desde fecha_inicio_paseos)
+        $u = $conn->prepare("UPDATE membresias SET paseos = 1, fecha_inicio_paseos = ? WHERE id_usuario = ?");
+        $fechaInicioDT = $fechaInicio . ' 00:00:00';
+        $u->bind_param("si", $fechaInicioDT, $idUsuario);
+        $u->execute();
+        $u->close();
+    }
 
     $conn->commit();
 
@@ -238,7 +336,9 @@ try {
         'referencia' => $resultado['referencia'],
         'total'      => $total,
         'estado'     => 'listo_para_asignar',
-    ], 'Pago aprobado. Tu membresía de paseos quedó activa.');
+    ], $pedidoBase
+        ? 'Pago aprobado. Tu mascota se unió al servicio de paseos.'
+        : 'Pago aprobado. Tu membresía de paseos quedó activa.');
 
 } catch (Exception $e) {
     $conn->rollback();

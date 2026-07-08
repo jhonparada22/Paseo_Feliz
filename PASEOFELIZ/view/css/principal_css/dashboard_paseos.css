@@ -498,3 +498,79 @@
     font-size: .8rem;
     margin-top: 10px;
 }
+
+/* ── Selector de mascotas en servicio + añadir otra ── */
+.dz-mascota-fila {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.dz-mascota-fila:hover { border-color: var(--primary); }
+.dz-mascota-fila.sel {
+    border-color: var(--primary);
+    background: #f0f6ff;
+}
+.dz-mascota-av {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.dz-mascota-emoji { font-size: 1.3rem; }
+.dz-mascota-nombre {
+    flex: 1;
+    font-weight: 700;
+    font-size: .88rem;
+    color: var(--text);
+}
+.dz-mascota-check { color: var(--primary); font-size: 1.05rem; }
+.dz-btn-add-mascota {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 12px;
+    border: 1.5px dashed var(--primary);
+    border-radius: var(--radius-md);
+    background: #f6f9ff;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: .84rem;
+    cursor: pointer;
+    transition: background .15s var(--ease);
+}
+.dz-btn-add-mascota:hover { background: #eaf2ff; }
+
+/* Mini-modal: opciones para añadir mascota */
+.dz-modal-txt {
+    font-size: .84rem;
+    color: var(--muted);
+    margin: 4px 0 12px;
+}
+.dz-btn-opcion {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    text-align: left;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-family: inherit;
+    color: var(--text);
+    transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.dz-btn-opcion:hover { border-color: var(--primary); background: #f6f9ff; }
+.dz-btn-opcion i { font-size: 1.3rem; color: var(--primary); margin-top: 2px; }
+.dz-btn-opcion small { color: var(--muted); line-height: 1.4; }

@@ -1178,24 +1178,52 @@ a {
         border-radius: 0 10px 0 0;
     }
 
-    /* Panel ocupa ancho completo arriba del mapa */
-    .info-panel {
+    /* Alturas reales de móvil (dvh evita el salto de la barra
+       de dirección del navegador) */
+    .app-shell {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    /* Mapa arriba, a pantalla completa */
+    .map-area {
         order: 1;
+        min-height: 0;
+        flex: 1;
+    }
+
+    /* Panel de info abajo, como hoja deslizable sobre el mapa
+       (mismo patrón que la app de referencia) */
+    .info-panel {
+        order: 2;
         width: 100%;
         height: auto;
+        max-height: 52%;
         border-right: none;
-        border-bottom: 1px solid var(--border);
+        margin-top: -14px;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -6px 18px rgba(0, 0, 0, .14);
+        z-index: 500;
+    }
+
+    .panel-header {
+        border-radius: 16px 16px 0 0;
     }
 
     .panel-scroll {
-        max-height: 38vh;
+        max-height: none;
+        flex: 1;
+        min-height: 0;
     }
 
-    /* Mapa llena el resto */
-    .map-area {
-        order: 2;
-        min-height: 240px;
-        flex: 1;
+    /* FABs no deben quedar tapados por la hoja inferior */
+    .fab-group {
+        top: 10px;
+        right: 10px;
+    }
+
+    .fab-locate {
+        bottom: 24px;
     }
 
     .push-notif {

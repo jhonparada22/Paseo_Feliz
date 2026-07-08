@@ -30,6 +30,15 @@
     let pasoActual = 1;
     let mapaWz = null, marcadorWz = null;
     let procesando = false;
+    // Modo exprés "añadir otra mascota al servicio activo": hereda plan,
+    // días, horario y dirección del pedido base; solo se elige la mascota
+    // y se paga (el backend re-lee la configuración del pedido base).
+    let EXPRESS = null;        // { base: pedido activo, ocupadas: [id_mascota, ...] }
+    // Mascotas que YA tienen un servicio activo: en el paso 1 se muestran
+    // bloqueadas con la etiqueta "Ya tiene servicio" (aplica en ambos modos
+    // cuando el wizard se abre desde el dashboard; la renovación desde el
+    // inicio abre sin esta lista para no bloquear renovar la misma mascota).
+    let OCUPADAS = [];
 
     function estadoInicial() {
         return {
@@ -86,7 +95,14 @@
     }
 
     // ── Apertura del wizard ─────────────────────────────────
-    window.abrirWizardPaseos = async function () {
+    // Sin argumentos: flujo normal de 4 pasos.
+    // Con { modo: 'agregar_mascota', base: pedidoActivo, ocupadas: [ids] }:
+    // modo exprés — la nueva mascota se une al servicio del pedido base.
+    window.abrirWizardPaseos = async function (opts) {
+        opts = opts || {};
+        EXPRESS = (opts.modo === 'agregar_mascota' && opts.base) ? opts : null;
+        OCUPADAS = opts.ocupadas || [];
+
         inyectarModal();
         W = estadoInicial();
         pasoActual = 1;
@@ -108,9 +124,29 @@
             // Prellenar con el perfil
             W.ubicacion.direccion = datos.perfil.direccion || '';
             if (datos.planes.length) W.id_plan = datos.planes[datos.planes.length - 1].id_plan; // el de 12 por defecto
-            if (datos.mascotas.length) W.id_mascota = datos.mascotas[0].id_mascota;
+            // Preseleccionar la primera mascota que NO tenga ya un servicio activo
+            const primeraLibre = datos.mascotas.find(m => !OCUPADAS.includes(m.id_mascota));
+            W.id_mascota = primeraLibre ? primeraLibre.id_mascota : null;
             W.pago.titular = datos.perfil.nombre || '';
             W.pago.email_confirmacion = datos.perfil.email || '';
+
+            if (EXPRESS) {
+                // Heredar toda la configuración del pedido base (solo para
+                // mostrarla; el backend la re-lee de la BD por integridad)
+                const b = EXPRESS.base;
+                W.pedido_base   = b.id_pedido;
+                W.id_plan       = b.id_plan || W.id_plan;
+                W.modalidad     = b.modalidad || W.modalidad;
+                W.duracion_min  = b.duracion_min || W.duracion_min;
+                W.dias          = (b.dias_preferidos || '').split(',').filter(Boolean);
+                W.franja        = b.franja_horaria || W.franja;
+                W.fecha_inicio  = hoyISO();
+                W.ubicacion = {
+                    direccion: b.direccion || '', barrio: b.barrio || '',
+                    referencia: b.referencia || '', instrucciones: b.instrucciones || '',
+                    lat: b.lat, lng: b.lng, validada: true,
+                };
+            }
 
             renderPaso(1);
         } catch (e) {
@@ -152,6 +188,12 @@
         if (mapaWz) { mapaWz.remove(); mapaWz = null; marcadorWz = null; }
         // Si la compra fue exitosa, refrescar los botones de membresía del inicio
         if (W && W.__exito && typeof cargarMembresias === 'function') cargarMembresias();
+        // Y si fue en modo exprés, refrescar el dashboard para que la nueva
+        // mascota aparezca de inmediato en el selector (sin esperar el polling)
+        if (W && W.__exito && EXPRESS && typeof mostrarDashboardPaseos === 'function') {
+            mostrarDashboardPaseos();
+        }
+        EXPRESS = null;
     }
 
     // ── Navegación y render ─────────────────────────────────
@@ -160,21 +202,25 @@
 
     function renderPaso(n) {
         pasoActual = n;
-        $('#wz-subtitulo').innerHTML = `<strong>Paso ${n} de 4:</strong> ${TITULOS[n]}`;
+        $('#wz-subtitulo').innerHTML = EXPRESS && n === 1
+            ? '<strong>Añadir otra mascota:</strong> se unirá a tu servicio activo'
+            : `<strong>Paso ${n} de 4:</strong> ${TITULOS[n]}`;
 
-        // Barra de progreso
+        // Barra de progreso (en modo exprés el paso 2 —ubicación— se hereda
+        // del servicio activo y se muestra como ya completado)
         let html = '';
         for (let i = 1; i <= 4; i++) {
-            const cls = i < n ? 'hecho' : (i === n ? 'activo' : '');
+            const hecho = i < n || (EXPRESS && i === 2);
+            const cls = hecho ? 'hecho' : (i === n ? 'activo' : '');
             html += `<div class="wz-step ${cls}">
-                       <div class="wz-step-dot">${i < n ? '✓' : i}</div>
+                       <div class="wz-step-dot">${hecho ? '✓' : i}</div>
                        <div class="wz-step-lbl">${LBL_PASOS[i - 1]}</div>
                      </div>`;
-            if (i < 4) html += `<div class="wz-step-linea ${i < n ? 'hecha' : ''}"></div>`;
+            if (i < 4) html += `<div class="wz-step-linea ${hecho ? 'hecha' : ''}"></div>`;
         }
         $('#wz-progreso').innerHTML = html;
 
-        if (n === 1) renderPaso1();
+        if (n === 1) EXPRESS ? renderPaso1Express() : renderPaso1();
         if (n === 2) renderPaso2();
         if (n === 3) renderPaso3();
         if (n === 4) renderPaso4();
@@ -188,8 +234,10 @@
         html += `<button class="wz-btn wz-btn-prim" id="${siguienteId}">${siguienteTxt}</button>`;
         $('#wz-botones').innerHTML = html;
         $('#wz-btn-atras').addEventListener('click', () => {
-            if (atras) renderPaso(pasoActual - 1);
-            else cerrarWizard();
+            if (!atras) return cerrarWizard();
+            // En modo exprés el paso 2 (ubicación) no existe: del resumen se vuelve al 1
+            const prev = (EXPRESS && pasoActual === 3) ? 1 : pasoActual - 1;
+            renderPaso(prev);
         });
         $('#' + siguienteId).addEventListener('click', onSiguiente);
     }
@@ -260,17 +308,40 @@
     // ═══════════════════════════════════════════════════════
     // PASO 1 — MASCOTA Y SERVICIO
     // ═══════════════════════════════════════════════════════
+    // Tarjeta de una mascota: bloqueada con etiqueta si ya tiene servicio
+    function cardMascotaWz(m) {
+        const av = normalizarAvatar(m.avatar);
+        const ocupada = OCUPADAS.includes(m.id_mascota);
+        return `<div class="wz-card ${ocupada ? 'ocupada' : (W.id_mascota === m.id_mascota ? 'sel' : '')}"
+                     ${ocupada ? '' : `data-mascota="${m.id_mascota}"`}>
+                  ${av ? `<img src="${av}" onerror="this.outerHTML='<div class=wz-card-emoji>🐶</div>'">` : '<div class="wz-card-emoji">🐶</div>'}
+                  <div class="wz-card-nombre">${m.nombre}</div>
+                  <div class="wz-card-sub">${(m.biografia || '').slice(0, 26) || 'Tu mascota'}</div>
+                  ${ocupada ? '<div class="wz-card-tag-ocupada">Ya tiene servicio</div>' : ''}
+                </div>`;
+    }
+
+    // Tarjeta "+ Registrar mascota" (abre el formulario dentro del wizard)
+    function cardRegistrarWz() {
+        return `<div class="wz-card wz-card-registrar" data-registrar-mascota>
+                  <div class="wz-card-mas">+</div>
+                  <div class="wz-card-nombre">Registrar mascota</div>
+                </div>`;
+    }
+
+    function conectarSeleccionMascota(refrescar) {
+        $$('#wz-cuerpo [data-mascota]').forEach(c => c.addEventListener('click', () => {
+            W.id_mascota = parseInt(c.dataset.mascota);
+            $$('#wz-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
+            refrescar();
+        }));
+        const btnReg = $('#wz-cuerpo [data-registrar-mascota]');
+        if (btnReg) btnReg.addEventListener('click', abrirFormRegistrarMascota);
+    }
+
     function renderPaso1() {
         const sinMascotas = !datos.mascotas.length;
-
-        const cardsMascotas = datos.mascotas.map(m => {
-            const av = normalizarAvatar(m.avatar);
-            return `<div class="wz-card ${W.id_mascota === m.id_mascota ? 'sel' : ''}" data-mascota="${m.id_mascota}">
-                      ${av ? `<img src="${av}" onerror="this.outerHTML='<div class=wz-card-emoji>🐶</div>'">` : '<div class="wz-card-emoji">🐶</div>'}
-                      <div class="wz-card-nombre">${m.nombre}</div>
-                      <div class="wz-card-sub">${(m.biografia || '').slice(0, 26) || 'Tu mascota'}</div>
-                    </div>`;
-        }).join('');
+        const cardsMascotas = datos.mascotas.map(cardMascotaWz).join('') + cardRegistrarWz();
 
         const opcionesPlan = datos.planes.map(p =>
             `<option value="${p.id_plan}" ${W.id_plan === p.id_plan ? 'selected' : ''}>${p.nombre} — ${cop(p.total)}${p.descuento_pct ? ` (${p.descuento_pct}% dcto)` : ''}</option>`
@@ -293,8 +364,9 @@
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-paw-print"></i> 1. Selecciona la mascota</div>
               ${sinMascotas
-                ? `<div class="wz-banner-info"><i class="ph ph-info"></i> No tienes mascotas registradas. Ve a <strong>&nbsp;Usuario → tu perfil&nbsp;</strong> y registra tu mascota antes de contratar el plan.</div>`
-                : `<div class="wz-cards">${cardsMascotas}</div>`}
+                ? `<div class="wz-banner-info" style="margin-bottom:10px"><i class="ph ph-info"></i> No tienes mascotas registradas. Regístrala aquí mismo con el botón <strong>&nbsp;Registrar mascota</strong>.</div>`
+                : ''}
+              <div class="wz-cards">${cardsMascotas}</div>
             </div>
 
             <div class="wz-bloque">
@@ -354,11 +426,7 @@
         </div>`;
 
         // Listeners
-        $$('#wz-cuerpo [data-mascota]').forEach(c => c.addEventListener('click', () => {
-            W.id_mascota = parseInt(c.dataset.mascota);
-            $$('#wz-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
-            refrescarLateral(true);
-        }));
+        conectarSeleccionMascota(() => refrescarLateral(true));
         $$('#wz-cuerpo [data-comp]').forEach(c => c.addEventListener('click', () => {
             W.comportamiento = c.dataset.comp;
             $$('#wz-cuerpo [data-comp]').forEach(x => x.classList.toggle('sel', x === c));
@@ -385,6 +453,138 @@
             if (!W.dias.length) return alertaPaso('Elige al menos un día preferido.');
             if (!W.fecha_inicio || W.fecha_inicio < hoyISO()) return alertaPaso('La fecha de inicio debe ser hoy o una fecha futura.');
             renderPaso(2);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // PASO 1 (MODO EXPRÉS) — SOLO ELEGIR LA MASCOTA NUEVA
+    // Plan, días, horario, dirección y paseador se heredan del
+    // servicio activo; del resumen se pasa directo al pago.
+    // ═══════════════════════════════════════════════════════
+    function renderPaso1Express() {
+        const disponibles = datos.mascotas.filter(m => !OCUPADAS.includes(m.id_mascota));
+        const p = planSel();
+        const diasTxt = W.dias.map(k => DIAS.find(d => d.k === k)?.n).filter(Boolean).join(', ') || '—';
+
+        // Mismas tarjetas del paso 1 normal: las ocupadas se ven bloqueadas
+        // y siempre está la opción de registrar una mascota nueva aquí mismo
+        const cardsMascotas = datos.mascotas.map(cardMascotaWz).join('') + cardRegistrarWz();
+
+        $('#wz-cuerpo').innerHTML = `
+        <div class="wz-grid">
+          <div>
+            <div class="wz-banner-info" style="margin-bottom:14px">
+              <i class="ph ph-info"></i>
+              <div>
+                <strong>Se unirá a tu servicio actual:</strong>
+                ${diasTxt} · ${W.franja} · ${p ? p.nombre : 'mismo plan'} ·
+                misma dirección de recogida y mismo paseador.
+                Saldrán a pasear juntas desde el próximo paseo programado.
+              </div>
+            </div>
+
+            <div class="wz-bloque">
+              <div class="wz-titulo-seccion"><i class="ph ph-paw-print"></i> ¿Qué mascota quieres añadir?</div>
+              ${!disponibles.length
+                ? `<div class="wz-banner-info" style="margin-bottom:10px"><i class="ph ph-info"></i> Todas tus mascotas registradas ya están en el servicio. Puedes registrar una nueva aquí mismo.</div>`
+                : ''}
+              <div class="wz-cards">${cardsMascotas}</div>
+            </div>
+          </div>
+          <div id="wz-lateral-slot">${lateralHTML(true)}</div>
+        </div>`;
+
+        conectarSeleccionMascota(() => refrescarLateral(true));
+
+        botonesFooter(false, 'Continuar al resumen <i class="ph ph-arrow-right"></i>', () => {
+            if (!W.id_mascota) return alertaPaso('Selecciona la mascota que quieres añadir (o registra una nueva).');
+            renderPaso(3);
+        });
+    }
+
+    // ── Registrar una mascota nueva sin salir del wizard ────
+    // Mismos campos que el formulario del perfil (usuario_info.php)
+    function abrirFormRegistrarMascota() {
+        let ov = document.getElementById('wz-reg-overlay');
+        if (ov) ov.remove();
+        ov = document.createElement('div');
+        ov.id = 'wz-reg-overlay';
+        ov.innerHTML = `
+        <div class="wz-reg-box">
+          <div class="wz-reg-head">
+            <h3><i class="ph ph-paw-print"></i> Registrar nueva mascota</h3>
+            <button class="wz-close" id="wz-reg-cerrar"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="wz-alerta-error" id="wz-reg-error"></div>
+          <div class="wz-campo">
+            <label>Nombre de la mascota *</label>
+            <input type="text" id="wz-reg-nombre" maxlength="100" placeholder="Nombre del peludito">
+          </div>
+          <div class="wz-form-fila">
+            <div class="wz-campo">
+              <label>Raza</label>
+              <input type="text" id="wz-reg-raza" maxlength="80" placeholder="Ej: Golden Retriever">
+            </div>
+            <div class="wz-campo">
+              <label>Edad (años)</label>
+              <input type="number" id="wz-reg-edad" min="0" max="30" placeholder="Ej: 3">
+            </div>
+          </div>
+          <div class="wz-campo">
+            <label>Foto de la mascota <span style="font-weight:400;color:#94a3b8">(opcional)</span></label>
+            <input type="file" id="wz-reg-avatar" accept="image/*">
+          </div>
+          <div class="wz-campo">
+            <label>Biografía canina</label>
+            <textarea id="wz-reg-bio" rows="3" maxlength="1000" placeholder="Cuéntanos su historia..."></textarea>
+          </div>
+          <div class="wz-campo">
+            <label>Enfermedades y/o discapacidades</label>
+            <textarea id="wz-reg-enf" rows="2" maxlength="1000" placeholder="Ninguna / Alergias..."></textarea>
+          </div>
+          <button class="wz-btn wz-btn-prim" id="wz-reg-guardar" style="width:100%"><i class="ph ph-check"></i> Registrar mascota</button>
+        </div>`;
+        document.querySelector('#wizard-paseos .wz-modal').appendChild(ov);
+
+        document.getElementById('wz-reg-cerrar').addEventListener('click', () => ov.remove());
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+
+        document.getElementById('wz-reg-guardar').addEventListener('click', async () => {
+            const nombre = document.getElementById('wz-reg-nombre').value.trim();
+            const err = document.getElementById('wz-reg-error');
+            if (!nombre) {
+                err.textContent = '⚠ El nombre de la mascota es obligatorio.';
+                err.classList.add('visible');
+                return;
+            }
+            const btn = document.getElementById('wz-reg-guardar');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wz-spinner"></span> Registrando...';
+
+            const fd = new FormData();
+            fd.append('nombre_mascota', nombre);
+            fd.append('raza', document.getElementById('wz-reg-raza').value.trim());
+            fd.append('edad', document.getElementById('wz-reg-edad').value);
+            fd.append('biografia_canina', document.getElementById('wz-reg-bio').value.trim());
+            fd.append('enfermedades_discapacidades', document.getElementById('wz-reg-enf').value.trim());
+            const archivo = document.getElementById('wz-reg-avatar').files[0];
+            if (archivo) fd.append('avatar_mascota', archivo);
+
+            try {
+                const r = await fetch(API_WZ + 'registrar_mascota_cliente.php', { method: 'POST', body: fd });
+                const data = await r.json();
+                if (!data.success) throw new Error(data.message || 'No se pudo registrar la mascota.');
+
+                datos.mascotas.push(data.mascota);
+                W.id_mascota = data.mascota.id_mascota; // queda seleccionada
+                ov.remove();
+                renderPaso(1); // repinta el paso con la mascota nueva
+            } catch (e) {
+                err.textContent = '⚠ ' + e.message;
+                err.classList.add('visible');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-check"></i> Registrar mascota';
+            }
         });
     }
 
@@ -888,6 +1088,8 @@
             },
             facturacion: W.facturacion,
             confirmaciones: W.conf,
+            // Modo exprés: el backend hereda la configuración de este pedido
+            pedido_base: W.pedido_base || null,
         };
 
         try {
@@ -923,12 +1125,16 @@
         const p = planSel(), m = mascotaSel();
         $('#wz-progreso').innerHTML = '';
         $('#wz-subtitulo').innerHTML = '<strong>¡Compra completada!</strong>';
+        const esExpress = !!W.pedido_base;
         $('#wz-cuerpo').innerHTML = `
         <div class="wz-exito">
           <div class="icono"><i class="ph ph-check-circle"></i></div>
-          <h3>¡Tu membresía de paseos está activa! 🎉</h3>
-          <p>${m ? m.nombre : 'Tu mascota'} ya tiene su plan <strong>${p ? p.nombre : ''}</strong>.
-             Tu pedido quedó registrado y pasará a asignación de ruta con un paseador.</p>
+          <h3>${esExpress
+            ? `¡${m ? m.nombre : 'Tu mascota'} se unió al servicio de paseos! 🎉`
+            : '¡Tu membresía de paseos está activa! 🎉'}</h3>
+          <p>${esExpress
+            ? `${m ? m.nombre : 'Tu mascota'} saldrá a pasear junto a tu otra mascota, con el mismo paseador, los mismos días y en el mismo horario.`
+            : `${m ? m.nombre : 'Tu mascota'} ya tiene su plan <strong>${p ? p.nombre : ''}</strong>. Tu pedido quedó registrado y pasará a asignación de ruta con un paseador.`}</p>
           <div class="ref">
             Pedido <strong>#${data.id_pedido}</strong> · Referencia de pago <strong>${data.referencia}</strong><br>
             Total pagado: <strong>${cop(data.total)}</strong>

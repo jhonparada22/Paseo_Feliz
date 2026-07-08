@@ -32,9 +32,12 @@ $ahoraServidor = $conn->query("SELECT NOW() AS ahora")->fetch_assoc()['ahora'];
 // (mismo criterio que controller/membresia_estado.php)
 $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 
-// ── 1. Pedido pagado más reciente con membresía de paseos vigente ─────
+// ── 1. TODOS los pedidos pagados con membresía de paseos vigente ──────
+// (uno por mascota: si una mascota tiene varios, gana el más reciente).
+// El dashboard muestra el detalle de UNO (?id_pedido, o el más reciente)
+// y usa la lista completa para el selector de mascotas.
 $stmt = $conn->prepare(
-    "SELECT p.id_pedido, p.id_mascota, p.modalidad, p.duracion_min, p.dias_preferidos,
+    "SELECT p.id_pedido, p.id_mascota, p.id_plan, p.modalidad, p.duracion_min, p.dias_preferidos,
             p.franja_horaria, p.fecha_inicio, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.ubicacion_validada, p.total, p.estado, p.fecha_creacion,
@@ -51,17 +54,43 @@ $stmt = $conn->prepare(
        AND m.paseos = 1
        AND m.fecha_inicio_paseos IS NOT NULL
        AND DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) > $ahoraColombia
-     ORDER BY p.fecha_creacion DESC
-     LIMIT 1"
+     ORDER BY p.fecha_creacion DESC"
 );
 $stmt->bind_param("i", $idUsuario);
 $stmt->execute();
-$pedido = $stmt->get_result()->fetch_assoc();
+$res = $stmt->get_result();
+$pedidosPorMascota = [];
+while ($row = $res->fetch_assoc()) {
+    $idM = (int)$row['id_mascota'];
+    if (!isset($pedidosPorMascota[$idM])) $pedidosPorMascota[$idM] = $row; // más reciente por mascota
+}
 $stmt->close();
 
-if (!$pedido) {
+if (!$pedidosPorMascota) {
     responder(true, ['tiene_servicio' => false], 'Sin servicio de paseos activo.');
 }
+
+// Lista resumida para el selector de mascotas del dashboard
+$pedidosActivos = [];
+foreach ($pedidosPorMascota as $row) {
+    $pedidosActivos[] = [
+        'id_pedido'  => (int)$row['id_pedido'],
+        'id_mascota' => (int)$row['id_mascota'],
+        'nombre'     => $row['nombre_mascota'],
+        'avatar'     => $row['avatar_mascota'] ?? '',
+    ];
+}
+
+// Pedido a detallar: el solicitado por ?id_pedido (si es suyo y está activo),
+// o el más reciente de todos.
+$idPedidoFiltro = intval($_GET['id_pedido'] ?? 0);
+$pedido = null;
+if ($idPedidoFiltro > 0) {
+    foreach ($pedidosPorMascota as $row) {
+        if ((int)$row['id_pedido'] === $idPedidoFiltro) { $pedido = $row; break; }
+    }
+}
+if (!$pedido) $pedido = reset($pedidosPorMascota);
 
 $idPedido  = (int)$pedido['id_pedido'];
 $idMascota = (int)$pedido['id_mascota'];
@@ -292,11 +321,13 @@ $diasRestantes = $ahora < $finMembresia ? $ahora->diff($finMembresia)->days : 0;
 responder(true, [
     'tiene_servicio' => true,
     'ahora_servidor' => $ahoraServidor,
+    'pedidos_activos' => $pedidosActivos,
     'servicio' => [
         'estado' => $estadoServicio,
         'pedido' => [
             'id_pedido'       => $idPedido,
             'id_mascota'      => $idMascota,
+            'id_plan'         => (int)$pedido['id_plan'],
             'mascota'         => $pedido['nombre_mascota'],
             'avatar_mascota'  => $pedido['avatar_mascota'] ?? '',
             'modalidad'       => $pedido['modalidad'],
