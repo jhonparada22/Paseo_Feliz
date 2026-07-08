@@ -101,6 +101,7 @@
 .form-group-box input[type="text"],
 .form-group-box input[type="date"],
 .form-group-box input[type="tel"],
+.form-group-box input[type="number"],
 .form-group-box textarea,
 .form-group-box select {
     width: 100%;

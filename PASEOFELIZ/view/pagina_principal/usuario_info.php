@@ -179,6 +179,17 @@ if ($id_usuario) {
                                 <input type="text" name="nombre_mascota_edit" placeholder="Deja vacío para no cambiar">
                             </div>
 
+                            <div class="form-group-box" style="display:flex; gap:12px;">
+                                <div style="flex:1;">
+                                    <label>Raza</label>
+                                    <input type="text" name="raza_mascota_edit" placeholder="Deja vacío para no cambiar">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>Edad (años)</label>
+                                    <input type="number" name="edad_mascota_edit" min="0" max="30" placeholder="Deja vacío para no cambiar">
+                                </div>
+                            </div>
+
                             <div class="form-group-box">
                                 <label>Cambiar icono de la mascota</label>
                                 <div class="preview-row">
@@ -211,6 +222,17 @@ if ($id_usuario) {
                             <div class="form-group-box">
                                 <label>Nombre de la mascota</label>
                                 <input type="text" name="nombre_mascota_nuevo" placeholder="Nombre del peludito">
+                            </div>
+
+                            <div class="form-group-box" style="display:flex; gap:12px;">
+                                <div style="flex:1;">
+                                    <label>Raza</label>
+                                    <input type="text" name="raza_mascota_nuevo" placeholder="Ej: Golden Retriever">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>Edad (años)</label>
+                                    <input type="number" name="edad_mascota_nuevo" min="0" max="30" placeholder="Ej: 3">
+                                </div>
                             </div>
 
                             <div class="form-group-box">

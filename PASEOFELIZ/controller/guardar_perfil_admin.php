@@ -31,6 +31,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mkdir($directorio_subidas, 0777, true);
     }
 
+    // ── Eliminar una mascota (form independiente) ──────────────────────
+    if (isset($_POST['accion_eliminar_mascota'])) {
+        $id_mascota = isset($_POST['select_id_mascota']) ? intval($_POST['select_id_mascota']) : 0;
+
+        if ($id_mascota > 0) {
+            $stmt = $conn->prepare("SELECT avatar_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
+            $stmt->bind_param("ii", $id_mascota, $id_usuario);
+            $stmt->execute();
+            $mascota = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if ($mascota) {
+                $stmt_del = $conn->prepare("DELETE FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
+                $stmt_del->bind_param("ii", $id_mascota, $id_usuario);
+                $stmt_del->execute();
+                $stmt_del->close();
+
+                if (!empty($mascota['avatar_mascota'])
+                    && strpos($mascota['avatar_mascota'], 'assets/default/') === false) {
+                    $archivo = str_replace("../../assets/uploads/", $directorio_subidas, $mascota['avatar_mascota']);
+                    if (file_exists($archivo)) { unlink($archivo); }
+                }
+            }
+        }
+
+        header("Location: ../view/vistas/admin/usuario_admin.php");
+        exit();
+    }
+
     // Consultar datos actuales del perfil para no perder el avatar/banner si vienen vacíos
     $stmt_check = $conn->prepare("SELECT id_info, avatar_url, banner_url FROM info_usuario WHERE id_usuario = ?");
     $stmt_check->bind_param("i", $id_usuario);
@@ -93,9 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nombre_mascota = isset($_POST['nombre_mascota_nuevo']) ? trim($_POST['nombre_mascota_nuevo']) : '';
         $biografia_canina = isset($_POST['biografia_canina_nuevo']) ? trim($_POST['biografia_canina_nuevo']) : null;
         $enfermedades = isset($_POST['enfermedades_nuevo']) ? trim($_POST['enfermedades_nuevo']) : '';
+        $raza_mascota = isset($_POST['raza_mascota_nuevo']) ? trim($_POST['raza_mascota_nuevo']) : '';
+        $raza_mascota = $raza_mascota !== '' ? $raza_mascota : null;
+        $edad_mascota = (isset($_POST['edad_mascota_nuevo']) && $_POST['edad_mascota_nuevo'] !== '')
+            ? intval($_POST['edad_mascota_nuevo']) : null;
 
         if (!empty($nombre_mascota)) {
-            $avatar_mascota = '../../assets/default/dog.png'; 
+            $avatar_mascota = '../../assets/default/dog.png';
 
             if (isset($_FILES['avatar_mascota_nuevo']) && $_FILES['avatar_mascota_nuevo']['error'] === UPLOAD_ERR_OK) {
                 $ext = pathinfo($_FILES['avatar_mascota_nuevo']['name'], PATHINFO_EXTENSION);
@@ -105,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $stmt_pet = $conn->prepare("INSERT INTO mascota_usuario (id_usuario, nombre_mascota, avatar_mascota, biografia_canina, enfermedades_discapacidades) VALUES (?, ?, ?, ?, ?)");
-            $stmt_pet->bind_param("issss", $id_usuario, $nombre_mascota, $avatar_mascota, $biografia_canina, $enfermedades);
+            $stmt_pet = $conn->prepare("INSERT INTO mascota_usuario (id_usuario, nombre_mascota, raza, edad, avatar_mascota, biografia_canina, enfermedades_discapacidades) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt_pet->bind_param("ississs", $id_usuario, $nombre_mascota, $raza_mascota, $edad_mascota, $avatar_mascota, $biografia_canina, $enfermedades);
             $stmt_pet->execute();
             $stmt_pet->close();
         }
@@ -115,9 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id_mascota = isset($_POST['select_id_mascota']) ? intval($_POST['select_id_mascota']) : 0;
         $biografia_canina = isset($_POST['biografia_canina_edit']) ? trim($_POST['biografia_canina_edit']) : null;
         $enfermedades = isset($_POST['enfermedades_edit']) ? trim($_POST['enfermedades_edit']) : '';
+        $raza_edit = isset($_POST['raza_mascota_edit']) ? trim($_POST['raza_mascota_edit']) : '';
+        $edad_edit = isset($_POST['edad_mascota_edit']) ? trim($_POST['edad_mascota_edit']) : '';
 
         if ($id_mascota > 0) {
-            $stmt_check_pet = $conn->prepare("SELECT avatar_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
+            $stmt_check_pet = $conn->prepare("SELECT raza, edad, avatar_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
             $stmt_check_pet->bind_param("ii", $id_mascota, $id_usuario);
             $stmt_check_pet->execute();
             $datos_mascota = $stmt_check_pet->get_result()->fetch_assoc();
@@ -125,6 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($datos_mascota) {
                 $avatar_mascota = $datos_mascota['avatar_mascota'];
+                $raza_final = $raza_edit !== '' ? $raza_edit : $datos_mascota['raza'];
+                $edad_final = $edad_edit !== '' ? intval($edad_edit) : $datos_mascota['edad'];
 
                 if (isset($_FILES['avatar_mascota_edit']) && $_FILES['avatar_mascota_edit']['error'] === UPLOAD_ERR_OK) {
                     $ext = pathinfo($_FILES['avatar_mascota_edit']['name'], PATHINFO_EXTENSION);
@@ -138,8 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $stmt_update_pet = $conn->prepare("UPDATE mascota_usuario SET avatar_mascota = ?, biografia_canina = ?, enfermedades_discapacidades = ? WHERE id_mascota = ? AND id_usuario = ?");
-                $stmt_update_pet->bind_param("sssii", $avatar_mascota, $biografia_canina, $enfermedades, $id_mascota, $id_usuario);
+                $stmt_update_pet = $conn->prepare("UPDATE mascota_usuario SET raza = ?, edad = ?, avatar_mascota = ?, biografia_canina = ?, enfermedades_discapacidades = ? WHERE id_mascota = ? AND id_usuario = ?");
+                $stmt_update_pet->bind_param("sisssii", $raza_final, $edad_final, $avatar_mascota, $biografia_canina, $enfermedades, $id_mascota, $id_usuario);
                 $stmt_update_pet->execute();
                 $stmt_update_pet->close();
             }

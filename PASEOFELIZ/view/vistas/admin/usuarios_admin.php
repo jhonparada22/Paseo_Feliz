@@ -8,7 +8,7 @@
   <link rel="icon" href="../../assets/images/logo.png" type="image/png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../../css/admin/admin.css">
-    <link rel="stylesheet" href="../../css/admin/usuarios_admin.css">
+    <link rel="stylesheet" href="../../css/admin/usuarios_admin.css?v=4">
   <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
 </head>
 <body>
@@ -170,7 +170,7 @@
 
 <!-- ── MODAL MASCOTAS ───────────────────────────────────────── -->
 <div class="modal-overlay" id="petsModal">
-  <div class="modal">
+  <div class="modal modal-pets">
     <div class="modal-head">
       <div>
         <div class="m-title" id="modalUserName">Mascotas de Usuario</div>
@@ -178,7 +178,10 @@
       </div>
       <button class="btn-close-modal" id="closeModal"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-body" id="modalPetList"></div>
+    <div class="modal-body pet-modal-body">
+      <div class="pet-list-panel" id="petListPanel"></div>
+      <div class="pet-detail-panel" id="petDetailPanel"></div>
+    </div>
   </div>
 </div>
 
@@ -188,6 +191,6 @@
   <span id="toastMsg">Cambio guardado</span>
 </div>
 
-<script src="../../js/admin/usuarios_admin.js"></script>
+<script src="../../js/admin/usuarios_admin.js?v=3"></script>
 </body>
 </html>
