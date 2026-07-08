@@ -13,68 +13,11 @@
 /* =========================================================================
    1. CHAT (Chat.php / Chat.css)
    -------------------------------------------------------------------------
-   Problemas que corrige:
-   - El chat usaba "height: 100vh" fijo en varios paneles. Cuando el
-     sidebar pasa a ser una barra inferior en pantallas chicas, esto hacía
-     que la caja de texto quedara cortada fuera de la pantalla (no se veía).
-   - En móvil se mostraban la lista de conversaciones y el "rectángulo"
-     vacío del chat al mismo tiempo, muy apretados. Ahora solo se muestra
-     un panel a la vez: primero la lista, y al abrir una conversación, el
-     chat a pantalla completa (con la caja de texto visible).
+   Los ajustes responsive del chat ahora viven en Chat.css (sección
+   "RESPONSIVE MÓVIL — estilo WhatsApp"), que es compartido por los tres
+   roles (cliente, admin y paseador). Así el comportamiento móvil es el
+   mismo en Chat.php, Chat_admin.php y Chat_paseador.php.
    ========================================================================= */
-
-/* Alturas relativas en vez de 100vh fijo, así no se desbordan */
-.chat-main {
-    min-height: 0;
-}
-.conversations-panel {
-    height: 100%;
-}
-.chat-window {
-    height: 100%;
-}
-
-@media (max-width: 680px) {
-    /* La lista de conversaciones tenía un ancho fijo de 290px; en
-       pantallas angostas eso dejaba una franja en blanco al costado
-       (el "rectángulo vacío"). En móvil debe ocupar todo el ancho. */
-    .conversations-panel {
-        width: 100%;
-    }
-
-    /* Chat.js ya agrega la clase "hidden" a #conv-panel cuando se abre
-       una conversación en pantallas ≤680px (y la quita con el botón
-       "atrás"). Antes de abrir un chat: solo se ve la lista, nada del
-       rectángulo vacío al lado. Al abrir un chat: la lista se oculta y
-       el chat pasa a ocupar el 100% del ancho. */
-    .chat-window {
-        display: none !important;
-    }
-    .conversations-panel.hidden {
-        display: none !important;
-    }
-    .conversations-panel.hidden + .chat-window {
-        display: flex !important;
-        width: 100% !important;
-    }
-
-    .chat-header-back {
-        display: block !important;
-    }
-}
-
-/* El sidebar pasa a ser una barra inferior fija (ver global.css) en
-   pantallas muy pequeñas; ajustamos el alto del chat para que la caja
-   de texto (o el aviso de "chat desactivado") no queden cortados por
-   debajo de la pantalla. */
-@media (max-width: 540px) {
-    .app-container {
-        height: 100vh !important;
-    }
-    .chat-main {
-        height: calc(100vh - 58px) !important;
-    }
-}
 
 
 /* =========================================================================

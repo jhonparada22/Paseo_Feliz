@@ -48,6 +48,7 @@ if ($id_usuario) {
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
     <link rel="stylesheet" href="../../css/principal_css/usuario.css">
+    <link rel="stylesheet" href="../../css/responsive/responsive_principal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>

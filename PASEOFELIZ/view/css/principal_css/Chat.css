@@ -13,33 +13,33 @@ body {
     color: #333; 
 }
 
-.app-container { 
-    display: flex; 
-    height: 100vh; 
-    overflow: hidden; 
+.app-container {
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
 }
 
-.sidebar {
-    flex-shrink: 0;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    overflow-y: auto;
-    z-index: 10;
-}
+/* OJO: aquí NO se estiliza .sidebar. Cada rol trae su propio CSS de
+   sidebar (sidebar_admin.css / sidebar_usuario.css / sidebar_paseador.css)
+   que carga ANTES que este archivo; una regla base aquí pisaría sus
+   media queries móviles (la barra inferior de 58px quedaba a pantalla
+   completa en el chat del admin). */
 
-.chat-main { 
-    flex: 1; 
-    display: flex; 
-    overflow: hidden; 
-    background-color: #fff; 
+.chat-main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background-color: #fff;
     height: 100vh;
+    height: 100dvh;
+    min-height: 0;
 }
 
 /* ── PANEL IZQUIERDO DE CONVERSACIONES ── */
-.conversations-panel { 
-    width: 290px; 
-    height: 100vh;
+.conversations-panel {
+    width: 290px;
+    height: 100%;
     background: #fff; 
     border-right: 1px solid #E0E0E0; 
     display: flex; 
@@ -243,9 +243,9 @@ body {
 }
 
 /* ── PANEL DERECHO (VENTANA DE CHAT) ── */
-.chat-window { 
-    flex: 1; 
-    height: 100vh;
+.chat-window {
+    flex: 1;
+    height: 100%;
     display: flex; 
     flex-direction: column; 
     background: #F7F9FB; 
@@ -583,12 +583,105 @@ body {
     background: #F0F4FF; 
 }
 
-/* ── RESPONSIVE MÓVIL ── */
+/* =========================================================================
+   RESPONSIVE MÓVIL — estilo WhatsApp
+   En ≤680px solo se muestra un panel a la vez: primero la lista de
+   conversaciones a pantalla completa; al abrir un chat, Chat.js agrega
+   la clase "hidden" al panel y la ventana del chat pasa a ocupar todo
+   el ancho (con botón "atrás" para volver a la lista).
+   ========================================================================= */
 @media (max-width: 680px) {
-    .conversations-panel.hidden { 
-        display: none; 
+    .conversations-panel {
+        width: 100%;
+        border-right: none;
     }
-    .chat-header-back { 
-        display: block !important; 
+
+    .chat-window {
+        display: none !important;
+    }
+
+    .conversations-panel.hidden {
+        display: none !important;
+    }
+
+    .conversations-panel.hidden + .chat-window {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .chat-header-back {
+        display: block !important;
+        padding: 6px;
+    }
+
+    /* Burbujas relativas al ancho de pantalla, como WhatsApp */
+    .msg-bubble {
+        max-width: 78%;
+    }
+
+    .messages-area {
+        padding: 14px 10px;
+        gap: 12px;
+    }
+
+    .input-area {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    /* El picker de emojis no debe desbordar la pantalla */
+    .emoji-picker {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: none;
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    /* Items de conversación con más aire para el dedo */
+    .conv-item {
+        padding: 13px 14px;
+    }
+
+    .conv-avatar {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* En ≤540px el sidebar pasa a ser una barra inferior fija de 58px
+   (ver sidebar_admin.css / sidebar_usuario.css / sidebar_paseador.css);
+   se descuenta ese alto para que la caja de texto nunca quede tapada.
+   Los selectores con #contenedor_general igualan la especificidad de los
+   "!important" de los CSS de sidebar de usuario/paseador. */
+@media (max-width: 540px) {
+    #contenedor_general.app-container,
+    .app-container {
+        height: 100vh !important;
+        height: 100dvh !important;
+    }
+
+    #contenedor_general .chat-main,
+    .chat-main {
+        order: 1 !important;
+        /* flex:none — con flex:1 el alto se ignora en el contenedor
+           columna y la barra inferior taparía la caja de texto */
+        flex: none !important;
+        height: calc(100vh - 58px) !important;
+        height: calc(100dvh - 58px) !important;
+        padding-bottom: 0 !important;
+    }
+
+    .conversations-panel,
+    .chat-window {
+        height: 100% !important;
+    }
+
+    .conversations-header {
+        padding: 16px 16px 12px;
+    }
+
+    .emoji-picker {
+        bottom: 68px;
     }
 }

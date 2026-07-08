@@ -72,7 +72,7 @@ include '../../../controller/chat_controller.php';
 
         <div class="chat-main">
             <div class="conversations-panel" id="conv-panel">
-                <div class="conversations-header"><h2>Conversación</h2></div>
+                <div class="conversations-header"><h2>Conversaciones</h2></div>
                 <div class="search-conv">
                     <i class="fas fa-search"></i>
                     <input type="text" id="search-input" placeholder="Buscar usuario por nombre..." />
