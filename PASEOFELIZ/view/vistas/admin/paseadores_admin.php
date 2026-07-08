@@ -213,8 +213,10 @@ include_once '../../../controller/control_acceso.php';
                         <input type="time" id="infoHoraFin" />
                     </div>
                     <div class="form-field" style="grid-column:span 2">
-                        <label>Puntuación (0.0 – 5.0)</label>
-                        <input type="number" id="infoPuntuacion" min="0" max="5" step="0.1" placeholder="Ej: 4.8" />
+                        <label>Puntuación</label>
+                        <div id="infoPuntuacionSoloLectura" style="font-size:.8rem;color:var(--muted);background:#f8fafc;border-radius:8px;padding:10px 12px">
+                            Se calcula automáticamente con las calificaciones de 1-5 estrellas que dejan los clientes al finalizar cada paseo. Ya no se edita manualmente.
+                        </div>
                     </div>
                 </div>
             </div>

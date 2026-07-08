@@ -15,7 +15,8 @@ $id_paseador  = isset($data['id_paseador'])  ? (int)$data['id_paseador']        
 $zona         = isset($data['zona_trabajo'])  ? trim($data['zona_trabajo'])       : '';
 $hora_inicio  = isset($data['hora_inicio'])   ? trim($data['hora_inicio'])        : null;
 $hora_fin     = isset($data['hora_fin'])      ? trim($data['hora_fin'])           : null;
-$puntuacion   = isset($data['puntuacion'])    ? (float)$data['puntuacion']        : null;
+// puntuacion ya no se edita a mano: se recalcula automáticamente en
+// calificar_paseo.php a partir de las calificaciones de los clientes.
 
 if (!$id_paseador) {
     echo json_encode(['success' => false, 'message' => 'ID de paseador requerido']);
@@ -42,12 +43,6 @@ if ($hora_fin !== null) {
     $tipos   .= 's';
     $vals[]   = $hora_fin ?: null;
 }
-if ($puntuacion !== null) {
-    $campos[] = 'puntuacion = ?';
-    $tipos   .= 'd';
-    $vals[]   = $puntuacion;
-}
-
 if (empty($campos)) {
     echo json_encode(['success' => false, 'message' => 'Nada que actualizar']);
     exit;

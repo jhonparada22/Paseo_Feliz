@@ -164,6 +164,50 @@
         const estado = S.estado;
         let sub, col1, col2, col3;
 
+        // Aviso de cancelación: el paseo de HOY de esta mascota se canceló
+        // (la ruta del paseador puede seguir activa para otros clientes).
+        const canceladoHoy = S.ruta_hoy && S.ruta_hoy.fase === 'cancelado';
+        const motivoCancel = canceladoHoy
+            ? ((S.ruta_hoy.recogida && S.ruta_hoy.recogida.motivo_cancelacion) ||
+               (S.ruta_hoy.entrega && S.ruta_hoy.entrega.motivo_cancelacion) || '')
+            : '';
+        const avisoCancelado = canceladoHoy
+            ? '<div class="dz-aviso dz-aviso-rojo dz-aviso-grande" style="margin-bottom:14px">' +
+                  '<i class="ph ph-x-circle"></i>' +
+                  '<div><strong>El paseo de hoy de ' + esc(S.pedido.mascota) + ' fue cancelado.</strong>' +
+                  (motivoCancel ? '<br>Motivo: ' + esc(motivoCancel) : '') + '</div>' +
+              '</div>'
+            : '';
+
+        // Aviso de finalizado: el paseo de HOY de esta mascota ya se
+        // entregó (la ruta del paseador puede seguir activa para otros).
+        // Incluye el widget de calificación (1-5 estrellas) si aún no
+        // calificó este paseo.
+        const entregadoHoy   = S.ruta_hoy && S.ruta_hoy.fase === 'finalizado';
+        const yaCalificado   = entregadoHoy && S.ruta_hoy.calificacion;
+        const ratingHtml = !entregadoHoy ? '' : (
+            yaCalificado
+                ? '<div class="dz-rating-hecha">Calificaste este paseo: ' + '★'.repeat(yaCalificado.estrellas) + '☆'.repeat(5 - yaCalificado.estrellas) + '</div>'
+                : '<div class="dz-rating-widget" id="dzRatingWidget" data-pedido="' + S.pedido.id_pedido + '">' +
+                      '<span class="dz-rating-lbl">Califica el servicio:</span>' +
+                      '<span class="dz-rating-stars">' +
+                          [1, 2, 3, 4, 5].map(function (n) {
+                              return '<button type="button" class="dz-star" data-estrellas="' + n + '" title="' + n + ' estrella' + (n > 1 ? 's' : '') + '"><i class="ph ph-star"></i></button>';
+                          }).join('') +
+                      '</span>' +
+                  '</div>'
+        );
+        const avisoEntregado = entregadoHoy
+            ? '<div class="dz-aviso dz-aviso-verde dz-aviso-grande" style="margin-bottom:14px">' +
+                  '<i class="ph ph-check-circle"></i>' +
+                  '<div style="flex:1">' +
+                      '<strong>' + esc(S.pedido.mascota) + ' ya fue paseado y entregado hoy.</strong> ' +
+                      '¡Gracias por confiar en Paseo Feliz!' +
+                      ratingHtml +
+                  '</div>' +
+              '</div>'
+            : '';
+
         if (estado === 'paseo_en_curso') {
             sub  = 'El paseo de ' + esc(S.pedido.mascota) + ' está en curso. Puedes seguirlo en tiempo real.';
             col1 = cardMapa(true) + cardInstrucciones() + cardMascotas();
@@ -183,6 +227,7 @@
 
         cont.innerHTML =
             '<div class="dz-sub">' + sub + '</div>' +
+            avisoCancelado + avisoEntregado +
             '<div class="dz-grid">' +
                 '<div class="dz-col">' + col1 + '</div>' +
                 '<div class="dz-col dz-col-centro">' + col2 + '</div>' +
@@ -613,6 +658,47 @@
                 seleccionarPedido(parseInt(fila.getAttribute('data-pedido'), 10));
             });
         });
+        // Widget de calificación por estrellas (paseo ya entregado hoy)
+        const ratingWidget = document.getElementById('dzRatingWidget');
+        if (ratingWidget) {
+            const idPedido = parseInt(ratingWidget.getAttribute('data-pedido'), 10);
+            const stars = Array.from(ratingWidget.querySelectorAll('.dz-star'));
+            stars.forEach(function (btn) {
+                const n = parseInt(btn.getAttribute('data-estrellas'), 10);
+                btn.addEventListener('mouseenter', function () { pintarEstrellas(stars, n); });
+                btn.addEventListener('click', function () { enviarCalificacion(idPedido, n); });
+            });
+            ratingWidget.addEventListener('mouseleave', function () { pintarEstrellas(stars, 0); });
+        }
+    }
+
+    function pintarEstrellas(stars, hasta) {
+        stars.forEach(function (btn) {
+            const n = parseInt(btn.getAttribute('data-estrellas'), 10);
+            btn.classList.toggle('activa', n <= hasta);
+        });
+    }
+
+    function enviarCalificacion(idPedido, estrellas) {
+        const widget = document.getElementById('dzRatingWidget');
+        if (widget) widget.style.opacity = '.5';
+        fetch(API + 'calificar_paseo.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_pedido: idPedido, estrellas: estrellas }),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) {
+                    if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">' + esc(data.message || 'No se pudo calificar') + '</div>'); }
+                    return;
+                }
+                if (S.ruta_hoy) S.ruta_hoy.calificacion = { estrellas: estrellas, comentario: null };
+                render();
+            })
+            .catch(function () {
+                if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">Sin conexión. Intenta de nuevo.</div>'); }
+            });
     }
 
     function centrarMapa() {

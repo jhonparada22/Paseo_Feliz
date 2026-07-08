@@ -309,11 +309,10 @@ function abrirModalInfo(id, e) {
     if (!paseadorParaInfo) return;
 
     document.getElementById('infoModalTitle').textContent = `Editar: ${paseadorParaInfo.nombre}`;
-    document.getElementById('infoModalSub').textContent   = 'Zona de trabajo, horario y puntuación';
+    document.getElementById('infoModalSub').textContent   = 'Zona de trabajo y horario';
     document.getElementById('infoZona').value        = paseadorParaInfo.zona_trabajo   || '';
     document.getElementById('infoHoraInicio').value  = paseadorParaInfo.hora_inicio    ? paseadorParaInfo.hora_inicio.slice(0,5) : '';
     document.getElementById('infoHoraFin').value     = paseadorParaInfo.hora_fin       ? paseadorParaInfo.hora_fin.slice(0,5)    : '';
-    document.getElementById('infoPuntuacion').value  = paseadorParaInfo.puntuacion     || '';
 
     document.getElementById('infoModal').classList.add('open');
 }
@@ -333,13 +332,9 @@ document.getElementById('confirmInfo').addEventListener('click', async () => {
     const zona        = document.getElementById('infoZona').value.trim();
     const horaInicio  = document.getElementById('infoHoraInicio').value;
     const horaFin     = document.getElementById('infoHoraFin').value;
-    const puntuacion  = parseFloat(document.getElementById('infoPuntuacion').value);
 
     if (horaInicio && horaFin && horaInicio >= horaFin) {
         showToast('La hora de inicio debe ser antes que la hora fin', 'warning'); return;
-    }
-    if (puntuacion && (puntuacion < 0 || puntuacion > 5)) {
-        showToast('La puntuación debe estar entre 0 y 5', 'warning'); return;
     }
 
     try {
@@ -351,7 +346,6 @@ document.getElementById('confirmInfo').addEventListener('click', async () => {
                 zona_trabajo: zona,
                 hora_inicio:  horaInicio || null,
                 hora_fin:     horaFin    || null,
-                puntuacion:   isNaN(puntuacion) ? null : puntuacion,
             })
         });
         const data = await res.json();
@@ -361,7 +355,6 @@ document.getElementById('confirmInfo').addEventListener('click', async () => {
             paseadorParaInfo.zona_trabajo  = zona;
             paseadorParaInfo.hora_inicio   = horaInicio;
             paseadorParaInfo.hora_fin      = horaFin;
-            if (!isNaN(puntuacion)) paseadorParaInfo.puntuacion = puntuacion;
 
             document.getElementById('infoModal').classList.remove('open');
             showToast('Información actualizada ✓', 'success');

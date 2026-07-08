@@ -161,8 +161,22 @@
 .dz-aviso i { font-size: 1rem; margin-top: 1px; flex: 0 0 auto; }
 .dz-aviso-morado { background: #f4f1fe; color: #5b3fd4; }
 .dz-aviso-ambar  { background: #fef6e7; color: #b45309; }
+.dz-aviso-rojo   { background: #fdf0f0; color: #b42318; }
+.dz-aviso-verde  { background: #eefaf1; color: #15803d; }
 .dz-aviso-grande { padding: 15px; font-size: .84rem; }
 .dz-aviso small  { color: inherit; opacity: .8; }
+
+/* ── Calificación por estrellas (paseo entregado) ── */
+.dz-rating-widget { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.dz-rating-lbl { font-weight: 700; opacity: .85; }
+.dz-rating-stars { display: flex; gap: 2px; }
+.dz-star {
+    border: none; background: none; cursor: pointer; padding: 2px;
+    font-size: 1.15rem; color: #cbd5e1; line-height: 1;
+}
+.dz-star.activa { color: #f59e0b; }
+.dz-rating-hecha { margin-top: 8px; font-weight: 700; color: #b45309; }
+.dz-rating-error { margin-top: 6px; font-size: .75rem; color: #b42318; }
 
 /* ── Filas de datos (resumen / info) ── */
 .dz-fila {
