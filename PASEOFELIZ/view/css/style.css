@@ -2850,46 +2850,106 @@ input[type="button"].btn-block {
 }
 
 /* Custom styles from style.css */
+
+/* ==================================== */
+/* PALETA Y TOKENS DE MARCA — PASEO FELIZ */
+/* ==================================== */
+:root {
+  --pf-petrol: #0b3b40;
+  --pf-petrol-deep: #082a2e;
+  --pf-petrol-light: #14606b;
+  --pf-amber: #e2932b;
+  --pf-amber-deep: #b96f18;
+  --pf-cream: #faf7f1;
+  --pf-ink: #23201d;
+
+  --pf-space-1: 8px;
+  --pf-space-2: 16px;
+  --pf-space-3: 24px;
+  --pf-space-4: 40px;
+  --pf-space-5: 56px;
+  --pf-space-6: 72px;
+
+  --pf-radius: 18px;
+  --pf-radius-sm: 12px;
+  --pf-shadow: 0 10px 30px rgba(11, 59, 64, 0.12);
+  --pf-shadow-hover: 0 16px 40px rgba(11, 59, 64, 0.18);
+}
+
 body {
   font-family: "Poppins", sans-serif;
-  color: #0c0c0c;
-  background-color: #ffffff;
+  color: var(--pf-ink);
+  background-color: #fdfbf8;
+}
+
+/* Foco visible accesible para navegación por teclado */
+a:focus-visible,
+button:focus-visible,
+.navigation ul li a:focus-visible,
+.navbar-toggler:focus-visible {
+  outline: 3px solid var(--pf-amber);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
 }
 
 .layout_padding {
-  padding: 75px 0;
+  padding: var(--pf-space-6) 0;
 }
 
 .layout_padding2 {
-  padding: 45px 0;
+  padding: var(--pf-space-4) 0;
 }
 
 .layout_padding2-top {
-  padding-top: 45px;
+  padding-top: var(--pf-space-4);
 }
 
 .layout_padding2-bottom {
-  padding-bottom: 45px;
+  padding-bottom: var(--pf-space-4);
 }
 
 .layout_padding-top {
-  padding-top: 75px;
+  padding-top: var(--pf-space-6);
 }
 
 .layout_padding-bottom {
-  padding-bottom: 75px;
+  padding-bottom: var(--pf-space-6);
 }
 
 .custom_heading {
-  color: #030404;
-  font-size: 36px;
+  position: relative;
+  color: var(--pf-ink);
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-size: clamp(26px, 3.6vw, 40px);
   font-weight: 700;
-  margin-bottom: 20px;
-  text-transform: uppercase;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  margin-bottom: var(--pf-space-3);
+}
+
+.custom_heading::before {
+  content: "\f1b0";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 0.5em;
+  color: var(--pf-amber);
+  margin-right: 12px;
+  vertical-align: middle;
+  display: inline-block;
+  transform: translateY(-6px) rotate(-15deg);
 }
 
 .custom_heading span {
-  color: #21d7ff;
+  color: var(--pf-amber-deep);
+  font-weight: 800;
 }
 
 /*header section*/
@@ -2903,7 +2963,7 @@ body {
   position: absolute;
   width: 100%;
   height: 15px;
-  background-color: #023b48;
+  background-color: var(--pf-petrol);
 }
 
 .sub_page .hero_area {
@@ -2915,15 +2975,14 @@ body {
 }
 
 .header_section {
-  background-color: #226daa;
-  /*padding-top: 15px; Se elimina para que pegue bien */
-  
+  background-color: var(--pf-petrol);
+
   /* --- NUEVAS PROPIEDADES PARA HEADER FIJO --- */
   position: sticky; /* Lo hace "pegajoso" */
   top: 0; /* Lo pega en la parte superior */
   z-index: 1020; /* Asegura que esté por encima de otro contenido */
   width: 100%; /* Asegura que ocupe todo el ancho */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra sutil opcional */
+  box-shadow: 0 2px 12px rgba(8, 42, 46, 0.25); /* Sombra sutil acorde al petróleo */
 }
 
 .header_section .container-fluid {
@@ -2970,7 +3029,7 @@ a:focus {
   text-transform: uppercase;
   font-weight: bold;
   font-size: 24px;
-  color: #fafcfd;
+  color: var(--pf-cream);
 }
 
 .custom_nav-container .nav_search-btn {
@@ -3024,88 +3083,6 @@ a:focus {
 }
 
 /*end header section*/
-/* slider section */
-/* MODIFICADO */
-.slider_section {
-  /* background-image: url(../images/paseo.jpeg); */ /* <- Se elimina esta línea */
-  padding: 0; /* <- Se cambia el padding a 0 */
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-color: #333; /* <-- Se añade un color de fondo por si fallan las imágenes */
-}
-
-.slider_section .row {
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-}
-
-.slider_detail-box h1 {
-  color: #ffffff;
-  font-size: 42px;
-}
-
-.slider_detail-box h1 span {
-  display: inline-block;
-  color: #434242;
-  font-weight: bold;
-}
-
-.slider_detail-box p {
-  color: #f6f8f7;
-  margin-top: 45px;
-  margin-bottom: 40px;
-}
-
-.slider_detail-box .btn-box .btn-1 {
-  display: inline-block;
-  padding: 15px 45px;
-  background-color: #023b48;
-  border: 1px solid #023b48;
-  color: #ffffff;
-  margin-right: 10px;
-}
-
-.slider_detail-box .btn-box .btn-1:hover {
-  background-color: transparent;
-  color: #023b48;
-}
-
-.slider_detail-box .btn-box .btn-2 {
-  display: inline-block;
-  padding: 10px 45px;
-  background-color: #ffffff;
-  border: 1px solid #ffffff;
-  color: #023b48;
-}
-
-.slider_detail-box .btn-box .btn-2:hover {
-  background-color: transparent;
-  color: #ffffff;
-}
-
-.slider_img-box {
-  margin-right: 20%;
-}
-
-.slider_img-box img {
-  width: 100%;
-}
-
-.carousel-indicators {
-  bottom: 5%;
-}
-
-.carousel-indicators li {
-  width: 20px;
-  height: 20px;
-  border-radius: 100%;
-  opacity: 1;
-}
-
-.carousel-indicators .active {
-  background-color: #023b48;
-}
 
 .about_section {
   background-image: url(../assets/images/about-bg.png);
@@ -3120,24 +3097,32 @@ a:focus {
 
 .about_section .img-box img {
   width: 100%;
+  border-radius: var(--pf-radius);
 }
 
 .about_section .detail-box p {
-  margin: 25px 0;
+  margin: var(--pf-space-3) 0;
+  line-height: 1.7;
 }
 
-.about_section .detail-box a {
+.about_section .detail-box a,
+.training_section .detail-box a {
   display: inline-block;
-  padding: 10px 20px;
-  background-color: #023b48;
-  border: 1px solid #023b48;
-  color: #ffffff;
-  
+  padding: 12px 30px;
+  background-color: var(--pf-amber);
+  border: 2px solid var(--pf-amber);
+  border-radius: 999px;
+  color: var(--pf-ink);
+  font-weight: 600;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 
-.about_section .detail-box a:hover {
-  background-color: transparent;
-  color: #023b48;
+.about_section .detail-box a:hover,
+.training_section .detail-box a:hover {
+  background-color: var(--pf-petrol);
+  border-color: var(--pf-petrol);
+  color: var(--pf-cream);
+  transform: translateY(-2px);
 }
 
 .service_section .row .col-md-4 {
@@ -3145,7 +3130,11 @@ a:focus {
   display: -ms-flexbox;
 
   display: flex;
-  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid rgba(11, 59, 64, 0.08);
+  border-radius: var(--pf-radius);
+  box-shadow: var(--pf-shadow);
+  padding: 34px 26px;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
@@ -3154,14 +3143,21 @@ a:focus {
       -ms-flex-align: center;
           align-items: center;
   text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service_section .row .col-md-4:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--pf-shadow-hover);
 }
 
 .service_section .img_box {
   width: 110px;
   height: 110px;
   border-radius: 100%;
-  border: #154164 5px solid;
-  background-color: #226daa;
+  border: 4px solid var(--pf-amber);
+  background-color: var(--pf-petrol);
+  box-shadow: 0 8px 20px rgba(11, 59, 64, 0.25);
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -3171,6 +3167,11 @@ a:focus {
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.service_section .row .col-md-4:hover .img_box {
+  transform: scale(1.06);
 }
 
 .service_section .img_box img {
@@ -3178,28 +3179,18 @@ a:focus {
 }
 
 .service_section .detail_box {
-  margin-top: 25px;
+  margin-top: var(--pf-space-2);
 }
 
 .service_section .detail_box h6 {
-  font-weight: bold;
-}
-
-.service_section a {
-  display: inline-block;
-  padding: 12px 25px;
-  background-color: #023b48;
-  border: 1px solid #023b48;
-  color: #ffffff;
-}
-
-.service_section a:hover {
-  background-color: transparent;
-  color: #023b48;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pf-ink);
 }
 
 .gallery-section {
-  background-color: #226daa;
+  background-color: var(--pf-petrol);
 }
 
 .gallery-section .container {
@@ -3218,15 +3209,29 @@ a:focus {
 
 .gallery-section .container h2 {
   color: #ffffff;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+}
+
+.gallery-section .container h2::before {
+  color: var(--pf-amber);
 }
 
 .gallery-section .img_box {
   margin: 15px 0;
+  border-radius: var(--pf-radius-sm);
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .gallery-section .img_box img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.gallery-section .img_box:hover img {
+  transform: scale(1.05);
 }
 
 .gallery-section .img_box.box-1 {
@@ -3270,101 +3275,10 @@ a:focus {
   color: #023b48;
 }
 
-.client_section .pl-100 {
-  padding-left: 100px;
-}
-
-.client_section .client_container {
-  width: 100%;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  margin: 0 auto;
-  border: 1px solid #606060;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  padding: 30px 0;
-}
-
-.client_section .client_container .img_box {
-  width: 200px;
-  margin-left: -100px;
-}
-
-.client_section .client_container .img_box img {
-  min-width: 100%;
-}
-
-.client_section .client_container .detail_box {
-  padding: 0 35px;
-}
-
-.client_section .carousel-indicators li {
-  background-color: #868a8d;
-
-}
-
-.client_section .carousel-indicators .active {
-  background-color: #154164;
-
-}
-
-.map_section {
-  position: relative;
-  height: 600px;
-}
-
-.map_section #map {
-  position: absolute;
-}
-
-.map_section .form_container {
-  position: relative;
-  width: 50%;
-  z-index: 9;
-}
-
-.map_section .form_container form {
-  background-color: rgba(221, 221, 221, 0.966);
-  border-radius: 10px;
-  padding: 45px;
-  margin: 75px 0;
-}
-
-.map_section .form_container input {
-  border: none;
-  outline: none;
-  background-color: transparent;
-  border-bottom: 1px solid #111111;
-  padding-top: 35px;
-  width: 100%;
-}
-
-.map_section .form_container input.message-box {
-  padding-top: 55px;
-}
-
-.map_section .form_container button {
-  display: inline-block;
-  padding: 12px 20px;
-  background-color: #023b48;
-  border: 1px solid #023b48;
-  color: #ffffff;
-  border-radius: 30px;
-  width: 100%;
-  margin-top: 35px;
-}
-
-.map_section .form_container button:hover {
-  background-color: transparent;
-  color: #023b48;
-}
-
 .info_section {
-  background-color: #154164;
+  background-color: var(--pf-petrol-deep);
   padding: 50px 0;
-  
+
 }
 
 .info_items {
@@ -3397,13 +3311,28 @@ a:focus {
   width: 80px;
   height: 80px;
   border-radius: 100%;
+  background-color: rgba(255, 255, 255, 0.12);
   background-repeat: no-repeat;
   background-position: center;
+  transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.info_items a:hover .img-box {
+  background-color: var(--pf-amber);
+  transform: translateY(-3px);
 }
 
 .info_items .item .detail-box {
   margin-top: 5px;
   color: #fff;
+}
+
+.info_items .item .detail-box p {
+  transition: color 0.25s ease;
+}
+
+.info_items a:hover .item .detail-box p {
+  color: var(--pf-amber);
 }
 
 .info_items {
@@ -3428,19 +3357,20 @@ a:focus {
 
 /* footer section*/
 .footer_section {
-  background-color: #fbfdfd;
-  padding: 5px;
+  background-color: var(--pf-petrol-deep);
+  padding: 22px 5px;
   font-weight: 500;
+  border-top: 3px solid var(--pf-amber);
 }
 
 .footer_section p {
-  color: #292929;
+  color: rgba(250, 247, 241, 0.75);
   margin: 0;
   text-align: center;
 }
 
 .footer_section a {
-  color: #292929;
+  color: var(--pf-amber);
 }
 
 /* end footer section*/
@@ -3450,6 +3380,7 @@ a:focus {
   max-width: 150px; /* Or the size you prefer */
   height: auto;
   margin-bottom: 15px; /* Space below on mobile */
+  border: 4px solid var(--pf-amber);
 }
 
 @media (min-width: 768px) {
@@ -3462,11 +3393,15 @@ a:focus {
 }
 
 .client_container_custom {
-   border-bottom: 1px solid #eee; /* Example: divider line */
-   padding-bottom: 1.5rem; /* Example: bottom space */
+   background-color: #ffffff;
+   border: 1px solid rgba(11, 59, 64, 0.08);
+   border-radius: var(--pf-radius);
+   box-shadow: var(--pf-shadow);
+   padding: 28px 32px;
+   margin-bottom: var(--pf-space-3);
 }
 .client_container_custom:last-of-type {
-   border-bottom: none; /* Remove border from the last one */
+   margin-bottom: 0;
 }
 
 
@@ -3518,19 +3453,19 @@ a:focus {
 /* ==================================== */
 
 .training_section {
-    padding: 75px 0; /* Usa el padding estándar */
+    padding: var(--pf-space-6) 0; /* Usa el padding estándar */
 }
 
 .training-list {
     list-style: none; /* Quita los puntos por defecto */
     padding-left: 0;
-    margin-top: 15px;
+    margin-top: var(--pf-space-2);
 }
 
 .training-list li {
-    padding: 5px 0;
-    border-bottom: 1px dashed #cccccc; /* Línea de guiones para separar elementos */
-    color: #0c0c0c;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(11, 59, 64, 0.2); /* Línea sutil para separar elementos */
+    color: var(--pf-ink);
 }
 
 .training-list li:last-child {
@@ -3538,8 +3473,8 @@ a:focus {
 }
 
 .training-list li strong {
-    color: #023b48; /* Color de acento para los títulos */
-    font-weight: 600;
+    color: var(--pf-petrol); /* Color de acento para los títulos */
+    font-weight: 700;
 }
 
 .training-gallery-grid {
@@ -3634,12 +3569,13 @@ a:focus {
   display: inline-flex; /* Para alinear icono y texto */
   align-items: center; /* Centra icono y texto verticalmente */
   padding: 12px 20px;
-  border-radius: 25px; /* Bordes redondeados */
+  border-radius: 999px; /* Bordes redondeados */
   color: #fff; /* Texto blanco */
   text-decoration: none;
   font-size: 1rem;
-  transition: opacity 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Sombra ligera */
+  font-weight: 600;
+  transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 14px rgba(11, 59, 64, 0.18); /* Sombra acorde a la marca */
 }
 
 .social_button i {
@@ -3648,8 +3584,10 @@ a:focus {
 }
 
 .social_button:hover {
-  opacity: 0.85; /* Efecto hover */
+  opacity: 0.9; /* Efecto hover */
   color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(11, 59, 64, 0.28);
 }
 
 /* Colores específicos para cada red */
@@ -3668,15 +3606,16 @@ a:focus {
 
 /* Estilos para la caja de dirección */
 .address_box {
-  background-color: #f8f9fa; /* Fondo ligero */
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  background-color: var(--pf-cream); /* Fondo ligero */
+  padding: 18px;
+  border-radius: var(--pf-radius-sm);
+  border: 1px solid rgba(11, 59, 64, 0.1);
 }
 
 .address_box h5 {
   margin-bottom: 5px;
-  color: #023b48; /* Color principal */
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  color: var(--pf-petrol); /* Color principal */
 }
 
 .address_box p {
@@ -3703,9 +3642,9 @@ a:focus {
 /* ESTILOS NAVEGACIÓN ANIMADA           */
 /* ==================================== */
 :root {
-  --clr: #154164; /* Color principal para íconos/indicador */
-  --clr-indicator-bg: #29fd53; /* Color de fondo del indicador (verde) */
-  --clr-indicator-border: #226daa; /* Color del borde del indicador */
+  --clr: var(--pf-petrol); /* Color principal para íconos/indicador */
+  --clr-indicator-bg: var(--pf-amber); /* Color de fondo del indicador */
+  --clr-indicator-border: var(--pf-petrol); /* Color del borde del indicador */
 }
 
 /* Contenedor general para alinear logo, nav y botón WhatsApp */
@@ -3722,9 +3661,14 @@ a:focus {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: #191919;
+  color: var(--pf-cream);
+  font-family: "Baloo 2", "Poppins", sans-serif;
   font-weight: 700;
-  font-size: 30px;
+  font-size: 26px;
+  transition: color 0.2s ease;
+}
+.navbar-brand-logo:hover {
+  color: var(--pf-amber);
 }
 .navbar-brand-logo img {
   margin-right: 10px;
@@ -3944,9 +3888,9 @@ a:focus {
   justify-content: center; /* Centra el contenido */
   padding: 8px 15px;
   background-color: #ffffff;
-  border: 2px solid #051a2b;/*clr es #023b48 */
+  border: 2px solid var(--pf-petrol);
   border-radius: 20px;
-  color: #051a2b;
+  color: var(--pf-petrol);
   font-weight: 500;
   text-decoration: none;
   font-size: 0.9rem;
@@ -4053,249 +3997,12 @@ a:focus {
 }
 
 /* ==================================== */
-/* --- INICIO: ESTILOS DEL SLIDER --- */
+/* --- ESTILOS DE TESTIMONIOS (CON ESTRELLAS) --- */
 /* ==================================== */
-
-/* Oculta la imagen estática original del slider 
-.slider_img-box {
-  display: none;
-}
-
-/* Ajusta la sección principal del slider 
-.slider_section {
-  background-color: #333; /* Color de fondo si la imagen no carga 
-  padding: 0; /* Quitamos el padding original 
-}
-
-/* Estilo para cada diapositiva (carousel-item) 
-.slider_section .carousel-item {
-  height: 85vh; /* Altura del slider (90% de la pantalla) 
-  min-height: 500px; /* Altura mínima 
-  background-size: 120%; /* La imagen de fondo cubre todo el espacio 
-  background-position: center center; /* Centra la imagen 
-  background-repeat: no-repeat;
-  position: relative; /* Necesario para la capa oscura 
-}
-
-/* Capa oscura semitransparente (Overlay) para MEJORAR LEGIBILIDAD 
-.slider_section .carousel-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* Negro al 40% de opacidad 
-  z-index: 1; /* Detrás del texto 
-}
-
-/* --- Imágenes de fondo para CADA diapositiva --- 
-
-/* Diapositiva 1: Paseos (usando la imagen que subiste) 
-.slider_section .carousel-item.slide-1 {
-  background-image: url('../images/slider-bg-paseos1.jpg'); 
-}
-
-/* Diapositiva 2: Hospedaje (DEBES CAMBIAR ESTA IMAGEN) 
-.slider_section .carousel-item.slide-2 {
-  background-image: url('../images/slider-bg-hospedaje1.jpg'); /* REEMPLAZA ESTA RUTA 
-  background-position: center bottom; /* Ejemplo de ajuste de posición 
-}
-
-/* Diapositiva 3: Colegio (DEBES CAMBIAR ESTA IMAGEN) 
-.slider_section .carousel-item.slide-3 {
-  background-image: url('../images/slider-bg-colegio1.jpg'); /* REEMPLAZA ESTA RUTA 
-}
-
-/* Diapositiva 4: Eventos (DEBES CAMBIAR ESTA IMAGEN) 
-.slider_section .carousel-item.slide-4 {
-  background-image: url('../images/slider-bg-eventos1.jpg'); /* REEMPLAZA ESTA RUTA 
-}
-
-
-/* --- Estilos para el texto (MEJORAR LEGIBILIDAD) --- 
-
-.slider_section .slider_detail-box {
-  position: relative;
-  z-index: 2; /* Asegura que el texto esté SOBRE la capa oscura 
-  padding: 20px; /* Añade un padding por si acaso 
-}
-
-/* Título (H1) 
-.slider_section .slider_detail-box h1 {
-  color: #ffffff; /* Texto blanco 
-  font-weight: bold; /* Más grueso 
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Sombra de texto fuerte 
-}
-.slider_section .slider_detail-box h1 span {
-  color: #ffffff; /* El <span> (como en "Colegio Canino") también debe ser blanco 
-  font-weight: bold;
-}
-
-/* Párrafo (p) 
-.slider_section .slider_detail-box p {
-  color: #f0f0f0; /* Blanco un poco más suave 
-  font-size: 1.1rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9); /* Sombra de texto fuerte 
-}
-
-/* Botón (btn-1) 
-.slider_section .slider_detail-box .btn-1 {
-  /* Mantenemos tus colores pero aseguramos que esté visible 
-  background-color: #023b48;
-  color: #ffffff;
-  border: 1px solid #023b48;
-  transition: 0.3s;
-}
-.slider_section .slider_detail-box .btn-1:hover {
-  background-color: transparent;
-  color: #ffffff;
-  border-color: #ffffff; /* Borde blanco en hover 
-}
-
-/* Ajustes para centrar el texto (ya que quitamos la imagen) 
-.slider_section .carousel-item .row {
-  height: 100%;
-  align-items: center; /* Centra el texto verticalmente 
-}
-
-/* ==================================== 
-/* --- FIN: ESTILOS DEL SLIDER --- 
-==================================== */
-/* ==================================== */
-/* --- INICIO: ESTILOS DEL SLIDER --- */
-/* ==================================== */
-
-/* Estilo para cada diapositiva (carousel-item) */
-.slider_section .carousel-item {
-  height: 85vh; /* Altura del slider (90% de la pantalla) */
-  min-height: 60px; /* Altura mínima */
-  background-size: 120%; /* La imagen de fondo cubre todo el espacio */
-  background-position: center center; /* Centra la imagen */
-  background-repeat: no-repeat;
-  position: 100%; /* Necesario para la capa oscura */
-  padding: 6% 0; /* Recuperamos el padding que quitamos */
-}
-
-/* Capa oscura semitransparente (Overlay) para MEJORAR LEGIBILIDAD */
-.slider_section .carousel-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* Negro al 40% de opacidad. AJUSTA ESTE VALOR (0.4) si quieres más o menos oscuridad. */
-  z-index: 1; /* Detrás del contenido */
-}
-
-/* --- Imágenes de fondo para CADA diapositiva --- */
-
-/* Diapositiva 1: Paseos (usando la imagen que subiste) */
-.slider_section .carousel-item.slide-1 {
-  background-image: url('../assets/images/slider-bg-paseos1.jpg'); 
-}
-
-/* Diapositiva 2: Hospedaje (DEBES CAMBIAR ESTA IMAGEN) */
-.slider_section .carousel-item.slide-2 {
-  background-image: url('../assets/images/slider-bg-hospedaje1.jpg'); /* REEMPLAZA ESTA RUTA */
-  background-position: center bottom; /* Ejemplo de ajuste de posición */
-}
-
-/* Diapositiva 3: Colegio (DEBES CAMBIAR ESTA IMAGEN) */
-.slider_section .carousel-item.slide-3 {
-  background-image: url('../assets/images/slider-bg-colegio1.jpg'); /* REEMPLAZA ESTA RUTA */
-}
-
-/* Diapositiva 4: Eventos (DEBES CAMBIAR ESTA IMAGEN) */
-.slider_section .carousel-item.slide-4 {
-  background-image: url('../assets/images/slider-bg-eventos1.jpg'); /* REEMPLAZA ESTA RUTA */
-}
-
-
-/* --- Estilos para el texto (MEJORAR LEGIBILIDAD) --- */
-
-/* El contenido (texto e imagen decorativa) debe estar sobre el overlay */
-.slider_section .carousel-item .row {
-  position: relative;
-  z-index: 2; /* Asegura que esté SOBRE la capa oscura */
-  align-items: center; /* Centra el texto y la imagen verticalmente */
-}
-
-/* Título (H1) */
-.slider_section .slider_detail-box h1 {
-  color: #ffffff; /* Texto blanco */
-  font-weight: bold; /* Más grueso */
-  font-size: 48px; /* Tamaño consistente */
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Sombra de texto fuerte */
-}
-.slider_section .slider_detail-box h1 span {
-  color: #ffffff; /* El <span> (como en "Colegio Canino") también debe ser blanco */
-  font-weight: bold;
-}
-
-/* Párrafo (p) */
-.slider_section .slider_detail-box p {
-  color: #f0f0f0; /* Blanco un poco más suave */
-  font-size: 1.1rem;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9); /* Sombra de texto fuerte */
-}
-
-/* Botón (btn-1) */
-.slider_section .slider_detail-box .btn-1 {
-  /* Mantenemos tus colores pero aseguramos que esté visible */
-  background-color: #023b48;
-  color: #ffffff;
-  border: 1px solid #023b48;
-  transition: 0.3s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Sombra de botón opcional */
-}
-.slider_section .slider_detail-box .btn-1:hover {
-  background-color: transparent;
-  color: #ffffff;
-  border-color: #ffffff; /* Borde blanco en hover */
-}
-
-/* Aseguramos que la imagen decorativa (vet/dogs) no tenga el overlay */
-.slider_img-box {
-   position: relative;
-   z-index: 2; /* Sobre el overlay */
-}
-
-/* ==================================== */
-/* --- FIN: ESTILOS DEL SLIDER --- */
-/* ==================================== */
-
-/* ==================================== */
-/* --- INICIO: ESTILOS DE TESTIMONIOS (CON ESTRELLAS) --- */
-/* ==================================== */
-
-/* Ajuste para que el contenedor tenga un alto mínimo (tamaño fijo) */
-.client_section .client_container {
-  min-height: 240px; /* <- AJUSTA ESTA ALTURA SI ES NECESARIO */
-  align-items: center; /* Asegura centrado vertical */
-}
-
-/* Contenedor para alinear Nombre y Estrellas */
-.client-name-rating {
-  display: flex;
-  align-items: center; /* Centra verticalmente el nombre y las estrellas */
-  flex-wrap: wrap; /* Permite que baje en pantallas pequeñas */
-  gap: 10px 15px; /* Espacio vertical y horizontal */
-  margin-bottom: 10px; /* Espacio antes del párrafo de opinión */
-}
-
-/* Estilos para el H5 (nombre) */
-.client-name-rating h5 {
-  margin: 0; /* Quitamos márgenes por defecto */
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #023b48; /* Color principal de tu marca */
-}
 
 /* Contenedor de estrellas */
 .star-rating {
-  color: #f5b019; /* Color dorado/amarillo para las estrellas */
+  color: var(--pf-amber); /* Color dorado/ámbar para las estrellas */
   font-size: 1rem; /* Tamaño de las estrellas */
 }
 
@@ -4304,36 +4011,444 @@ a:focus {
   color: #ccc; /* Estrellas vacías (si se usan) */
 }
 
-/* Ajuste de la imagen del cliente */
-.client_container .img_box img {
-  border-radius: 50%; /* Asegura que la imagen sea redonda */
+/* ============================================================ */
+/* ======================  HOME REDESIGN  ====================== */
+/* =====================  PASEO FELIZ  ========================= */
+/* ============================================================ */
+/* Clases nuevas y exclusivas del home (index.html). No se tocan   */
+/* estilos compartidos con las demás páginas: .service_section,   */
+/* .client_container_custom, .star-rating, etc. se REUTILIZAN tal  */
+/* como están para mantener coherencia visual con el resto del     */
+/* sitio; aquí solo se agrega composición y layout nuevos.         */
+/* ============================================================ */
+
+/* --- Patrón reutilizable: eyebrow + título + copy --- */
+.home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-amber-deep);
+  background: rgba(226, 147, 43, 0.13);
+  padding: 7px 18px;
+  border-radius: 999px;
+  margin-bottom: var(--pf-space-2);
+}
+
+.home-section-head {
+  max-width: 640px;
+  margin-bottom: var(--pf-space-4);
+}
+
+.home-section-head-center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.home-section-lead {
+  color: rgba(35, 32, 29, 0.68);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.home-section-cta {
+  text-align: center;
+  margin-top: var(--pf-space-4);
+}
+
+/* --- Sistema de botones del home --- */
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-btn-primary {
+  background-color: var(--pf-amber);
+  border: 2px solid var(--pf-amber);
+  color: var(--pf-ink);
+  box-shadow: 0 10px 24px rgba(226, 147, 43, 0.3);
+}
+
+.home-btn-primary:hover {
+  background-color: var(--pf-petrol);
+  border-color: var(--pf-petrol);
+  color: var(--pf-cream);
+  transform: translateY(-2px);
+}
+
+.home-btn-secondary {
+  background-color: transparent;
+  border: 2px solid var(--pf-petrol);
+  color: var(--pf-petrol);
+}
+
+.home-btn-secondary:hover {
+  background-color: var(--pf-petrol);
+  color: var(--pf-cream);
+  transform: translateY(-2px);
+}
+
+.home-btn-large {
+  padding: 18px 44px;
+  font-size: 1.1rem;
+}
+
+/* --- HERO --- */
+.home-hero {
+  position: relative;
+  padding: var(--pf-space-6) 0 calc(var(--pf-space-6) + 16px);
+  background: linear-gradient(180deg, #fdfbf8 0%, #f6efe2 100%);
+  overflow: hidden;
+}
+
+.home-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--pf-space-6);
+  align-items: center;
+}
+
+.home-hero-title {
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: clamp(32px, 4.6vw, 54px);
+  line-height: 1.1;
+  color: var(--pf-ink);
+  margin: var(--pf-space-2) 0 var(--pf-space-3);
+}
+
+.home-hero-subtitle {
+  font-size: 1.12rem;
+  line-height: 1.7;
+  color: rgba(35, 32, 29, 0.72);
+  max-width: 480px;
+  margin-bottom: var(--pf-space-4);
+}
+
+.home-hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: var(--pf-space-4);
+}
+
+.home-hero-badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.home-hero-badges li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--pf-petrol);
+  background: #ffffff;
+  border: 1px solid rgba(11, 59, 64, 0.12);
+  padding: 8px 15px;
+  border-radius: 999px;
+}
+
+.home-hero-badges li i {
+  color: var(--pf-amber-deep);
+}
+
+.home-hero-visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.home-hero-visual::before {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  max-width: 90%;
+  background: radial-gradient(circle, rgba(226, 147, 43, 0.28), transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+.home-hero-photo {
+  position: relative;
+  z-index: 1;
   max-width: 100%;
-  border: 4px solid #023b48; /* Borde blanco opcional */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Sombra suave */
+  filter: drop-shadow(0 22px 40px rgba(11, 59, 64, 0.25));
 }
 
-/* Ajuste de la caja de texto */
-.client_container .detail_box {
-  padding-left: 25px;
+.home-hero-floatcard {
+  position: absolute;
+  z-index: 2;
+  bottom: 6%;
+  left: -4%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 12px 18px;
+  box-shadow: var(--pf-shadow);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--pf-petrol);
 }
 
-/* Ajuste responsivo para el padding en móviles */
-@media (max-width: 576px) {
-  .client_section .pl-100 {
-    padding-left: 15px; /* Reduce el padding en móvil */
-    padding-right: 15px;
-  }
-  .client_container .detail_box {
-    padding-left: 0; /* Quita padding extra en móvil */
-    text-align: center; /* Centra el texto en móvil */
-  }
-  .client-name-rating {
-    justify-content: center; /* Centra el nombre y las estrellas en móvil */
-  }
-  .client_section .client_container {
-    min-height: auto; /* Quita la altura mínima en móvil */
-  }
+.home-hero-floatcard i {
+  color: var(--pf-amber-deep);
 }
+
+/* --- SERVICIOS (reutiliza .service_section, solo ajusta el layout externo) --- */
+.home-services .row {
+  row-gap: var(--pf-space-3);
+}
+
+/* --- CÓMO FUNCIONA --- */
+.home-steps-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 640px;
+  position: relative;
+}
+
+.home-steps-list::before {
+  content: "";
+  position: absolute;
+  left: 23px;
+  top: 10px;
+  bottom: 10px;
+  border-left: 3px dashed var(--pf-amber);
+}
+
+.home-step {
+  position: relative;
+  display: flex;
+  gap: var(--pf-space-3);
+  padding-bottom: var(--pf-space-4);
+}
+
+.home-step:last-child {
+  padding-bottom: 0;
+}
+
+.home-step-number {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--pf-petrol);
+  color: var(--pf-amber);
+  border: 3px solid var(--pf-amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.home-step-body h3 {
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 1.12rem;
+  color: var(--pf-ink);
+  margin: 0 0 6px;
+}
+
+.home-step-body p {
+  margin: 0;
+  color: rgba(35, 32, 29, 0.68);
+  line-height: 1.6;
+}
+
+/* --- BENEFICIOS --- */
+.home-benefits {
+  background-color: var(--pf-cream);
+}
+
+.home-benefits-grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: var(--pf-space-6);
+  align-items: start;
+}
+
+.home-benefits-copy p {
+  color: rgba(35, 32, 29, 0.75);
+  line-height: 1.75;
+  font-size: 1.02rem;
+}
+
+.home-benefits-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-space-3);
+}
+
+.home-benefits-list li {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.home-benefits-list i {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(226, 147, 43, 0.16);
+  color: var(--pf-amber-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.home-benefits-list h3 {
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 1.04rem;
+  color: var(--pf-ink);
+  margin: 0 0 4px;
+}
+
+.home-benefits-list p {
+  margin: 0;
+  color: rgba(35, 32, 29, 0.68);
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+
+/* --- TESTIMONIOS (grilla, reutiliza tarjeta .client_container_custom) --- */
+.home-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--pf-space-3);
+  align-items: stretch;
+}
+
+.home-testimonials-grid .client_container_custom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  margin-bottom: 0;
+}
+
+.home-testimonials-grid .img_box_testimonial {
+  margin-bottom: var(--pf-space-2);
+}
+
+.home-testimonials-grid .detail_box {
+  padding-left: 0;
+}
+
+.home-testimonials-grid .star-rating {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+/* --- CTA FINAL --- */
+.home-cta-final {
+  position: relative;
+  overflow: hidden;
+  padding: var(--pf-space-6) 0;
+  text-align: center;
+  background: linear-gradient(135deg, var(--pf-petrol) 0%, var(--pf-petrol-deep) 100%);
+}
+
+.home-cta-final::before {
+  content: "\f1b0";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  font-size: 280px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.04);
+  right: -50px;
+  top: -40px;
+  transform: rotate(15deg);
+  z-index: 0;
+}
+
+.home-cta-final-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.home-cta-final-inner h2 {
+  font-family: "Baloo 2", "Poppins", sans-serif;
+  font-weight: 800;
+  color: #ffffff;
+  font-size: clamp(26px, 3.4vw, 38px);
+  margin-bottom: 14px;
+}
+
+.home-cta-final-inner > p {
+  color: rgba(250, 247, 241, 0.8);
+  font-size: 1.05rem;
+  margin-bottom: var(--pf-space-4);
+}
+
+.home-cta-final-links {
+  margin-top: var(--pf-space-3);
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.home-cta-final-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(250, 247, 241, 0.85);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.home-cta-final-links a:hover {
+  color: var(--pf-amber);
+}
+
+.home-cta-final-links i {
+  color: var(--pf-amber);
+}
+
+/* ============================================================ */
+/* ====================  FIN HOME REDESIGN  ==================== */
+/* ============================================================ */
 
 /* ==================================== */
 /* --- FIN: ESTILOS DE TESTIMONIOS --- */
