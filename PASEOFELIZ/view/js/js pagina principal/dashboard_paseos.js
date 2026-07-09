@@ -10,8 +10,6 @@
     const API = '../../model/';
 
     let S = null;             // servicio (respuesta del endpoint)
-    let pedidosActivos = [];  // [{id_pedido, id_mascota, nombre, avatar}] para el selector
-    let idPedidoSel = null;   // pedido elegido en el selector (persiste entre polls)
     let firmaRender = '';     // firma del último render (evita repintar sin cambios)
     let visible = false;
     let pollTimer = null;     // estado del servicio cada 15 s
@@ -99,8 +97,7 @@
 
     // ── Carga y polling ───────────────────────────────────────────
     async function cargarEstado() {
-        const url = API + 'estado_servicio_paseos.php' + (idPedidoSel ? '?id_pedido=' + idPedidoSel : '');
-        const r = await fetch(url);
+        const r = await fetch(API + 'estado_servicio_paseos.php');
         const data = await r.json();
         if (!data.success || !data.tiene_servicio) return false;
         if (data.ahora_servidor) {
@@ -108,24 +105,12 @@
             if (!isNaN(ahora)) skewMs = ahora.getTime() - Date.now();
         }
         S = data.servicio;
-        pedidosActivos = data.pedidos_activos || [];
-        // Sincronizar la selección con lo que el servidor realmente devolvió
-        // (si el pedido elegido venció, cae al más reciente)
-        idPedidoSel = S.pedido && S.pedido.id_pedido ? S.pedido.id_pedido : null;
-        const firma = JSON.stringify(S) + '|' + JSON.stringify(pedidosActivos);
+        const firma = JSON.stringify(S);
         if (firma !== firmaRender) {
             firmaRender = firma;
             render();
         }
         return true;
-    }
-
-    // Cambia la mascota mostrada en el dashboard (click en el selector)
-    function seleccionarPedido(idPedido) {
-        if (idPedido === idPedidoSel) return;
-        idPedidoSel = idPedido;
-        firmaRender = ''; // fuerza repintado con la respuesta nueva
-        cargarEstado().catch(function () {});
     }
 
     function iniciarTimers() {
@@ -164,70 +149,25 @@
         const estado = S.estado;
         let sub, col1, col2, col3;
 
-        // Aviso de cancelación: el paseo de HOY de esta mascota se canceló
-        // (la ruta del paseador puede seguir activa para otros clientes).
-        const canceladoHoy = S.ruta_hoy && S.ruta_hoy.fase === 'cancelado';
-        const motivoCancel = canceladoHoy
-            ? ((S.ruta_hoy.recogida && S.ruta_hoy.recogida.motivo_cancelacion) ||
-               (S.ruta_hoy.entrega && S.ruta_hoy.entrega.motivo_cancelacion) || '')
-            : '';
-        const avisoCancelado = canceladoHoy
-            ? '<div class="dz-aviso dz-aviso-rojo dz-aviso-grande" style="margin-bottom:14px">' +
-                  '<i class="ph ph-x-circle"></i>' +
-                  '<div><strong>El paseo de hoy de ' + esc(S.pedido.mascota) + ' fue cancelado.</strong>' +
-                  (motivoCancel ? '<br>Motivo: ' + esc(motivoCancel) : '') + '</div>' +
-              '</div>'
-            : '';
-
-        // Aviso de finalizado: el paseo de HOY de esta mascota ya se
-        // entregó (la ruta del paseador puede seguir activa para otros).
-        // Incluye el widget de calificación (1-5 estrellas) si aún no
-        // calificó este paseo.
-        const entregadoHoy   = S.ruta_hoy && S.ruta_hoy.fase === 'finalizado';
-        const yaCalificado   = entregadoHoy && S.ruta_hoy.calificacion;
-        const ratingHtml = !entregadoHoy ? '' : (
-            yaCalificado
-                ? '<div class="dz-rating-hecha">Calificaste este paseo: ' + '★'.repeat(yaCalificado.estrellas) + '☆'.repeat(5 - yaCalificado.estrellas) + '</div>'
-                : '<div class="dz-rating-widget" id="dzRatingWidget" data-pedido="' + S.pedido.id_pedido + '">' +
-                      '<span class="dz-rating-lbl">Califica el servicio:</span>' +
-                      '<span class="dz-rating-stars">' +
-                          [1, 2, 3, 4, 5].map(function (n) {
-                              return '<button type="button" class="dz-star" data-estrellas="' + n + '" title="' + n + ' estrella' + (n > 1 ? 's' : '') + '"><i class="ph ph-star"></i></button>';
-                          }).join('') +
-                      '</span>' +
-                  '</div>'
-        );
-        const avisoEntregado = entregadoHoy
-            ? '<div class="dz-aviso dz-aviso-verde dz-aviso-grande" style="margin-bottom:14px">' +
-                  '<i class="ph ph-check-circle"></i>' +
-                  '<div style="flex:1">' +
-                      '<strong>' + esc(S.pedido.mascota) + ' ya fue paseado y entregado hoy.</strong> ' +
-                      '¡Gracias por confiar en Paseo Feliz!' +
-                      ratingHtml +
-                  '</div>' +
-              '</div>'
-            : '';
-
         if (estado === 'paseo_en_curso') {
             sub  = 'El paseo de ' + esc(S.pedido.mascota) + ' está en curso. Puedes seguirlo en tiempo real.';
-            col1 = cardMapa(true) + cardInstrucciones() + cardMascotas();
+            col1 = cardMapa(true) + cardInstrucciones();
             col2 = cardEstadoPaseo() + cardInfoPaseo() + cardHistorial('Historial del paseo de hoy');
             col3 = cardPaseador(true) + cardAcciones() + cardPlan();
         } else if (estado === 'paseador_asignado') {
             sub  = 'Tu paseador ha sido asignado y tu próximo paseo está programado.';
-            col1 = cardMapa(false) + cardProximoPaseo() + cardMascotas();
+            col1 = cardMapa(false) + cardProximoPaseo();
             col2 = cardEstadoServicio() + cardResumen() + cardHistorial('Historial reciente');
             col3 = cardPaseador(false) + cardAcciones() + cardPlan();
         } else {
             sub  = 'Tu servicio de paseos está confirmado y estamos asignando un paseador.';
-            col1 = cardMapa(false) + cardDireccion() + cardMascotas();
+            col1 = cardMapa(false) + cardDireccion();
             col2 = cardEstadoServicio() + cardResumen() + cardHistorial('Historial reciente');
             col3 = cardBuscandoPaseador() + cardAcciones() + cardPlan();
         }
 
         cont.innerHTML =
             '<div class="dz-sub">' + sub + '</div>' +
-            avisoCancelado + avisoEntregado +
             '<div class="dz-grid">' +
                 '<div class="dz-col">' + col1 + '</div>' +
                 '<div class="dz-col dz-col-centro">' + col2 + '</div>' +
@@ -276,64 +216,6 @@
                     (p.referencia ? '<div class="dz-fila"><i class="ph ph-note"></i><span><strong>Referencia:</strong> ' + esc(p.referencia) + '</span></div>' : '') +
                     '<div class="dz-aviso"><i class="ph ph-bell"></i> Te notificaremos cuando tu paseador esté en camino a la recogida.</div>' +
                '</div>';
-    }
-
-    // Selector de mascotas en servicio + botón para añadir otra
-    function cardMascotas() {
-        const filas = pedidosActivos.map(function (pa) {
-            const sel = pa.id_pedido === (S.pedido && S.pedido.id_pedido);
-            const av = avatarUrl(pa.avatar, '');
-            return '<div class="dz-mascota-fila' + (sel ? ' sel' : '') + '" data-pedido="' + pa.id_pedido + '">' +
-                       (av ? '<img class="dz-mascota-av" src="' + esc(av) + '" onerror="this.outerHTML=\'<span class=dz-mascota-emoji>🐶</span>\'">'
-                           : '<span class="dz-mascota-emoji">🐶</span>') +
-                       '<span class="dz-mascota-nombre">' + esc(pa.nombre) + '</span>' +
-                       (sel ? '<i class="ph ph-check-circle dz-mascota-check"></i>' : '') +
-                   '</div>';
-        }).join('');
-
-        return '<div class="dz-card">' +
-                    filas +
-                    '<button class="dz-btn-add-mascota" data-accion="agregar-mascota">' +
-                        '<i class="ph ph-plus"></i> Añadir a otra mascota al servicio' +
-                    '</button>' +
-               '</div>';
-    }
-
-    // Mini-modal: cómo añadir la nueva mascota (exprés o servicio nuevo)
-    function abrirModalAgregarMascota() {
-        if (typeof abrirWizardPaseos !== 'function') return;
-        const p = S.pedido;
-        abrirModalDz(
-            '<button class="dz-modal-x" data-cerrar><i class="ph ph-x"></i></button>' +
-            '<h3 class="dz-h3"><i class="ph ph-paw-print"></i> Añadir otra mascota</h3>' +
-            '<p class="dz-modal-txt">¿Cómo quieres añadirla?</p>' +
-            '<button id="dz-add-express" class="dz-btn-opcion">' +
-                '<i class="ph ph-users-three"></i>' +
-                '<span><strong>Unirse al servicio actual</strong><br>' +
-                '<small>Mismos días, horario y paseador que ' + esc(p.mascota) + '. Solo eliges la mascota y pagas.</small></span>' +
-            '</button>' +
-            '<button id="dz-add-normal" class="dz-btn-opcion">' +
-                '<i class="ph ph-gear"></i>' +
-                '<span><strong>Configurar un servicio nuevo</strong><br>' +
-                '<small>Eliges plan, días, horario y dirección desde cero.</small></span>' +
-            '</button>'
-        );
-        document.getElementById('dz-add-express').addEventListener('click', function () {
-            cerrarModalDz();
-            abrirWizardPaseos({
-                modo: 'agregar_mascota',
-                base: S.pedido,
-                ocupadas: pedidosActivos.map(function (pa) { return pa.id_mascota; }),
-            });
-        });
-        document.getElementById('dz-add-normal').addEventListener('click', function () {
-            cerrarModalDz();
-            // También en el flujo normal: las mascotas que ya tienen servicio
-            // se muestran bloqueadas en el paso 1 del wizard
-            abrirWizardPaseos({
-                ocupadas: pedidosActivos.map(function (pa) { return pa.id_mascota; }),
-            });
-        });
     }
 
     function cardInstrucciones() {
@@ -404,7 +286,7 @@
         const p = S.pedido;
         const filas = [
             ['ph-paw-print',      'Mascota',           esc(p.mascota)],
-            ['ph-calendar-blank', 'Plan',              esc(S.plan.nombre)],
+            ['ph-calendar-blank', 'Paseos al mes',     S.plan.paseos_mes + ' al mes'],
             ['ph-clock',          'Duración',          p.duracion_min + ' minutos por paseo'],
             ['ph-users',          'Modalidad',         p.modalidad === 'individual' ? 'Individual' : 'Grupal'],
             ['ph-calendar-check', 'Días preferidos',   fmtDiasCsv(p.dias_preferidos)],
@@ -555,8 +437,8 @@
             : '';
         return '<div class="dz-card">' +
                     '<h3 class="dz-h3">Tu plan</h3>' +
-                    '<div class="dz-plan-nombre">Plan mensual</div>' +
-                    '<div class="dz-texto">' + esc(pl.nombre) + '</div>' +
+                    '<div class="dz-plan-nombre">Tu mensualidad</div>' +
+                    '<div class="dz-texto">' + pl.paseos_mes + ' paseos al mes</div>' +
                     '<div class="dz-plan-uso"><span>Usados: <strong>' + pl.usados + '</strong></span><span>Restantes: <strong>' + pl.restantes + '</strong></span></div>' +
                     '<div class="dz-barra"><div class="dz-barra-fill" style="width:' + pct + '%"></div></div>' +
                     '<div class="dz-fila dz-fila-sm"><i class="ph ph-calendar-blank"></i><span>Renovación: ' + fmtFecha(mem.renovacion) + '</span></div>' +
@@ -649,56 +531,8 @@
                 else if (a === 'direccion') centrarMapa();
                 else if (a === 'perfil') abrirModalPerfil();
                 else if (a === 'renovar' && typeof abrirWizardPaseos === 'function') abrirWizardPaseos();
-                else if (a === 'agregar-mascota') abrirModalAgregarMascota();
             });
         });
-        // Selector de mascota en servicio (cambia el pedido mostrado)
-        document.querySelectorAll('#paseos-dashboard [data-pedido]').forEach(function (fila) {
-            fila.addEventListener('click', function () {
-                seleccionarPedido(parseInt(fila.getAttribute('data-pedido'), 10));
-            });
-        });
-        // Widget de calificación por estrellas (paseo ya entregado hoy)
-        const ratingWidget = document.getElementById('dzRatingWidget');
-        if (ratingWidget) {
-            const idPedido = parseInt(ratingWidget.getAttribute('data-pedido'), 10);
-            const stars = Array.from(ratingWidget.querySelectorAll('.dz-star'));
-            stars.forEach(function (btn) {
-                const n = parseInt(btn.getAttribute('data-estrellas'), 10);
-                btn.addEventListener('mouseenter', function () { pintarEstrellas(stars, n); });
-                btn.addEventListener('click', function () { enviarCalificacion(idPedido, n); });
-            });
-            ratingWidget.addEventListener('mouseleave', function () { pintarEstrellas(stars, 0); });
-        }
-    }
-
-    function pintarEstrellas(stars, hasta) {
-        stars.forEach(function (btn) {
-            const n = parseInt(btn.getAttribute('data-estrellas'), 10);
-            btn.classList.toggle('activa', n <= hasta);
-        });
-    }
-
-    function enviarCalificacion(idPedido, estrellas) {
-        const widget = document.getElementById('dzRatingWidget');
-        if (widget) widget.style.opacity = '.5';
-        fetch(API + 'calificar_paseo.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_pedido: idPedido, estrellas: estrellas }),
-        })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!data.success) {
-                    if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">' + esc(data.message || 'No se pudo calificar') + '</div>'); }
-                    return;
-                }
-                if (S.ruta_hoy) S.ruta_hoy.calificacion = { estrellas: estrellas, comentario: null };
-                render();
-            })
-            .catch(function () {
-                if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">Sin conexión. Intenta de nuevo.</div>'); }
-            });
     }
 
     function centrarMapa() {

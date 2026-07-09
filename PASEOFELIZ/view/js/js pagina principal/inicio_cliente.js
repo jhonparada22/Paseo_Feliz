@@ -350,12 +350,23 @@ document.getElementById('tnext').addEventListener('click', () => {
 // ══════════════════════════════════════════════════
 
 // Estado global de membresías (se llena al cargar)
+// Ahora la membresía es POR MASCOTA: `mascotas` trae el detalle de cada
+// una; paseos/adiestramiento/hospedaje siguen existiendo como resumen
+// ("¿al menos una mascota la tiene activa?") por compatibilidad.
 let membresias = {
     paseos:         false,
     adiestramiento: false,
     hospedaje:      false,
     renovar:        { paseos: false, adiestramiento: false, hospedaje: false },
+    mascotas:       [],
+    tieneMascotas:  true, // optimista hasta que cargue; evita parpadeo de aviso
 };
+
+function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+}
 
 // Nombres legibles para el modal "En proceso"
 const svcNombre = {
@@ -363,6 +374,44 @@ const svcNombre = {
     adiestramiento: 'Adiestramiento canino',
     hospedaje:      'Hospedaje canino',
 };
+
+// — Estilos del bloque "membresía por mascota" (inyectados por JS: no
+//   se tocó ningún .css para no romper otros estilos ya existentes) —
+(function inyectarEstilosMascotas() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .membresia-mascotas { margin-top: 14px; width: 100%; }
+        .mm-titulo { font-size: .78rem; font-weight: 700; color: #475569; margin-bottom: 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+        .mm-titulo-nota { font-weight: 500; color: #16a34a; }
+        .mm-aviso {
+            display:flex; align-items:center; gap:8px;
+            background:#fff7ed; border:1px solid #fdba74; color:#9a3412;
+            border-radius:10px; padding:10px 12px; font-size:.8rem; line-height:1.35;
+        }
+        .mm-aviso i { color:#ea580c; flex-shrink:0; font-size:1.1rem; }
+        .mm-row {
+            display:flex; align-items:center; gap:8px;
+            padding:7px 0; border-top:1px solid #eef2f7;
+        }
+        .mm-row:first-of-type { border-top:none; }
+        .mm-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; background:#f1f5f9; }
+        .mm-nombre { flex:1; font-size:.82rem; color:#334155; font-weight:600; }
+        .mm-badge {
+            display:inline-flex; align-items:center; gap:4px;
+            font-size:.72rem; font-weight:700; padding:3px 9px; border-radius:999px;
+        }
+        .mm-activa { background:#dcfce7; color:#16a34a; }
+        .mm-porvencer { background:#fef3c7; color:#b45309; }
+        .mm-btn-comprar {
+            display:inline-flex; align-items:center; gap:5px;
+            background:#eff6ff; color:#3E72A6; border:1px solid #bfdbfe;
+            border-radius:999px; padding:5px 11px; font-size:.74rem; font-weight:700;
+            cursor:pointer; transition:background .15s;
+        }
+        .mm-btn-comprar:hover { background:#dbeafe; }
+    `;
+    document.head.appendChild(style);
+})();
 
 // — Inyectar modal reutilizable al DOM —
 (function crearModal() {
@@ -425,15 +474,40 @@ function actualizarBotonesBooking(svcKey) {
     avail.classList.remove('listo');
     const nombre = svcNombre[svcKey];
 
-    // Paseos ya tiene wizard de compra real; los demás servicios siguen "en proceso"
-    const tieneWizard = svcKey === 'paseos' && typeof abrirWizardPaseos === 'function';
+    // Los 3 servicios ya tienen checkout real, con el mismo patrón de 4
+    // pasos (mascota → ubicación/mapa → resumen → pago) que Paseos.
+    const abridores = {
+        paseos:         typeof abrirWizardPaseos === 'function' ? abrirWizardPaseos : null,
+        adiestramiento: typeof abrirWizardAdiestramiento === 'function' ? abrirWizardAdiestramiento : null,
+        hospedaje:      typeof abrirWizardHospedaje === 'function' ? abrirWizardHospedaje : null,
+    };
+    const abrirWizardServicio = abridores[svcKey];
+    const tieneWizard = !!abrirWizardServicio;
+
+    // — Sin ninguna mascota registrada: no se puede comprar NINGUNA membresía —
+    // (la membresía ahora se activa por mascota, así que sin mascota no hay
+    // a quién asignársela).
+    if (!membresias.tieneMascotas) {
+        avail.innerHTML = `<span class="avail-dot avail-off"></span> No tienes mascotas registradas`;
+        btnP.innerHTML  = `<i class="ph ph-paw-print"></i> Registrar una mascota`;
+        btnP.onclick    = () => { window.location.href = 'usuario.php'; };
+        btnS.style.display = 'none';
+
+        requestAnimationFrame(() => {
+            btnP.classList.add('listo');
+            btnS.classList.add('listo');
+            avail.classList.add('listo');
+        });
+        renderMascotasMembresia(svcKey);
+        return;
+    }
 
     if (membresias.renovar[svcKey]) {
         // Membresía activa pero vence en menos de 1 día
         avail.innerHTML = `<span class="avail-dot avail-warn"></span> ¡Renueva tu membresía hoy!`;
         btnP.innerHTML  = `<i class="ph ph-arrow-clockwise"></i> Renovar membresía`;
         btnP.onclick    = tieneWizard
-            ? () => abrirWizardPaseos()
+            ? () => abrirWizardServicio()
             : () => abrirModal(
                 '🔄 Renovación en proceso',
                 `Tu membresía de ${nombre} vence muy pronto. El sistema de pago estará disponible próximamente.`,
@@ -461,7 +535,7 @@ function actualizarBotonesBooking(svcKey) {
         avail.innerHTML = `<span class="avail-dot avail-off"></span> No tienes membresía`;
         btnP.innerHTML  = `<i class="ph ph-shopping-cart"></i> Comprar membresía de ${nombre}`;
         btnP.onclick    = tieneWizard
-            ? () => abrirWizardPaseos()
+            ? () => abrirWizardServicio()
             : () => abrirModal(
                 '🛒 Pago en proceso',
                 `El módulo de compra para "${nombre}" estará disponible muy pronto. ¡Estamos trabajando en ello! 🐾`,
@@ -476,6 +550,21 @@ function actualizarBotonesBooking(svcKey) {
         btnS.classList.add('listo');
         avail.classList.add('listo');
     });
+
+    renderMascotasMembresia(svcKey);
+}
+
+// — Detalle de membresía por mascota + botón "Comprar para otra mascota" —
+// Se muestra debajo de los botones de reserva. Si el usuario tiene varias
+// mascotas, cada una tiene su propio estado y su propio botón de compra
+// (así puede comprar la misma membresía para más de una mascota).
+function renderMascotasMembresia(svcKey) {
+    // Deshabilitado para los 3 servicios: Paseos ya tiene su propio wizard
+    // (Paso 1: "Selecciona la mascota"), y Adiestramiento/Hospedaje van a
+    // tener el suyo propio próximamente — este listado genérico quedaría
+    // redundante en los tres casos.
+    const cont = document.getElementById('membresia-mascotas');
+    if (cont) cont.innerHTML = '';
 }
 
 // — Llamar al endpoint PHP y guardar estado —
@@ -492,12 +581,31 @@ async function cargarMembresias() {
                     membresias.adiestramiento = d.adiestramiento;
                     membresias.hospedaje      = d.hospedaje;
                     membresias.renovar        = d.renovar;
+                    membresias.mascotas       = d.mascotas ?? [];
+                    membresias.tieneMascotas  = !!d.tiene_mascotas;
                     console.log('✅ Membresías cargadas:', membresias);
                 }
             }
         }
     } catch (e) {
         console.warn('Membresías no disponibles:', e);
+    }
+
+    // Traer los precios reales configurados por el admin (antes estaban
+    // fijos en este archivo: "$18.000" nunca cambiaba aunque el admin
+    // actualizara el precio desde el panel).
+    try {
+        const rp = await fetch('../../model/obtener_precios.php');
+        if (rp.ok) {
+            const dp = await rp.json();
+            if (dp.success) {
+                if (dp.precios.paseos)         services.paseos.price         = '$' + Math.round(dp.precios.paseos.precio_unidad).toLocaleString('es-CO');
+                if (dp.precios.adiestramiento) services.adiestramiento.price = '$' + Math.round(dp.precios.adiestramiento.precio_unidad).toLocaleString('es-CO');
+                if (dp.precios.hospedaje)      services.hospedaje.price      = '$' + Math.round(dp.precios.hospedaje.precio_unidad).toLocaleString('es-CO');
+            }
+        }
+    } catch (e) {
+        console.warn('Precios no disponibles, se usan los de respaldo:', e);
     }
 
     // SIEMPRE renderizar, con o sin datos de membresía

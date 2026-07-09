@@ -1,39 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
-// WIZARD_PASEOS.JS — Modal "Contratar Mensualidad de Paseos" (4 pasos)
+// WIZARD_HOSPEDAJE.JS — Modal "Contratar Hospedaje Canino" (4 pasos)
 // Paso 1: Mascota y servicio · Paso 2: Dirección y ubicación
 // Paso 3: Resumen del pedido · Paso 4: Pago
 //
-// Se abre con window.abrirWizardPaseos() desde inicio_cliente.js.
+// Se abre con window.abrirWizardHospedaje() desde inicio_cliente.js.
 // Backend: model/obtener_planes.php, obtener_mi_perfil.php,
-//          obtener_mascotas.php y procesar_compra_paseos.php.
+//          obtener_mascotas.php y procesar_compra_hospedaje.php.
 // ═══════════════════════════════════════════════════════════════
 (function () {
     'use strict';
 
     const API_WZ = '../../model/';
-    const DIAS   = [
-        { k: 'lun', n: 'Lun' }, { k: 'mar', n: 'Mar' }, { k: 'mie', n: 'Mié' },
-        { k: 'jue', n: 'Jue' }, { k: 'vie', n: 'Vie' }, { k: 'sab', n: 'Sáb' }, { k: 'dom', n: 'Dom' },
-    ];
-    const FRANJAS = ['6:00 a.m. – 8:00 a.m.', '8:00 a.m. – 11:00 a.m.', '11:00 a.m. – 2:00 p.m.', '2:00 p.m. – 5:00 p.m.'];
     const BANCOS_PSE = ['Bancolombia', 'Banco de Bogotá', 'Davivienda', 'BBVA Colombia', 'Banco de Occidente', 'Banco Popular', 'Banco AV Villas', 'Scotiabank Colpatria'];
-    // Ya no se cobra por "pack" (4/8/12): el cliente elige cuántos paseos
-    // al mes quiere y se cobra $18.000 por cada uno. El precio real
-    // SIEMPRE se valida en el servidor (procesar_compra_paseos.php); esta
-    // constante es solo para mostrar el total mientras se edita el pedido.
-    // El precio por día y los descuentos se cargan desde obtener_precios.php
+    // El precio por noche y los descuentos se cargan desde obtener_precios.php
     // (configurables por el admin) — el total final SIEMPRE lo valida
-    // procesar_compra_paseos.php en el servidor, esto es solo para mostrar
-    // el precio mientras el cliente edita el pedido.
-    let PRECIO_PASEO_DIA = 18000; // valor de respaldo mientras carga
-    let DESCUENTOS_PASEOS = [];   // [{cantidad_minima, descuento_pct}, ...]
-    const MIN_PASEOS_MES = 1;
-    const MAX_PASEOS_MES = 31;
+    // procesar_compra_hospedaje.php en el servidor.
+    let PRECIO_NOCHE_HOSP = 28000; // valor de respaldo mientras carga
+    let DESCUENTOS_HOSP = [];      // [{cantidad_minima, descuento_pct}, ...]
+    const MAX_NOCHES_HOSPEDAJE = 60;
     const COMPORTAMIENTOS = [
         { k: 'sociable',    icono: 'ph-smiley',         t: 'Sociable',    d: 'Le va bien con otros perros' },
         { k: 'timido',      icono: 'ph-smiley-meh',     t: 'Tímido',      d: 'Necesita tiempo para adaptarse' },
         { k: 'reactivo',    icono: 'ph-warning-circle', t: 'Reactivo',    d: 'Puede reaccionar a otros perros' },
-        { k: 'no_sociable', icono: 'ph-smiley-x-eyes',  t: 'No sociable', d: 'Prefiere paseos individuales' },
+        { k: 'no_sociable', icono: 'ph-smiley-x-eyes',  t: 'No sociable', d: 'Prefiere estar solo' },
     ];
 
     // ── Estado ──────────────────────────────────────────────
@@ -44,14 +33,11 @@
     let procesando = false;
 
     function estadoInicial() {
+        const entrada = hoyISO();
         return {
             id_mascota: null,
-            cantidad_paseos: 8,
-            modalidad: 'grupal',
-            duracion_min: 60,
-            dias: ['lun', 'mie', 'vie'],
-            franja: FRANJAS[1],
-            fecha_inicio: hoyISO(),
+            fecha_entrada: entrada,
+            fecha_salida: sumarDias(entrada, 3),
             comportamiento: 'sociable',
             observaciones: '',
             ubicacion: { direccion: '', barrio: '', referencia: '', instrucciones: '', lat: null, lng: null, validada: false },
@@ -66,6 +52,16 @@
     const $$ = (sel) => Array.from(document.querySelectorAll(sel));
     const cop = (n) => '$' + Math.round(n).toLocaleString('es-CO');
     function hoyISO() { return new Date().toISOString().split('T')[0]; }
+    function sumarDias(fechaISO, dias) {
+        const d = new Date(fechaISO + 'T00:00:00');
+        d.setDate(d.getDate() + dias);
+        return d.toISOString().split('T')[0];
+    }
+    function calcularNoches(entradaISO, salidaISO) {
+        const a = new Date(entradaISO + 'T00:00:00');
+        const b = new Date(salidaISO + 'T00:00:00');
+        return Math.round((b - a) / 86400000);
+    }
 
     function normalizarAvatar(a) {
         if (!a) return '';
@@ -74,16 +70,14 @@
     }
 
     function calcularPrecio() {
-        const cantidad = Math.max(0, parseInt(W.cantidad_paseos, 10) || 0);
-        const subtotal = PRECIO_PASEO_DIA * cantidad;
-        // Mejor descuento aplicable: el de mayor cantidad_minima que la
-        // cantidad sí alcance a cumplir (mismo criterio que el servidor)
+        const noches = Math.max(0, calcularNoches(W.fecha_entrada, W.fecha_salida));
+        const subtotal = PRECIO_NOCHE_HOSP * noches;
         let descuentoPct = 0;
-        DESCUENTOS_PASEOS.forEach(d => {
-            if (cantidad >= d.cantidad_minima && d.descuento_pct > descuentoPct) descuentoPct = d.descuento_pct;
+        DESCUENTOS_HOSP.forEach(d => {
+            if (noches >= d.cantidad_minima && d.descuento_pct > descuentoPct) descuentoPct = d.descuento_pct;
         });
         const descuento = Math.round(subtotal * descuentoPct) / 100;
-        return { precio_paseo: PRECIO_PASEO_DIA, cantidad, subtotal, descuento_pct: descuentoPct, descuento, total: subtotal - descuento };
+        return { precio_noche: PRECIO_NOCHE_HOSP, noches, cantidad: noches, subtotal, descuento_pct: descuentoPct, descuento, total: subtotal - descuento };
     }
     function mascotaSel() { return datos.mascotas.find(m => m.id_mascota === W.id_mascota) || null; }
 
@@ -109,13 +103,13 @@
     }
 
     // ── Apertura del wizard ─────────────────────────────────
-    window.abrirWizardPaseos = async function () {
+    window.abrirWizardHospedaje = async function () {
         inyectarModal();
         W = estadoInicial();
         pasoActual = 1;
-        $('#wizard-paseos').classList.add('visible');
-        $('#wizard-paseos').style.display = 'flex';
-        $('#wz-cuerpo').innerHTML = '<div style="text-align:center;padding:60px;color:#64748b">Cargando tus datos... 🐾</div>';
+        $('#wizard-hospedaje').classList.add('visible');
+        $('#wizard-hospedaje').style.display = 'flex';
+        $('#wzh-cuerpo').innerHTML = '<div style="text-align:center;padding:60px;color:#64748b">Cargando tus datos... 🐾</div>';
 
         try {
             const rPerfil = await fetch(API_WZ + 'obtener_mi_perfil.php').then(r => r.json());
@@ -131,12 +125,12 @@
             const rMem = await fetch('../../controller/membresia_estado.php').then(r => r.json()).catch(() => null);
             const membresiaPorMascota = {};
             if (rMem && rMem.success) (rMem.mascotas || []).forEach(m => { membresiaPorMascota[m.id_mascota] = m; });
-            datos.mascotas.forEach(m => { m.yaTieneEsta = !!(membresiaPorMascota[m.id_mascota]?.paseos); });
+            datos.mascotas.forEach(m => { m.yaTieneEsta = !!(membresiaPorMascota[m.id_mascota]?.hospedaje); });
 
             const rPrecios = await fetch(API_WZ + 'obtener_precios.php').then(r => r.json()).catch(() => null);
-            if (rPrecios && rPrecios.success && rPrecios.precios.paseos) {
-                PRECIO_PASEO_DIA = rPrecios.precios.paseos.precio_unidad;
-                DESCUENTOS_PASEOS = rPrecios.descuentos.paseos || [];
+            if (rPrecios && rPrecios.success && rPrecios.precios.hospedaje) {
+                PRECIO_NOCHE_HOSP = rPrecios.precios.hospedaje.precio_unidad;
+                DESCUENTOS_HOSP = rPrecios.descuentos.hospedaje || [];
             }
 
             // Prellenar con el perfil
@@ -149,41 +143,42 @@
 
             renderPaso(1);
         } catch (e) {
-            $('#wz-cuerpo').innerHTML =
+            $('#wzh-cuerpo').innerHTML =
                 '<div style="text-align:center;padding:60px;color:#b91c1c">No se pudieron cargar tus datos. Verifica tu conexión e inténtalo de nuevo.</div>';
         }
     };
 
     // ── Estructura base del modal ───────────────────────────
     function inyectarModal() {
-        if (document.getElementById('wizard-paseos')) return;
+        if (document.getElementById('wizard-hospedaje')) return;
         const div = document.createElement('div');
-        div.id = 'wizard-paseos';
+        div.id = 'wizard-hospedaje';
         div.innerHTML = `
-        <div class="wz-overlay" id="wz-overlay">
+        <div class="wz-overlay" id="wzh-overlay">
           <div class="wz-modal">
             <div class="wz-header">
               <div class="wz-header-icon"><i class="ph ph-paw-print"></i></div>
               <div>
-                <h2>Contratar Mensualidad de Paseos</h2>
-                <div class="wz-sub" id="wz-subtitulo"></div>
+                <h2>Contratar Hospedaje Canino</h2>
+                <div class="wz-sub" id="wzh-subtitulo"></div>
               </div>
-              <button class="wz-close" id="wz-cerrar" title="Cerrar"><i class="ph ph-x"></i></button>
+              <button class="wz-close" id="wzh-cerrar" title="Cerrar"><i class="ph ph-x"></i></button>
             </div>
-            <div class="wz-progress" id="wz-progreso"></div>
-            <div class="wz-body" id="wz-cuerpo"></div>
-            <div class="wz-footer" id="wz-footer">
+            <div class="wz-progress" id="wzh-progreso"></div>
+            <div class="wz-body" id="wzh-cuerpo"></div>
+            <div class="wz-footer" id="wzh-footer">
               <div class="wz-seguro"><i class="ph ph-shield-check"></i> Tu información está protegida</div>
-              <div class="wz-botones" id="wz-botones"></div>
+              <div class="wz-botones" id="wzh-botones"></div>
             </div>
           </div>
         </div>`;
         document.body.appendChild(div);
-        $('#wz-cerrar').addEventListener('click', cerrarWizard);
+        $('#wzh-cerrar').addEventListener('click', cerrarWizard);
     }
 
     function cerrarWizard() {
-        $('#wizard-paseos').classList.remove('visible');
+        $('#wizard-hospedaje').classList.remove('visible');
+        $('#wizard-hospedaje').style.display = 'none';
         if (mapaWz) { mapaWz.remove(); mapaWz = null; marcadorWz = null; }
         // Si la compra fue exitosa, refrescar los botones de membresía del inicio
         if (W && W.__exito && typeof cargarMembresias === 'function') cargarMembresias();
@@ -195,7 +190,7 @@
 
     function renderPaso(n) {
         pasoActual = n;
-        $('#wz-subtitulo').innerHTML = `<strong>Paso ${n} de 4:</strong> ${TITULOS[n]}`;
+        $('#wzh-subtitulo').innerHTML = `<strong>Paso ${n} de 4:</strong> ${TITULOS[n]}`;
 
         // Barra de progreso
         let html = '';
@@ -207,22 +202,22 @@
                      </div>`;
             if (i < 4) html += `<div class="wz-step-linea ${i < n ? 'hecha' : ''}"></div>`;
         }
-        $('#wz-progreso').innerHTML = html;
+        $('#wzh-progreso').innerHTML = html;
 
         if (n === 1) renderPaso1();
         if (n === 2) renderPaso2();
         if (n === 3) renderPaso3();
         if (n === 4) renderPaso4();
-        $('#wz-cuerpo').scrollTop = 0;
+        $('#wzh-cuerpo').scrollTop = 0;
     }
 
-    function botonesFooter(atras, siguienteTxt, onSiguiente, siguienteId = 'wz-btn-sig') {
+    function botonesFooter(atras, siguienteTxt, onSiguiente, siguienteId = 'wzh-btn-sig') {
         let html = '';
-        if (atras) html += `<button class="wz-btn wz-btn-sec" id="wz-btn-atras"><i class="ph ph-arrow-left"></i> Anterior</button>`;
-        else       html += `<button class="wz-btn wz-btn-sec" id="wz-btn-atras">Cancelar</button>`;
+        if (atras) html += `<button class="wz-btn wz-btn-sec" id="wzh-btn-atras"><i class="ph ph-arrow-left"></i> Anterior</button>`;
+        else       html += `<button class="wz-btn wz-btn-sec" id="wzh-btn-atras">Cancelar</button>`;
         html += `<button class="wz-btn wz-btn-prim" id="${siguienteId}">${siguienteTxt}</button>`;
-        $('#wz-botones').innerHTML = html;
-        $('#wz-btn-atras').addEventListener('click', () => {
+        $('#wzh-botones').innerHTML = html;
+        $('#wzh-btn-atras').addEventListener('click', () => {
             if (atras) renderPaso(pasoActual - 1);
             else cerrarWizard();
         });
@@ -233,7 +228,6 @@
     function lateralHTML(extendido) {
         const m = mascotaSel(), pr = calcularPrecio();
         const av = m ? normalizarAvatar(m.avatar) : '';
-        const diasTxt = W.dias.map(k => DIAS.find(d => d.k === k)?.n).filter(Boolean).join(', ') || '—';
         let html = `
         <div class="wz-lateral">
           <h4>Resumen del pedido</h4>
@@ -245,13 +239,10 @@
             </div>
           </div>
           <div class="wz-lat-sep"></div>
-          <div style="font-weight:800;font-size:.8rem;margin-bottom:5px">Servicio</div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-calendar-blank"></i>Paseos al mes:</span><span class="v">${pr.cantidad}</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-clock"></i>Duración:</span><span class="v">${W.duracion_min} minutos</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-users"></i>Modalidad:</span><span class="v">${W.modalidad === 'grupal' ? 'Grupal' : 'Individual'}</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-calendar-check"></i>Días:</span><span class="v">${diasTxt}</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-clock-clockwise"></i>Horario:</span><span class="v">${W.franja}</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-play"></i>Inicio:</span><span class="v">${W.fecha_inicio}</span></div>`;
+          <div style="font-weight:800;font-size:.8rem;margin-bottom:5px">Estadía</div>
+          <div class="wz-lat-fila"><span class="d"><i class="ph ph-calendar-blank"></i>Entrada:</span><span class="v">${W.fecha_entrada}</span></div>
+          <div class="wz-lat-fila"><span class="d"><i class="ph ph-calendar-check"></i>Salida:</span><span class="v">${W.fecha_salida}</span></div>
+          <div class="wz-lat-fila"><span class="d"><i class="ph ph-moon"></i>Noches:</span><span class="v">${pr.noches}</span></div>`;
 
         if (W.ubicacion.validada) {
             html += `
@@ -261,24 +252,24 @@
           <span class="wz-tag" style="margin-top:5px;display:inline-block">Ubicación confirmada ✓</span>`;
         }
 
-        if (pr.cantidad > 0) {
+        if (pr.noches > 0) {
             html += `
           <div class="wz-lat-sep"></div>
           <div style="font-weight:800;font-size:.8rem;margin-bottom:5px">Precio</div>
-          <div class="wz-lat-fila"><span class="d">Precio por paseo</span><span class="v">${cop(pr.precio_paseo)}</span></div>
-          <div class="wz-lat-fila"><span class="d">Cantidad de paseos al mes</span><span class="v">${pr.cantidad}</span></div>
+          <div class="wz-lat-fila"><span class="d">Precio por noche</span><span class="v">${cop(pr.precio_noche)}</span></div>
+          <div class="wz-lat-fila"><span class="d">Cantidad de noches</span><span class="v">${pr.noches}</span></div>
           <div class="wz-lat-fila"><span class="d">Subtotal</span><span class="v">${cop(pr.subtotal)}</span></div>
           ${pr.descuento > 0 ? `<div class="wz-lat-fila"><span class="d wz-lat-desc">Descuento (${pr.descuento_pct}%)</span><span class="v wz-lat-desc">-${cop(pr.descuento)}</span></div>` : ''}
-          <div class="wz-lat-total"><span>Total mensual</span><span class="monto">${cop(pr.total)}</span></div>`;
+          <div class="wz-lat-total"><span>Total estadía</span><span class="monto">${cop(pr.total)}</span></div>`;
         }
 
         html += `
-          <div class="wz-lat-aviso"><i class="ph ph-calendar-blank"></i> La mensualidad comienza el día que elijas como fecha de inicio.</div>`;
+          <div class="wz-lat-aviso"><i class="ph ph-calendar-blank"></i> El cobro cubre toda la estadía, desde la entrada hasta la salida.</div>`;
 
         if (extendido) {
             html += `
           <div class="wz-lat-beneficios">
-            <div><i class="ph ph-check-circle"></i> Paseadores certificados</div>
+            <div><i class="ph ph-check-circle"></i> Cuidadores certificados</div>
             <div><i class="ph ph-check-circle"></i> Seguimiento en tiempo real</div>
             <div><i class="ph ph-check-circle"></i> Trato amoroso y responsable</div>
           </div>`;
@@ -288,7 +279,7 @@
     }
 
     function refrescarLateral(extendido) {
-        const lat = $('#wz-lateral-slot');
+        const lat = $('#wzh-lateral-slot');
         if (lat) lat.innerHTML = lateralHTML(extendido);
     }
 
@@ -308,10 +299,6 @@
                     </div>`;
         }).join('');
 
-        const chipsDias = DIAS.map(d =>
-            `<span class="wz-dia ${W.dias.includes(d.k) ? 'sel' : ''}" data-dia="${d.k}">${d.n}</span>`
-        ).join('');
-
         const cardsComp = COMPORTAMIENTOS.map(c =>
             `<div class="wz-card wz-card-ancha ${W.comportamiento === c.k ? 'sel' : ''}" data-comp="${c.k}">
                <i class="ph ${c.icono}"></i>
@@ -319,7 +306,7 @@
              </div>`
         ).join('');
 
-        $('#wz-cuerpo').innerHTML = `
+        $('#wzh-cuerpo').innerHTML = `
         <div class="wz-grid">
           <div>
             <div class="wz-bloque">
@@ -330,40 +317,19 @@
             </div>
 
             <div class="wz-bloque">
-              <div class="wz-titulo-seccion"><i class="ph ph-list-checks"></i> 2. Detalles del paseo</div>
+              <div class="wz-titulo-seccion"><i class="ph ph-list-checks"></i> 2. Fechas de la estadía</div>
               <div class="wz-form-fila">
                 <div class="wz-campo">
-                  <label>Paseos al mes <span class="op" style="font-weight:400;color:#94a3b8">(${cop(PRECIO_PASEO_DIA)} c/u)</span></label>
-                  <input type="number" id="wz-cantidad" min="${MIN_PASEOS_MES}" max="${MAX_PASEOS_MES}" value="${W.cantidad_paseos}">
+                  <label>Fecha de entrada</label>
+                  <input type="date" id="wzh-fecha-entrada" value="${W.fecha_entrada}" min="${hoyISO()}">
                 </div>
                 <div class="wz-campo">
-                  <label>Duración del paseo</label>
-                  <select id="wz-duracion">
-                    <option value="30" ${W.duracion_min === 30 ? 'selected' : ''}>30 minutos</option>
-                    <option value="45" ${W.duracion_min === 45 ? 'selected' : ''}>45 minutos</option>
-                    <option value="60" ${W.duracion_min === 60 ? 'selected' : ''}>60 minutos</option>
-                  </select>
+                  <label>Fecha de salida</label>
+                  <input type="date" id="wzh-fecha-salida" value="${W.fecha_salida}" min="${sumarDias(W.fecha_entrada, 1)}">
                 </div>
                 <div class="wz-campo">
-                  <label>Modalidad</label>
-                  <select id="wz-modalidad">
-                    <option value="grupal" ${W.modalidad === 'grupal' ? 'selected' : ''}>Grupal (máx. 4 perros)</option>
-                    <option value="individual" ${W.modalidad === 'individual' ? 'selected' : ''}>Individual</option>
-                  </select>
-                </div>
-              </div>
-              <div class="wz-form-fila">
-                <div class="wz-campo">
-                  <label>Días preferidos</label>
-                  <div class="wz-dias">${chipsDias}</div>
-                </div>
-                <div class="wz-campo">
-                  <label>Franja horaria preferida</label>
-                  <select id="wz-franja">${FRANJAS.map(f => `<option ${W.franja === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
-                </div>
-                <div class="wz-campo">
-                  <label>Inicio de la membresía</label>
-                  <input type="date" id="wz-fecha-inicio" value="${W.fecha_inicio}" min="${hoyISO()}">
+                  <label>Noches <span class="op" style="font-weight:400;color:#94a3b8">(${cop(PRECIO_NOCHE_HOSP)} c/u)</span></label>
+                  <div class="wz-noches-box" id="wzh-noches-box" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-weight:700;color:#334155;background:#f8fafc;">${Math.max(0, calcularNoches(W.fecha_entrada, W.fecha_salida))} noche(s)</div>
                 </div>
               </div>
             </div>
@@ -376,46 +342,46 @@
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-note-pencil"></i> Observaciones adicionales <span class="op" style="font-weight:400;color:#94a3b8">(opcional)</span></div>
               <div class="wz-campo">
-                <textarea id="wz-observaciones" rows="3" maxlength="300"
-                  placeholder="Ej: Tiene alergias, toma medicamentos, miedos, instrucciones especiales...">${W.observaciones}</textarea>
-                <div class="wz-contador"><span id="wz-obs-count">${W.observaciones.length}</span> / 300</div>
+                <textarea id="wzh-observaciones" rows="3" maxlength="300"
+                  placeholder="Ej: Tiene alergias, toma medicamentos, alimentación especial, rutinas...">${W.observaciones}</textarea>
+                <div class="wz-contador"><span id="wzh-obs-count">${W.observaciones.length}</span> / 300</div>
               </div>
             </div>
           </div>
-          <div id="wz-lateral-slot">${lateralHTML(true)}</div>
+          <div id="wzh-lateral-slot">${lateralHTML(true)}</div>
         </div>`;
 
         // Listeners
-        $$('#wz-cuerpo [data-mascota]').forEach(c => c.addEventListener('click', () => {
+        $$('#wzh-cuerpo [data-mascota]').forEach(c => c.addEventListener('click', () => {
             if (c.dataset.bloqueada) { alertaPaso('Esta mascota ya tiene la membresía activa. Elige otra mascota.'); return; }
             W.id_mascota = parseInt(c.dataset.mascota);
-            $$('#wz-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
+            $$('#wzh-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
             refrescarLateral(true);
         }));
-        $$('#wz-cuerpo [data-comp]').forEach(c => c.addEventListener('click', () => {
+        $$('#wzh-cuerpo [data-comp]').forEach(c => c.addEventListener('click', () => {
             W.comportamiento = c.dataset.comp;
-            $$('#wz-cuerpo [data-comp]').forEach(x => x.classList.toggle('sel', x === c));
+            $$('#wzh-cuerpo [data-comp]').forEach(x => x.classList.toggle('sel', x === c));
         }));
-        $$('#wz-cuerpo [data-dia]').forEach(ch => ch.addEventListener('click', () => {
-            const k = ch.dataset.dia;
-            W.dias = W.dias.includes(k) ? W.dias.filter(x => x !== k) : [...W.dias, k];
-            ch.classList.toggle('sel');
-            refrescarLateral(true);
-        }));
-        $('#wz-cantidad').addEventListener('input', e => {
-            let v = parseInt(e.target.value, 10);
-            if (isNaN(v)) v = 0;
-            if (v > MAX_PASEOS_MES) v = MAX_PASEOS_MES;
-            W.cantidad_paseos = v;
+        $('#wzh-fecha-entrada').addEventListener('change', e => {
+            W.fecha_entrada = e.target.value;
+            // La salida mínima siempre es 1 noche después de la nueva entrada
+            const minSalida = sumarDias(W.fecha_entrada, 1);
+            $('#wzh-fecha-salida').min = minSalida;
+            if (W.fecha_salida <= W.fecha_entrada) {
+                W.fecha_salida = minSalida;
+                $('#wzh-fecha-salida').value = minSalida;
+            }
+            $('#wzh-noches-box').textContent = Math.max(0, calcularNoches(W.fecha_entrada, W.fecha_salida)) + ' noche(s)';
             refrescarLateral(true);
         });
-        $('#wz-duracion').addEventListener('change', e => { W.duracion_min = parseInt(e.target.value); refrescarLateral(true); });
-        $('#wz-modalidad').addEventListener('change', e => { W.modalidad = e.target.value; refrescarLateral(true); });
-        $('#wz-franja').addEventListener('change', e => { W.franja = e.target.value; refrescarLateral(true); });
-        $('#wz-fecha-inicio').addEventListener('change', e => { W.fecha_inicio = e.target.value; refrescarLateral(true); });
-        $('#wz-observaciones').addEventListener('input', e => {
+        $('#wzh-fecha-salida').addEventListener('change', e => {
+            W.fecha_salida = e.target.value;
+            $('#wzh-noches-box').textContent = Math.max(0, calcularNoches(W.fecha_entrada, W.fecha_salida)) + ' noche(s)';
+            refrescarLateral(true);
+        });
+        $('#wzh-observaciones').addEventListener('input', e => {
             W.observaciones = e.target.value;
-            $('#wz-obs-count').textContent = e.target.value.length;
+            $('#wzh-obs-count').textContent = e.target.value.length;
         });
 
         botonesFooter(false, 'Continuar con ubicación <i class="ph ph-arrow-right"></i>', () => {
@@ -424,19 +390,19 @@
                 const mSel = datos.mascotas.find(m => m.id_mascota === W.id_mascota);
                 if (mSel && mSel.yaTieneEsta) return alertaPaso('Esta mascota ya tiene la membresía activa. Elige otra mascota.');
             }
-            if (!W.cantidad_paseos || W.cantidad_paseos < MIN_PASEOS_MES) return alertaPaso(`Ingresa cuántos paseos al mes quieres (mínimo ${MIN_PASEOS_MES}).`);
-            if (!W.dias.length) return alertaPaso('Elige al menos un día preferido.');
-            if (!W.fecha_inicio || W.fecha_inicio < hoyISO()) return alertaPaso('La fecha de inicio debe ser hoy o una fecha futura.');
+            if (!W.fecha_entrada || W.fecha_entrada < hoyISO()) return alertaPaso('La fecha de entrada debe ser hoy o una fecha futura.');
+            if (!W.fecha_salida || W.fecha_salida <= W.fecha_entrada) return alertaPaso('La fecha de salida debe ser posterior a la de entrada.');
+            if (calcularNoches(W.fecha_entrada, W.fecha_salida) > MAX_NOCHES_HOSPEDAJE) return alertaPaso(`La estadía no puede superar ${MAX_NOCHES_HOSPEDAJE} noches.`);
             renderPaso(2);
         });
     }
 
     function alertaPaso(msg) {
         // Aviso simple sin perder los datos ya diligenciados
-        let al = $('#wz-alerta-flotante');
+        let al = $('#wzh-alerta-flotante');
         if (!al) {
             al = document.createElement('div');
-            al.id = 'wz-alerta-flotante';
+            al.id = 'wzh-alerta-flotante';
             al.className = 'wz-alerta-error visible';
             al.style.cssText = 'position:absolute;bottom:74px;left:24px;right:24px;z-index:10';
             $('.wz-modal').appendChild(al);
@@ -452,36 +418,36 @@
     // ═══════════════════════════════════════════════════════
     function renderPaso2() {
         const u = W.ubicacion;
-        $('#wz-cuerpo').innerHTML = `
+        $('#wzh-cuerpo').innerHTML = `
         <div class="wz-grid" style="grid-template-columns: 340px 1fr 300px">
           <div>
             <div class="wz-titulo-seccion"><i class="ph ph-map-pin"></i> 1. Dirección de recogida y entrega</div>
             <div class="wz-campo">
               <label>Dirección <span style="color:#dc2626">*</span></label>
-              <input type="text" id="wz-dir" value="${u.direccion.replace(/"/g, '&quot;')}" placeholder="Ej: Calle 10 #5-20, Barrio Blanco">
+              <input type="text" id="wzh-dir" value="${u.direccion.replace(/"/g, '&quot;')}" placeholder="Ej: Calle 10 #5-20, Barrio Blanco">
             </div>
             <div class="wz-form-fila">
               <div class="wz-campo">
                 <label>Barrio / Sector</label>
-                <input type="text" id="wz-barrio" value="${u.barrio.replace(/"/g, '&quot;')}" placeholder="Ej: Barrio Blanco">
+                <input type="text" id="wzh-barrio" value="${u.barrio.replace(/"/g, '&quot;')}" placeholder="Ej: Barrio Blanco">
               </div>
             </div>
             <div class="wz-campo">
               <label>Punto de referencia <span class="op">(opcional)</span></label>
-              <input type="text" id="wz-ref" value="${u.referencia.replace(/"/g, '&quot;')}" placeholder="Ej: Casa blanca con portón negro">
+              <input type="text" id="wzh-ref" value="${u.referencia.replace(/"/g, '&quot;')}" placeholder="Ej: Casa blanca con portón negro">
             </div>
             <div class="wz-campo">
-              <label>Instrucciones para el paseador <span class="op">(opcional)</span></label>
-              <textarea id="wz-instr" rows="2" maxlength="200" placeholder="Ej: Tocar timbre. La mascota sale con pechera azul.">${u.instrucciones}</textarea>
+              <label>Instrucciones para el cuidador <span class="op">(opcional)</span></label>
+              <textarea id="wzh-instr" rows="2" maxlength="200" placeholder="Ej: Tocar timbre. La mascota sale con pechera azul.">${u.instrucciones}</textarea>
             </div>
 
             <div class="wz-titulo-seccion" style="margin-top:14px"><i class="ph ph-crosshair"></i> 2. Confirmar ubicación en el mapa</div>
             <div class="wz-metodos-ubi">
-              <div class="wz-metodo-ubi" id="wz-ubi-gps">
+              <div class="wz-metodo-ubi" id="wzh-ubi-gps">
                 <i class="ph ph-crosshair-simple"></i>
                 <div><div class="t">Usar mi ubicación actual</div><div class="d">Detectar automáticamente</div></div>
               </div>
-              <div class="wz-metodo-ubi" id="wz-ubi-buscar">
+              <div class="wz-metodo-ubi" id="wzh-ubi-buscar">
                 <i class="ph ph-magnifying-glass"></i>
                 <div><div class="t">Buscar dirección</div><div class="d">Geocodificar la dirección escrita</div></div>
               </div>
@@ -490,31 +456,31 @@
                 <div><div class="t">Ajustar marcador manualmente</div><div class="d">Arrastra el pin o haz clic en el mapa</div></div>
               </div>
             </div>
-            <div class="wz-resultados-dir" id="wz-resultados"></div>
+            <div class="wz-resultados-dir" id="wzh-resultados"></div>
           </div>
 
           <div>
-            <div id="wz-mapa" class="wz-mapa"></div>
-            <div id="wz-estado-ubi">
+            <div id="wzh-mapa" class="wz-mapa"></div>
+            <div id="wzh-estado-ubi">
               ${u.validada
                 ? `<div class="wz-banner-ok"><i class="ph ph-check-circle"></i> Ubicación confirmada — ${Number(u.lat).toFixed(6)}, ${Number(u.lng).toFixed(6)}</div>`
                 : `<div class="wz-banner-info"><i class="ph ph-info"></i> Marca el punto exacto donde se recogerá a tu mascota (clic en el mapa, buscar la dirección o usar tu GPS).</div>`}
             </div>
           </div>
-          <div id="wz-lateral-slot">${lateralHTML(false)}</div>
+          <div id="wzh-lateral-slot">${lateralHTML(false)}</div>
         </div>`;
 
         // Inputs → estado
-        $('#wz-dir').addEventListener('input', e => { u.direccion = e.target.value; });
-        $('#wz-barrio').addEventListener('input', e => { u.barrio = e.target.value; });
-        $('#wz-ref').addEventListener('input', e => { u.referencia = e.target.value; });
-        $('#wz-instr').addEventListener('input', e => { u.instrucciones = e.target.value; });
+        $('#wzh-dir').addEventListener('input', e => { u.direccion = e.target.value; });
+        $('#wzh-barrio').addEventListener('input', e => { u.barrio = e.target.value; });
+        $('#wzh-ref').addEventListener('input', e => { u.referencia = e.target.value; });
+        $('#wzh-instr').addEventListener('input', e => { u.instrucciones = e.target.value; });
 
         // Mapa Leaflet
         setTimeout(() => iniciarMapaWizard(), 60);
 
         // GPS del navegador
-        $('#wz-ubi-gps').addEventListener('click', () => {
+        $('#wzh-ubi-gps').addEventListener('click', () => {
             if (!('geolocation' in navigator)) return alertaPaso('Tu navegador no soporta geolocalización.');
             navigator.geolocation.getCurrentPosition(
                 pos => fijarUbicacion(pos.coords.latitude, pos.coords.longitude, true),
@@ -524,13 +490,13 @@
         });
 
         // Buscar dirección con Nominatim (mismo patrón que el mapa del admin)
-        $('#wz-ubi-buscar').addEventListener('click', () => {
+        $('#wzh-ubi-buscar').addEventListener('click', () => {
             const q = u.direccion.trim();
             if (q.length < 4) return alertaPaso('Escribe primero la dirección en el campo de arriba.');
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Cúcuta, Colombia')}&limit=4&accept-language=es`)
                 .then(r => r.json())
                 .then(res => {
-                    const cont = $('#wz-resultados');
+                    const cont = $('#wzh-resultados');
                     cont.innerHTML = '';
                     if (!res.length) { cont.style.display = 'none'; return alertaPaso('No se encontró esa dirección. Ajusta el marcador manualmente.'); }
                     cont.style.display = 'block';
@@ -556,13 +522,13 @@
 
     function iniciarMapaWizard() {
         if (typeof L === 'undefined') {
-            $('#wz-mapa').innerHTML = '<div style="padding:30px;text-align:center;color:#64748b">No se pudo cargar el mapa. Recarga la página.</div>';
+            $('#wzh-mapa').innerHTML = '<div style="padding:30px;text-align:center;color:#64748b">No se pudo cargar el mapa. Recarga la página.</div>';
             return;
         }
         if (mapaWz) { mapaWz.remove(); mapaWz = null; }
         const u = W.ubicacion;
         const centro = u.lat ? [u.lat, u.lng] : [7.8939, -72.5078]; // Cúcuta
-        mapaWz = L.map('wz-mapa').setView(centro, u.lat ? 16 : 13);
+        mapaWz = L.map('wzh-mapa').setView(centro, u.lat ? 16 : 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(mapaWz);
 
         marcadorWz = L.marker(centro, { draggable: true }).addTo(mapaWz);
@@ -578,7 +544,7 @@
         u.lat = lat; u.lng = lng; u.validada = true;
         if (marcadorWz) marcadorWz.setLatLng([lat, lng]);
         if (centrar && mapaWz) mapaWz.setView([lat, lng], 16);
-        $('#wz-estado-ubi').innerHTML =
+        $('#wzh-estado-ubi').innerHTML =
             `<div class="wz-banner-ok"><i class="ph ph-check-circle"></i> Ubicación confirmada — ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
         refrescarLateral(false);
     }
@@ -590,9 +556,8 @@
         const m = mascotaSel(), pr = calcularPrecio(), u = W.ubicacion;
         const av = m ? normalizarAvatar(m.avatar) : '';
         const comp = COMPORTAMIENTOS.find(c => c.k === W.comportamiento);
-        const diasTxt = W.dias.map(k => DIAS.find(d => d.k === k)?.n).filter(Boolean).join(', ');
 
-        $('#wz-cuerpo').innerHTML = `
+        $('#wzh-cuerpo').innerHTML = `
         <div class="wz-grid">
           <div>
             <div style="margin-bottom:14px">
@@ -609,7 +574,6 @@
                   <div style="font-weight:700">${m ? m.nombre : '—'}</div>
                   <div class="wz-tags">
                     <span class="wz-tag">${comp ? comp.t : ''}</span>
-                    <span class="wz-tag">${W.modalidad === 'grupal' ? 'Puede pasear en grupo' : 'Paseo individual'}</span>
                   </div>
                   ${W.observaciones ? `<div style="font-size:.74rem;color:#64748b;margin-top:5px"><strong>Observaciones:</strong> ${W.observaciones}</div>` : ''}
                 </div>
@@ -617,15 +581,12 @@
             </div>
 
             <div class="wz-resumen-card">
-              <div class="wz-rc-head"><span class="t"><i class="ph ph-calendar-check"></i> Servicio contratado</span>
+              <div class="wz-rc-head"><span class="t"><i class="ph ph-calendar-check"></i> Estadía</span>
                 <button class="wz-btn-editar" data-ir="1"><i class="ph ph-pencil-simple"></i> Editar</button></div>
               <div class="wz-datos-grid">
-                <span class="d">Paseos al mes:</span><span class="v">${pr.cantidad} (${cop(pr.total)}/mes)</span>
-                <span class="d">Duración por paseo:</span><span class="v">${W.duracion_min} minutos</span>
-                <span class="d">Modalidad:</span><span class="v">${W.modalidad === 'grupal' ? 'Grupal (máx. 4 perros)' : 'Individual'}</span>
-                <span class="d">Días preferidos:</span><span class="v">${diasTxt}</span>
-                <span class="d">Horario preferido:</span><span class="v">${W.franja}</span>
-                <span class="d">Inicio de la membresía:</span><span class="v">${W.fecha_inicio}</span>
+                <span class="d">Entrada:</span><span class="v">${W.fecha_entrada}</span>
+                <span class="d">Salida:</span><span class="v">${W.fecha_salida}</span>
+                <span class="d">Noches:</span><span class="v">${pr.noches} (${cop(pr.total)} en total)</span>
               </div>
             </div>
 
@@ -642,16 +603,16 @@
             <div class="wz-banner-info">
               <i class="ph ph-info"></i>
               <div>
-                <strong>Información importante:</strong> la mensualidad inicia en la fecha seleccionada ·
-                los paseos se programarán según disponibilidad del paseador y tu horario preferido ·
-                puedes pausar tu membresía hasta con 7 días de anticipación.
+                <strong>Información importante:</strong> la reserva queda confirmada desde el momento del pago ·
+                la mascota debe llegar sana y con sus vacunas al día ·
+                puedes cancelar la reserva hasta con 48 horas de anticipación.
               </div>
             </div>
           </div>
-          <div id="wz-lateral-slot">${lateralHTML(false)}</div>
+          <div id="wzh-lateral-slot">${lateralHTML(false)}</div>
         </div>`;
 
-        $$('#wz-cuerpo [data-ir]').forEach(b => b.addEventListener('click', () => renderPaso(parseInt(b.dataset.ir))));
+        $$('#wzh-cuerpo [data-ir]').forEach(b => b.addEventListener('click', () => renderPaso(parseInt(b.dataset.ir))));
         botonesFooter(true, 'Continuar al pago <i class="ph ph-arrow-right"></i>', () => renderPaso(4));
     }
 
@@ -662,10 +623,10 @@
         const pr = calcularPrecio();
         const g = W.pago, f = W.facturacion;
 
-        $('#wz-cuerpo').innerHTML = `
+        $('#wzh-cuerpo').innerHTML = `
         <div class="wz-grid">
           <div>
-            <div class="wz-alerta-error" id="wz-error-pago"></div>
+            <div class="wz-alerta-error" id="wzh-error-pago"></div>
 
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-credit-card"></i> 1. Método de pago</div>
@@ -688,185 +649,185 @@
               </div>
             </div>
 
-            <div class="wz-bloque" id="wz-form-pago"></div>
+            <div class="wz-bloque" id="wzh-form-pago"></div>
 
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-receipt"></i> 3. Dirección de facturación</div>
               <label class="wz-check-linea">
-                <input type="checkbox" id="wz-fact-perfil" ${f.usar_perfil ? 'checked' : ''}>
+                <input type="checkbox" id="wzh-fact-perfil" ${f.usar_perfil ? 'checked' : ''}>
                 <span>Usar los mismos datos de mi perfil para facturación</span>
               </label>
               <div class="wz-banner-info" style="margin-top:2px"><i class="ph ph-info"></i> La dirección de facturación no modifica la dirección de recogida de tu mascota.</div>
-              <div id="wz-fact-campos" style="display:${f.usar_perfil ? 'none' : 'block'};margin-top:12px">
+              <div id="wzh-fact-campos" style="display:${f.usar_perfil ? 'none' : 'block'};margin-top:12px">
                 <div class="wz-form-fila">
-                  <div class="wz-campo"><label>País</label><input id="wz-f-pais" value="${f.pais}"></div>
-                  <div class="wz-campo"><label>Departamento / Región</label><input id="wz-f-depto" value="${f.departamento}"></div>
-                  <div class="wz-campo"><label>Ciudad</label><input id="wz-f-ciudad" value="${f.ciudad}"></div>
+                  <div class="wz-campo"><label>País</label><input id="wzh-f-pais" value="${f.pais}"></div>
+                  <div class="wz-campo"><label>Departamento / Región</label><input id="wzh-f-depto" value="${f.departamento}"></div>
+                  <div class="wz-campo"><label>Ciudad</label><input id="wzh-f-ciudad" value="${f.ciudad}"></div>
                 </div>
                 <div class="wz-form-fila">
-                  <div class="wz-campo" style="flex:2"><label>Dirección</label><input id="wz-f-dir" value="${f.direccion}"></div>
-                  <div class="wz-campo"><label>Complemento <span class="op">(opcional)</span></label><input id="wz-f-comp" value="${f.complemento}"></div>
-                  <div class="wz-campo"><label>Código postal <span class="op">(opcional)</span></label><input id="wz-f-cp" value="${f.codigo_postal}"></div>
+                  <div class="wz-campo" style="flex:2"><label>Dirección</label><input id="wzh-f-dir" value="${f.direccion}"></div>
+                  <div class="wz-campo"><label>Complemento <span class="op">(opcional)</span></label><input id="wzh-f-comp" value="${f.complemento}"></div>
+                  <div class="wz-campo"><label>Código postal <span class="op">(opcional)</span></label><input id="wzh-f-cp" value="${f.codigo_postal}"></div>
                 </div>
               </div>
             </div>
 
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-check-square"></i> 4. Confirmaciones</div>
-              <label class="wz-check-linea"><input type="checkbox" id="wz-c-datos" ${W.conf.datos ? 'checked' : ''}>
+              <label class="wz-check-linea"><input type="checkbox" id="wzh-c-datos" ${W.conf.datos ? 'checked' : ''}>
                 <span>Confirmo que los datos del servicio y la dirección de recogida son correctos.</span></label>
-              <label class="wz-check-linea"><input type="checkbox" id="wz-c-terminos" ${W.conf.terminos ? 'checked' : ''}>
+              <label class="wz-check-linea"><input type="checkbox" id="wzh-c-terminos" ${W.conf.terminos ? 'checked' : ''}>
                 <span>Acepto los <strong>Términos y Condiciones</strong> del servicio de paseos.</span></label>
-              <label class="wz-check-linea"><input type="checkbox" id="wz-c-autorizo" ${W.conf.autorizo ? 'checked' : ''}>
-                <span>Autorizo el procesamiento del pago para activar mi membresía.</span></label>
+              <label class="wz-check-linea"><input type="checkbox" id="wzh-c-autorizo" ${W.conf.autorizo ? 'checked' : ''}>
+                <span>Autorizo el procesamiento del pago para confirmar mi reserva.</span></label>
             </div>
           </div>
 
-          <div id="wz-lateral-slot">${lateralHTML(true).replace('wz-lat-aviso', 'wz-lat-aviso ok').replace(
-              'La mensualidad comienza el día que elijas como fecha de inicio.',
+          <div id="wzh-lateral-slot">${lateralHTML(true).replace('wz-lat-aviso', 'wz-lat-aviso ok').replace(
+              'La reserva queda confirmada para las fechas que elegiste.',
               'Al completar el pago, tu pedido quedará registrado y pasará a validación para asignación de ruta.')}</div>
         </div>`;
 
         renderFormPago();
 
         // Método de pago
-        $$('#wz-cuerpo [data-metodo]').forEach(c => c.addEventListener('click', () => {
+        $$('#wzh-cuerpo [data-metodo]').forEach(c => c.addEventListener('click', () => {
             const met = c.dataset.metodo;
             if (met === 'nequi') return alertaPaso('Nequi / Daviplata estará disponible próximamente.');
             W.pago.metodo = met;
-            $$('#wz-cuerpo [data-metodo]').forEach(x => x.classList.toggle('sel', x.dataset.metodo === met));
+            $$('#wzh-cuerpo [data-metodo]').forEach(x => x.classList.toggle('sel', x.dataset.metodo === met));
             renderFormPago();
             validarBotonPagar();
         }));
 
         // Facturación
-        $('#wz-fact-perfil').addEventListener('change', e => {
+        $('#wzh-fact-perfil').addEventListener('change', e => {
             f.usar_perfil = e.target.checked;
-            $('#wz-fact-campos').style.display = f.usar_perfil ? 'none' : 'block';
+            $('#wzh-fact-campos').style.display = f.usar_perfil ? 'none' : 'block';
             validarBotonPagar();
         });
         ['pais', 'depto', 'ciudad', 'dir', 'comp', 'cp'].forEach(k => {
-            const el = $('#wz-f-' + k);
+            const el = $('#wzh-f-' + k);
             if (!el) return;
             el.addEventListener('input', () => {
-                f.pais = $('#wz-f-pais').value; f.departamento = $('#wz-f-depto').value;
-                f.ciudad = $('#wz-f-ciudad').value; f.direccion = $('#wz-f-dir').value;
-                f.complemento = $('#wz-f-comp').value; f.codigo_postal = $('#wz-f-cp').value;
+                f.pais = $('#wzh-f-pais').value; f.departamento = $('#wzh-f-depto').value;
+                f.ciudad = $('#wzh-f-ciudad').value; f.direccion = $('#wzh-f-dir').value;
+                f.complemento = $('#wzh-f-comp').value; f.codigo_postal = $('#wzh-f-cp').value;
                 validarBotonPagar();
             });
         });
 
         // Confirmaciones
-        [['datos', 'wz-c-datos'], ['terminos', 'wz-c-terminos'], ['autorizo', 'wz-c-autorizo']].forEach(([k, id]) => {
+        [['datos', 'wzh-c-datos'], ['terminos', 'wzh-c-terminos'], ['autorizo', 'wzh-c-autorizo']].forEach(([k, id]) => {
             $('#' + id).addEventListener('change', e => { W.conf[k] = e.target.checked; validarBotonPagar(); });
         });
 
         // Footer con el total en el botón
-        botonesFooter(true, `<i class="ph ph-lock-simple"></i> Pagar membresía &nbsp; ${pr.cantidad ? cop(pr.total) : ''}`, pagar, 'wz-btn-pagar');
-        $('#wz-btn-atras').innerHTML = '<i class="ph ph-arrow-left"></i> Volver al resumen';
+        botonesFooter(true, `<i class="ph ph-lock-simple"></i> Pagar reserva &nbsp; ${pr.cantidad ? cop(pr.total) : ''}`, pagar, 'wzh-btn-pagar');
+        $('#wzh-btn-atras').innerHTML = '<i class="ph ph-arrow-left"></i> Volver al resumen';
         validarBotonPagar();
     }
 
     // Formulario dinámico según método (bloque 2)
     function renderFormPago() {
         const g = W.pago;
-        const cont = $('#wz-form-pago');
+        const cont = $('#wzh-form-pago');
         if (g.metodo === 'tarjeta') {
             cont.innerHTML = `
             <div class="wz-titulo-seccion"><i class="ph ph-credit-card"></i> 2. Datos de la tarjeta</div>
             <div class="wz-form-fila">
               <div class="wz-campo" style="flex:2">
                 <label>Número de tarjeta</label>
-                <input id="wz-t-numero" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" value="${g.numero}" maxlength="19">
-                <div class="wz-error" id="wz-e-numero">Número de tarjeta inválido.</div>
+                <input id="wzh-t-numero" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" value="${g.numero}" maxlength="19">
+                <div class="wz-error" id="wzh-e-numero">Número de tarjeta inválido.</div>
               </div>
               <div class="wz-campo" style="flex:2">
                 <label>Nombre del titular</label>
-                <input id="wz-t-titular" value="${g.titular.replace(/"/g, '&quot;')}" placeholder="Como aparece en la tarjeta">
-                <div class="wz-error" id="wz-e-titular">Escribe el nombre del titular.</div>
+                <input id="wzh-t-titular" value="${g.titular.replace(/"/g, '&quot;')}" placeholder="Como aparece en la tarjeta">
+                <div class="wz-error" id="wzh-e-titular">Escribe el nombre del titular.</div>
               </div>
             </div>
             <div class="wz-form-fila">
               <div class="wz-campo">
                 <label>Fecha de vencimiento</label>
-                <input id="wz-t-venc" placeholder="MM / AA" value="${g.venc}" maxlength="7" inputmode="numeric" autocomplete="off">
-                <div class="wz-error" id="wz-e-venc">Fecha inválida o vencida.</div>
+                <input id="wzh-t-venc" placeholder="MM / AA" value="${g.venc}" maxlength="7" inputmode="numeric" autocomplete="off">
+                <div class="wz-error" id="wzh-e-venc">Fecha inválida o vencida.</div>
               </div>
               <div class="wz-campo">
                 <label>CVV</label>
-                <input id="wz-t-cvv" type="password" placeholder="123" value="" maxlength="4" inputmode="numeric" autocomplete="off">
-                <div class="wz-error" id="wz-e-cvv">3 o 4 dígitos.</div>
+                <input id="wzh-t-cvv" type="password" placeholder="123" value="" maxlength="4" inputmode="numeric" autocomplete="off">
+                <div class="wz-error" id="wzh-e-cvv">3 o 4 dígitos.</div>
               </div>
               <div class="wz-campo">
                 <label>Número de cuotas <span class="op">(opcional)</span></label>
-                <select id="wz-t-cuotas">${[1, 3, 6, 12].map(c => `<option value="${c}" ${g.cuotas === c ? 'selected' : ''}>${c} cuota${c > 1 ? 's' : ''}</option>`).join('')}</select>
+                <select id="wzh-t-cuotas">${[1, 3, 6, 12].map(c => `<option value="${c}" ${g.cuotas === c ? 'selected' : ''}>${c} cuota${c > 1 ? 's' : ''}</option>`).join('')}</select>
               </div>
             </div>
             <div class="wz-nota-verde"><i class="ph ph-lock-simple"></i> Tus datos se procesan de forma segura. Paseo Feliz no almacena la información completa de tu tarjeta.</div>`;
 
             // Formateo y validación en vivo
-            $('#wz-t-numero').addEventListener('input', e => {
+            $('#wzh-t-numero').addEventListener('input', e => {
                 let v = e.target.value.replace(/\D/g, '').slice(0, 16);
                 e.target.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
                 g.numero = e.target.value;
-                marcarValidez('wz-t-numero', 'wz-e-numero', v.length === 0 || luhnValido(v));
+                marcarValidez('wzh-t-numero', 'wzh-e-numero', v.length === 0 || luhnValido(v));
                 validarBotonPagar();
             });
-            $('#wz-t-titular').addEventListener('input', e => { g.titular = e.target.value; validarBotonPagar(); });
-            $('#wz-t-venc').addEventListener('input', e => {
+            $('#wzh-t-titular').addEventListener('input', e => { g.titular = e.target.value; validarBotonPagar(); });
+            $('#wzh-t-venc').addEventListener('input', e => {
                 let v = e.target.value.replace(/\D/g, '').slice(0, 4);
                 e.target.value = v.length > 2 ? v.slice(0, 2) + ' / ' + v.slice(2) : v;
                 g.venc = e.target.value;
-                marcarValidez('wz-t-venc', 'wz-e-venc', v.length < 4 || vencValido(e.target.value));
+                marcarValidez('wzh-t-venc', 'wzh-e-venc', v.length < 4 || vencValido(e.target.value));
                 validarBotonPagar();
             });
-            $('#wz-t-cvv').addEventListener('input', e => {
+            $('#wzh-t-cvv').addEventListener('input', e => {
                 e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
                 g.cvv = e.target.value;
-                marcarValidez('wz-t-cvv', 'wz-e-cvv', g.cvv.length === 0 || g.cvv.length >= 3);
+                marcarValidez('wzh-t-cvv', 'wzh-e-cvv', g.cvv.length === 0 || g.cvv.length >= 3);
                 validarBotonPagar();
             });
-            $('#wz-t-cuotas').addEventListener('change', e => { g.cuotas = parseInt(e.target.value); });
+            $('#wzh-t-cuotas').addEventListener('change', e => { g.cuotas = parseInt(e.target.value); });
         } else {
             cont.innerHTML = `
             <div class="wz-titulo-seccion"><i class="ph ph-bank"></i> 2. Datos de PSE</div>
             <div class="wz-form-fila">
               <div class="wz-campo">
                 <label>Tipo de persona</label>
-                <select id="wz-p-tipo">
+                <select id="wzh-p-tipo">
                   <option value="natural" ${g.tipo_persona === 'natural' ? 'selected' : ''}>Persona natural</option>
                   <option value="juridica" ${g.tipo_persona === 'juridica' ? 'selected' : ''}>Persona jurídica</option>
                 </select>
               </div>
               <div class="wz-campo" style="flex:2">
                 <label>Nombre del titular</label>
-                <input id="wz-p-titular" value="${g.titular.replace(/"/g, '&quot;')}">
+                <input id="wzh-p-titular" value="${g.titular.replace(/"/g, '&quot;')}">
               </div>
             </div>
             <div class="wz-form-fila">
               <div class="wz-campo">
                 <label>Documento</label>
-                <input id="wz-p-doc" value="${g.documento}" inputmode="numeric" placeholder="C.C. o NIT" maxlength="15">
+                <input id="wzh-p-doc" value="${g.documento}" inputmode="numeric" placeholder="C.C. o NIT" maxlength="15">
               </div>
               <div class="wz-campo">
                 <label>Banco</label>
-                <select id="wz-p-banco">
+                <select id="wzh-p-banco">
                   <option value="">— Selecciona tu banco —</option>
                   ${BANCOS_PSE.map(b => `<option ${g.banco === b ? 'selected' : ''}>${b}</option>`).join('')}
                 </select>
               </div>
               <div class="wz-campo" style="flex:2">
                 <label>Correo de confirmación</label>
-                <input id="wz-p-email" type="email" value="${g.email_confirmacion}">
+                <input id="wzh-p-email" type="email" value="${g.email_confirmacion}">
               </div>
             </div>
             <div class="wz-nota-verde"><i class="ph ph-lock-simple"></i> Serás dirigido a tu banco para completar el débito de forma segura.</div>`;
 
-            $('#wz-p-tipo').addEventListener('change', e => { g.tipo_persona = e.target.value; });
-            $('#wz-p-titular').addEventListener('input', e => { g.titular = e.target.value; validarBotonPagar(); });
-            $('#wz-p-doc').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); g.documento = e.target.value; validarBotonPagar(); });
-            $('#wz-p-banco').addEventListener('change', e => { g.banco = e.target.value; validarBotonPagar(); });
-            $('#wz-p-email').addEventListener('input', e => { g.email_confirmacion = e.target.value; validarBotonPagar(); });
+            $('#wzh-p-tipo').addEventListener('change', e => { g.tipo_persona = e.target.value; });
+            $('#wzh-p-titular').addEventListener('input', e => { g.titular = e.target.value; validarBotonPagar(); });
+            $('#wzh-p-doc').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); g.documento = e.target.value; validarBotonPagar(); });
+            $('#wzh-p-banco').addEventListener('change', e => { g.banco = e.target.value; validarBotonPagar(); });
+            $('#wzh-p-email').addEventListener('input', e => { g.email_confirmacion = e.target.value; validarBotonPagar(); });
         }
     }
 
@@ -892,7 +853,7 @@
     }
 
     function validarBotonPagar() {
-        const btn = $('#wz-btn-pagar');
+        const btn = $('#wzh-btn-pagar');
         if (btn) btn.disabled = !pagoValido() || procesando;
     }
 
@@ -900,21 +861,17 @@
     async function pagar() {
         if (procesando || !pagoValido()) return;
         procesando = true;
-        const btn = $('#wz-btn-pagar');
+        const btn = $('#wzh-btn-pagar');
         const original = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="wz-spinner"></span> Procesando pago...';
-        $('#wz-error-pago').classList.remove('visible');
+        $('#wzh-error-pago').classList.remove('visible');
 
         const g = W.pago;
         const payload = {
             id_mascota: W.id_mascota,
-            cantidad_paseos: W.cantidad_paseos,
-            modalidad: W.modalidad,
-            duracion_min: W.duracion_min,
-            dias_preferidos: W.dias.join(','),
-            franja_horaria: W.franja,
-            fecha_inicio: W.fecha_inicio,
+            fecha_entrada: W.fecha_entrada,
+            fecha_salida: W.fecha_salida,
             comportamiento: W.comportamiento,
             observaciones: W.observaciones,
             ubicacion: W.ubicacion,
@@ -934,7 +891,7 @@
         };
 
         try {
-            const r = await fetch(API_WZ + 'procesar_compra_paseos.php', {
+            const r = await fetch(API_WZ + 'procesar_compra_hospedaje.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -942,18 +899,18 @@
             const data = await r.json();
 
             if (!data.success) {
-                const err = $('#wz-error-pago');
+                const err = $('#wzh-error-pago');
                 err.textContent = '⚠ ' + (data.message || 'No se pudo procesar el pago.');
                 err.classList.add('visible');
-                $('#wz-cuerpo').scrollTop = 0;
+                $('#wzh-cuerpo').scrollTop = 0;
                 return;
             }
             renderExito(data);
         } catch (e) {
-            const err = $('#wz-error-pago');
+            const err = $('#wzh-error-pago');
             err.textContent = '⚠ Error de conexión al procesar el pago. Tus datos siguen aquí: inténtalo de nuevo.';
             err.classList.add('visible');
-            $('#wz-cuerpo').scrollTop = 0;
+            $('#wzh-cuerpo').scrollTop = 0;
         } finally {
             procesando = false;
             if (btn.isConnected) { btn.innerHTML = original; validarBotonPagar(); }
@@ -964,21 +921,21 @@
     function renderExito(data) {
         W.__exito = true;
         const m = mascotaSel();
-        $('#wz-progreso').innerHTML = '';
-        $('#wz-subtitulo').innerHTML = '<strong>¡Compra completada!</strong>';
-        $('#wz-cuerpo').innerHTML = `
+        $('#wzh-progreso').innerHTML = '';
+        $('#wzh-subtitulo').innerHTML = '<strong>¡Compra completada!</strong>';
+        $('#wzh-cuerpo').innerHTML = `
         <div class="wz-exito">
           <div class="icono"><i class="ph ph-check-circle"></i></div>
-          <h3>¡Tu membresía de paseos está activa! 🎉</h3>
-          <p>${m ? m.nombre : 'Tu mascota'} ya tiene <strong>${W.cantidad_paseos} paseos al mes</strong>.
-             Tu pedido quedó registrado y pasará a asignación de ruta con un paseador.</p>
+          <h3>¡Tu reserva de hospedaje está confirmada! 🎉</h3>
+          <p>${m ? m.nombre : 'Tu mascota'} se quedará <strong>${data.noches ?? ''} noche(s)</strong>,
+             del ${W.fecha_entrada} al ${W.fecha_salida}. Tu pedido quedó registrado y pasará a asignación de cuidador.</p>
           <div class="ref">
             Pedido <strong>#${data.id_pedido}</strong> · Referencia de pago <strong>${data.referencia}</strong><br>
             Total pagado: <strong>${cop(data.total)}</strong>
           </div>
-          <p style="font-size:.76rem">Recibirás notificaciones cuando el paseador esté asignado y en cada paseo.</p>
+          <p style="font-size:.76rem">Recibirás notificaciones cuando el cuidador esté asignado.</p>
         </div>`;
-        $('#wz-botones').innerHTML = '<button class="wz-btn wz-btn-prim" id="wz-btn-fin"><i class="ph ph-paw-print"></i> ¡Entendido!</button>';
-        $('#wz-btn-fin').addEventListener('click', cerrarWizard);
+        $('#wzh-botones').innerHTML = '<button class="wz-btn wz-btn-prim" id="wzh-btn-fin"><i class="ph ph-paw-print"></i> ¡Entendido!</button>';
+        $('#wzh-btn-fin').addEventListener('click', cerrarWizard);
     }
 })();
