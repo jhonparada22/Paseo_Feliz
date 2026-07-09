@@ -7,7 +7,7 @@
  *
  * POST JSON esperado:
  * {
- *   "id_mascota": 6, "id_plan": 3,
+ *   "id_mascota": 6, "cantidad_paseos": 8,
  *   "modalidad": "grupal", "duracion_min": 60,
  *   "dias_preferidos": "lun,mie,vie", "franja_horaria": "8:00 a.m. – 11:00 a.m.",
  *   "fecha_inicio": "2026-07-10",
@@ -28,6 +28,8 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once '../model/conexion.php';
+include_once '../model/modelotelegram.php';
+include_once 'precios_helper.php';
 
 // Errores SQL como excepciones -> los captura el try/catch y responden JSON limpio
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -51,13 +53,21 @@ function procesarPagoSimulado($metodo, $monto, $datosPago) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// El precio por día y los descuentos por cantidad se configuran desde
+// el botón "Precios" del panel admin (tabla precios_servicios /
+// descuentos_servicios) — ya no está fijo en el código.
+// ═══════════════════════════════════════════════════════════════════
+define('MIN_PASEOS_MES', 1);
+define('MAX_PASEOS_MES', 31);
+
+// ═══════════════════════════════════════════════════════════════════
 // 1. LEER Y VALIDAR LA SOLICITUD
 // ═══════════════════════════════════════════════════════════════════
 $idUsuario = (int)$_SESSION['usuario_id'];
 $data      = leerJsonBody();
 
-$idMascota = intval($data['id_mascota'] ?? 0);
-$idPlan    = intval($data['id_plan'] ?? 0);
+$idMascota      = intval($data['id_mascota'] ?? 0);
+$cantidadPaseos = intval($data['cantidad_paseos'] ?? 0);
 $ubicacion = $data['ubicacion'] ?? [];
 $pago      = $data['pago'] ?? [];
 $fact      = $data['facturacion'] ?? [];
@@ -66,10 +76,11 @@ $conf      = $data['confirmaciones'] ?? [];
 // ═══════════════════════════════════════════════════════════════════
 // MODO EXPRÉS: "añadir otra mascota al servicio activo"
 // Si viene pedido_base, la nueva mascota HEREDA toda la configuración
-// del pedido activo (plan, días, franja, duración, modalidad, dirección)
-// leída de la BD — lo que mande el cliente para esos campos se ignora.
-// Además NO se toca la membresía (ya vigente) y al final se clona el
-// cronograma del pedido base para que salgan a pasear juntas.
+// del pedido activo (cantidad de paseos, días, franja, duración,
+// modalidad y dirección) leída de la BD — lo que mande el cliente para
+// esos campos se ignora. La nueva mascota paga y activa SU PROPIA
+// membresía (son por mascota) y al final se clona el cronograma del
+// pedido base para que salgan a pasear juntas.
 // ═══════════════════════════════════════════════════════════════════
 $idPedidoBase = intval($data['pedido_base'] ?? 0);
 $pedidoBase   = null;
@@ -77,11 +88,11 @@ $pedidoBase   = null;
 if ($idPedidoBase > 0) {
     $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
     $stmt = $conn->prepare(
-        "SELECT p.id_pedido, p.id_plan, p.modalidad, p.duracion_min, p.dias_preferidos,
+        "SELECT p.id_pedido, p.cantidad_paseos, p.modalidad, p.duracion_min, p.dias_preferidos,
                 p.franja_horaria, p.comportamiento,
                 p.direccion, p.barrio, p.referencia, p.instrucciones, p.lat, p.lng
          FROM pedidos_paseo p
-         JOIN membresias m ON m.id_usuario = p.id_usuario
+         JOIN membresias m ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
          WHERE p.id_pedido = ? AND p.id_usuario = ?
            AND p.estado IN ('pagado', 'listo_para_asignar')
            AND m.paseos = 1
@@ -111,7 +122,7 @@ if ($idPedidoBase > 0) {
     }
 
     // Heredar configuración del pedido base (fuente de verdad: la BD)
-    $idPlan                    = (int)$pedidoBase['id_plan'];
+    $cantidadPaseos            = (int)$pedidoBase['cantidad_paseos'];
     $data['modalidad']         = $pedidoBase['modalidad'];
     $data['duracion_min']      = (int)$pedidoBase['duracion_min'];
     $data['dias_preferidos']   = $pedidoBase['dias_preferidos'];
@@ -127,6 +138,10 @@ if ($idPedidoBase > 0) {
         'lng'           => (float)$pedidoBase['lng'],
         'validada'      => true, // ya se validó al comprar el servicio base
     ];
+}
+
+if ($cantidadPaseos < MIN_PASEOS_MES || $cantidadPaseos > MAX_PASEOS_MES) {
+    responder(false, [], 'La cantidad de paseos al mes debe estar entre ' . MIN_PASEOS_MES . ' y ' . MAX_PASEOS_MES . '.');
 }
 
 // Confirmaciones obligatorias
@@ -170,24 +185,26 @@ if (!$d || $d->format('Y-m-d') < date('Y-m-d')) {
 }
 
 // La mascota debe pertenecer al usuario en sesión
-$stmt = $conn->prepare("SELECT id_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
+$stmt = $conn->prepare("SELECT id_mascota, nombre_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
 $stmt->bind_param("ii", $idMascota, $idUsuario);
 $stmt->execute();
-$mascotaOk = $stmt->get_result()->num_rows > 0;
+$mascotaRow = $stmt->get_result()->fetch_assoc();
 $stmt->close();
-if (!$mascotaOk) responder(false, [], 'La mascota seleccionada no pertenece a tu cuenta.');
+if (!$mascotaRow) responder(false, [], 'La mascota seleccionada no pertenece a tu cuenta.');
 
-// El plan debe existir y estar activo — el precio SIEMPRE sale de la BD
-$stmt = $conn->prepare("SELECT paseos_mes, precio_paseo, descuento_pct FROM planes_paseos WHERE id_plan = ? AND activo = 1");
-$stmt->bind_param("i", $idPlan);
-$stmt->execute();
-$plan = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-if (!$plan) responder(false, [], 'El plan seleccionado no está disponible.');
+$stmtU = $conn->prepare("SELECT nombre, email FROM usuarios WHERE id = ? LIMIT 1");
+$stmtU->bind_param("i", $idUsuario);
+$stmtU->execute();
+$usuarioRow = $stmtU->get_result()->fetch_assoc();
+$stmtU->close();
 
-$subtotal  = (float)$plan['precio_paseo'] * (int)$plan['paseos_mes'];
-$descuento = round($subtotal * (int)$plan['descuento_pct'] / 100, 2);
-$total     = $subtotal - $descuento;
+// El precio SIEMPRE se calcula en el servidor, usando lo configurado
+// en el panel admin (precio por día + descuento por cantidad, si aplica)
+$precio = calcularPrecioServicio($conn, 'paseos', $cantidadPaseos);
+if (!$precio) responder(false, [], 'El servicio de Paseos no tiene un precio configurado todavía. Contacta al administrador.');
+$subtotal  = $precio['subtotal'];
+$descuento = $precio['descuento'];
+$total     = $precio['total'];
 
 // Campos opcionales del pedido
 $modalidad     = in_array($data['modalidad'] ?? '', ['individual', 'grupal']) ? $data['modalidad'] : 'grupal';
@@ -205,16 +222,16 @@ $instrucciones = substr(trim($ubicacion['instrucciones'] ?? ''), 0, 255);
 // ═══════════════════════════════════════════════════════════════════
 $conn->begin_transaction();
 try {
-    // 2.1 Pedido en estado pendiente_pago
+    // 2.1 Pedido en estado pendiente_pago (id_plan queda NULL: ya no se usa)
     $stmt = $conn->prepare(
         "INSERT INTO pedidos_paseo
-            (id_usuario, id_mascota, id_plan, modalidad, duracion_min, dias_preferidos,
+            (id_usuario, id_mascota, cantidad_paseos, modalidad, duracion_min, dias_preferidos,
              franja_horaria, fecha_inicio, comportamiento, observaciones,
              direccion, barrio, referencia, instrucciones, lat, lng, ubicacion_validada,
              subtotal, descuento, total, metodo_pago, estado)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'pendiente_pago')"
     );
-    $tiposPedido = 'iii'   // id_usuario, id_mascota, id_plan
+    $tiposPedido = 'iii'   // id_usuario, id_mascota, cantidad_paseos
                  . 's'     // modalidad
                  . 'i'     // duracion_min
                  . 'sssss' // dias, franja, fecha_inicio, comportamiento, observaciones
@@ -224,7 +241,7 @@ try {
                  . 's';    // metodo_pago
     $stmt->bind_param(
         $tiposPedido,
-        $idUsuario, $idMascota, $idPlan, $modalidad, $duracion, $dias,
+        $idUsuario, $idMascota, $cantidadPaseos, $modalidad, $duracion, $dias,
         $franja, $fechaInicio, $comportamiento, $observaciones,
         $direccion, $barrio, $referencia, $instrucciones, $lat, $lng,
         $subtotal, $descuento, $total, $metodo
@@ -265,15 +282,15 @@ try {
 
     $stmt = $conn->prepare(
         "INSERT INTO pagos
-            (id_pedido, id_usuario, metodo, monto, estado, referencia, titular, ultimos4, cuotas,
+            (id_pedido, id_usuario, id_mascota, metodo, monto, estado_pago, referencia, titular, ultimos4, cuotas,
              banco, tipo_persona, documento, email_confirmacion,
              fact_usar_perfil, fact_pais, fact_ciudad, fact_departamento,
              fact_direccion, fact_complemento, fact_codigo_postal)
-         VALUES (?, ?, ?, ?, 'aprobado', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?, 'aprobado', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $stmt->bind_param(
-        "iisdsssissssissssss",
-        $idPedido, $idUsuario, $metodo, $total, $resultado['referencia'],
+        "iiisdsssissssissssss",
+        $idPedido, $idUsuario, $idMascota, $metodo, $total, $resultado['referencia'],
         $titular, $ultimos4, $cuotas,
         $banco, $tipoPers, $documento, $emailConf,
         $usarPerfil, $fPais, $fCiudad, $fDepto, $fDir, $fComp, $fCP
@@ -288,12 +305,30 @@ try {
     $u->execute();
     $u->close();
 
+    // 2.5 Activar la membresía de paseos PARA ESTA MASCOTA (upsert por
+    //     usuario+mascota, igual que registrar_pago.php — antes esto
+    //     actualizaba por id_usuario solamente y no coincidía con ninguna
+    //     fila del sistema de membresía por mascota).
+    $ahoraPago = date('Y-m-d H:i:s');
+    $sqlMem = "
+        INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, id_pago_paseos)
+        VALUES (?, ?, 1, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            paseos              = 1,
+            id_mascota          = VALUES(id_mascota),
+            fecha_inicio_paseos = VALUES(fecha_inicio_paseos),
+            id_pago_paseos      = VALUES(id_pago_paseos)
+    ";
+    $u = $conn->prepare($sqlMem);
+    $u->bind_param("iisi", $idUsuario, $idMascota, $ahoraPago, $idPago);
+    $u->execute();
+    $u->close();
+
+    // 2.6 MODO EXPRÉS: clonar el cronograma del pedido base (mismo
+    //     paseador, mismos días) para que las mascotas salgan a pasear
+    //     juntas. Si el base aún no tiene cronograma (pendiente de
+    //     asignación), el nuevo pedido también queda pendiente — coherente.
     if ($pedidoBase) {
-        // 2.5 (modo exprés) La membresía YA está vigente: no se toca, porque
-        //     resetear fecha_inicio_paseos correría la renovación y el conteo
-        //     de paseos usados de la primera mascota.
-        //     En su lugar, clonar el cronograma del pedido base (mismo
-        //     paseador, mismos días) para que salgan a pasear juntas.
         $stmt = $conn->prepare(
             "SELECT id_paseador, dia_semana FROM cronograma_paseos WHERE id_pedido = ?"
         );
@@ -316,19 +351,24 @@ try {
             }
             $ins->close();
         }
-        // Si el base aún no tiene cronograma (pendiente de asignación),
-        // el nuevo pedido también queda pendiente — coherente.
-    } else {
-        // 2.5 Activar la membresía de paseos (el resto del sitio ya la reconoce
-        //     vía controller/membresia_estado.php: 30 días desde fecha_inicio_paseos)
-        $u = $conn->prepare("UPDATE membresias SET paseos = 1, fecha_inicio_paseos = ? WHERE id_usuario = ?");
-        $fechaInicioDT = $fechaInicio . ' 00:00:00';
-        $u->bind_param("si", $fechaInicioDT, $idUsuario);
-        $u->execute();
-        $u->close();
     }
 
     $conn->commit();
+
+    $telegram = new ModeloTelegram();
+    $telegram->enviarMensajePagos(
+        "💳 <b>Nuevo pago registrado (wizard cliente)</b>\n\n" .
+        "👤 <b>Usuario:</b> " . htmlspecialchars($usuarioRow['nombre'] ?? '') . "\n" .
+        "✉️ <b>Email:</b> "   . htmlspecialchars($usuarioRow['email'] ?? '')  . "\n" .
+        "🐾 <b>Mascota:</b> " . htmlspecialchars($mascotaRow['nombre_mascota']) . "\n" .
+        "📦 <b>Membresía:</b> 🐶 Paseos\n" .
+        "📆 <b>Días solicitados:</b> " . $cantidadPaseos . " paseos al mes\n" .
+        ($precio['descuento_pct'] > 0 ? "🏷️ <b>Descuento aplicado:</b> " . $precio['descuento_pct'] . "%\n" : "") .
+        "💰 <b>Monto:</b> $" . number_format($total, 0, '.', ',') . " COP\n" .
+        "🔧 <b>Método:</b> " . htmlspecialchars($metodo) . "\n" .
+        "📅 <b>Inicio:</b> " . date('d/m/Y', strtotime($fechaInicio)) . "\n" .
+        "🕒 <b>Fecha pago:</b> " . date('d/m/Y H:i')
+    );
 
     responder(true, [
         'id_pedido'  => $idPedido,
@@ -336,9 +376,7 @@ try {
         'referencia' => $resultado['referencia'],
         'total'      => $total,
         'estado'     => 'listo_para_asignar',
-    ], $pedidoBase
-        ? 'Pago aprobado. Tu mascota se unió al servicio de paseos.'
-        : 'Pago aprobado. Tu membresía de paseos quedó activa.');
+    ], 'Pago aprobado. Tu membresía de paseos quedó activa.');
 
 } catch (Exception $e) {
     $conn->rollback();

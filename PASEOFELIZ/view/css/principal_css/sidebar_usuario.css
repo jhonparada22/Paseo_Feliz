@@ -59,7 +59,7 @@ body.usuario-page .app-container,
 ══════════════════════════════════════════════════════════════════════════ */
 #contenedor_general .profile-main-content,
 #contenedor_general .edit-main-content,
-#contenedor_general .main {
+#contenedor_general .main-content {
     flex: 1 !important;
     height: 100vh !important;
     overflow-y: auto !important;
@@ -246,52 +246,33 @@ body.usuario-page .app-container,
         min-width: unset !important;
         height: 58px !important;
         flex-direction: row !important;
-        padding: 0 4px !important;
-        justify-content: flex-start !important;
+        padding: 0 !important;
+        justify-content: space-around !important;
         align-items: center !important;
         position: fixed !important;
         bottom: 0 !important;
         top: auto !important;
         left: 0 !important;
         right: 0 !important;
-        /* Barra deslizable horizontalmente si no caben los iconos */
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        overflow: visible !important;
     }
-
-    #contenedor_general .sidebar::-webkit-scrollbar { display: none; }
 
     #contenedor_general .menu-hamburguesa-container {
         padding: 4px !important;
         margin-bottom: 0 !important;
         width: auto !important;
-        flex-shrink: 0 !important;
-    }
-
-    #contenedor_general .profile-circle {
-        width: 38px !important;
-        height: 38px !important;
-        font-size: .9rem !important;
     }
 
     #contenedor_general .nav-links {
         display: flex !important;
         flex-direction: row !important;
         width: auto !important;
-        flex: 1 !important;
-        justify-content: space-evenly !important;
-        align-items: center !important;
     }
 
     #contenedor_general .nav-links li {
         margin-bottom: 0 !important;
         width: auto !important;
-        flex-shrink: 0 !important;
     }
-
-    #contenedor_general .nav-sep { display: none !important; }
 
     #contenedor_general .nav-links li a {
         padding: 5px 8px !important;
@@ -317,7 +298,7 @@ body.usuario-page .app-container,
 
     #contenedor_general .profile-main-content,
     #contenedor_general .edit-main-content,
-    #contenedor_general .main {
+    #contenedor_general .main-content {
         order: 1 !important;
         height: calc(100vh - 58px) !important;
         padding-bottom: 0 !important;

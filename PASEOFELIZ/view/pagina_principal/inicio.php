@@ -15,9 +15,9 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <link rel="stylesheet" href="../css/principal_css/sidebar_usuario.css">
     <!-- Wizard de compra de mensualidad de Paseos (mapa Leaflet en el paso 2) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="../css/principal_css/wizard_paseos.css?v=2">
+    <link rel="stylesheet" href="../css/principal_css/wizard_paseos.css?v=1">
     <!-- Dashboard post-compra del servicio de Paseos -->
-    <link rel="stylesheet" href="../css/principal_css/dashboard_paseos.css?v=2">
+    <link rel="stylesheet" href="../css/principal_css/dashboard_paseos.css?v=1">
     <link rel="stylesheet" href="../css/responsive/responsive_principal.css?v=<?php echo @filemtime(__DIR__ . '/../css/responsive/responsive_principal.css'); ?>">
 </head>
 <body class="usuario-page">
@@ -224,6 +224,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                 <button class="btn-secondary" id="btn-disponibilidad">
                     <i class="ph ph-calendar-check"></i> Ver disponibilidad
                 </button>
+
+                <!-- Estado de membresía por mascota + botón de "comprar para otra mascota".
+                     Lo llena inicio_cliente.js según el servicio activo (tab). -->
+                <div id="membresia-mascotas" class="membresia-mascotas"></div>
             </div>
         </div>
 
@@ -294,7 +298,9 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="../js/js pagina principal/wizard_paseos.js?v=3"></script>
-<script src="../js/js pagina principal/dashboard_paseos.js?v=3"></script>
-<script src="../js/js pagina principal/inicio_cliente.js?v=3"></script>
+<script src="../js/js pagina principal/wizard_adiestramiento.js?v=3"></script>
+<script src="../js/js pagina principal/wizard_hospedaje.js?v=3"></script>
+<script src="../js/js pagina principal/dashboard_paseos.js?v=1"></script>
+<script src="../js/js pagina principal/inicio_cliente.js?v=4"></script>
 </body>
 </html>

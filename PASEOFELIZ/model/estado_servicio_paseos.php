@@ -37,17 +37,16 @@ $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 // El dashboard muestra el detalle de UNO (?id_pedido, o el más reciente)
 // y usa la lista completa para el selector de mascotas.
 $stmt = $conn->prepare(
-    "SELECT p.id_pedido, p.id_mascota, p.id_plan, p.modalidad, p.duracion_min, p.dias_preferidos,
+    "SELECT p.id_pedido, p.id_mascota, p.modalidad, p.duracion_min, p.dias_preferidos,
             p.franja_horaria, p.fecha_inicio, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.ubicacion_validada, p.total, p.estado, p.fecha_creacion,
-            pl.nombre AS plan_nombre, pl.paseos_mes,
+            p.cantidad_paseos,
             m.fecha_inicio_paseos,
             DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) AS fecha_renovacion,
             mu.nombre_mascota, mu.avatar_mascota
      FROM pedidos_paseo p
-     JOIN planes_paseos pl   ON pl.id_plan = p.id_plan
-     JOIN membresias m       ON m.id_usuario = p.id_usuario
+     JOIN membresias m       ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
      JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
      WHERE p.id_usuario = ?
        AND p.estado IN ('pagado', 'listo_para_asignar')
@@ -287,7 +286,7 @@ $stmt->execute();
 $usados = (int)$stmt->get_result()->fetch_assoc()['usados'];
 $stmt->close();
 
-$paseosMes = (int)$pedido['paseos_mes'];
+$paseosMes = (int)$pedido['cantidad_paseos'];
 $restantes = max(0, $paseosMes - $usados);
 
 // ── 5. Historial reciente (eventos reales, más nuevo primero) ─────────
@@ -375,7 +374,6 @@ responder(true, [
         'pedido' => [
             'id_pedido'       => $idPedido,
             'id_mascota'      => $idMascota,
-            'id_plan'         => (int)$pedido['id_plan'],
             'mascota'         => $pedido['nombre_mascota'],
             'avatar_mascota'  => $pedido['avatar_mascota'] ?? '',
             'modalidad'       => $pedido['modalidad'],
@@ -396,7 +394,6 @@ responder(true, [
             'fecha_compra'    => $pedido['fecha_creacion'],
         ],
         'plan' => [
-            'nombre'     => $pedido['plan_nombre'],
             'paseos_mes' => $paseosMes,
             'usados'     => $usados,
             'restantes'  => $restantes,

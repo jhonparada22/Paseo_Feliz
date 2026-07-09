@@ -322,9 +322,11 @@
         );
         document.getElementById('dz-add-express').addEventListener('click', function () {
             cerrarModalDz();
+            // La cantidad de paseos del servicio vive en S.plan (no en el
+            // pedido): se anexa a la base para que el wizard la muestre
             abrirWizardPaseos({
                 modo: 'agregar_mascota',
-                base: S.pedido,
+                base: Object.assign({}, S.pedido, { cantidad_paseos: S.plan.paseos_mes }),
                 ocupadas: pedidosActivos.map(function (pa) { return pa.id_mascota; }),
             });
         });
@@ -406,7 +408,7 @@
         const p = S.pedido;
         const filas = [
             ['ph-paw-print',      'Mascota',           esc(p.mascota)],
-            ['ph-calendar-blank', 'Plan',              esc(S.plan.nombre)],
+            ['ph-calendar-blank', 'Paseos al mes',     S.plan.paseos_mes + ' al mes'],
             ['ph-clock',          'Duración',          p.duracion_min + ' minutos por paseo'],
             ['ph-users',          'Modalidad',         p.modalidad === 'individual' ? 'Individual' : 'Grupal'],
             ['ph-calendar-check', 'Días preferidos',   fmtDiasCsv(p.dias_preferidos)],
@@ -575,8 +577,8 @@
             : '';
         return '<div class="dz-card">' +
                     '<h3 class="dz-h3">Tu plan</h3>' +
-                    '<div class="dz-plan-nombre">Plan mensual</div>' +
-                    '<div class="dz-texto">' + esc(pl.nombre) + '</div>' +
+                    '<div class="dz-plan-nombre">Tu mensualidad</div>' +
+                    '<div class="dz-texto">' + pl.paseos_mes + ' paseos al mes</div>' +
                     '<div class="dz-plan-uso"><span>Usados: <strong>' + pl.usados + '</strong></span><span>Restantes: <strong>' + pl.restantes + '</strong></span></div>' +
                     '<div class="dz-barra"><div class="dz-barra-fill" style="width:' + pct + '%"></div></div>' +
                     '<div class="dz-fila dz-fila-sm"><i class="ph ph-calendar-blank"></i><span>Renovación: ' + fmtFecha(mem.renovacion) + '</span></div>' +

@@ -14,19 +14,17 @@ verificarAdmin();
 $estado = $_GET['estado'] ?? 'listo_para_asignar';
 
 $sqlBase =
-    "SELECT p.id_pedido, p.id_usuario, p.id_mascota, p.id_plan,
+    "SELECT p.id_pedido, p.id_usuario, p.id_mascota, p.cantidad_paseos,
             p.modalidad, p.duracion_min, p.dias_preferidos, p.franja_horaria,
             p.fecha_inicio, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.total, p.estado, p.fecha_creacion,
             u.nombre AS cliente, i.telefono,
-            m.nombre_mascota, m.avatar_mascota,
-            pl.nombre AS plan, pl.paseos_mes
+            m.nombre_mascota, m.avatar_mascota
      FROM pedidos_paseo p
      JOIN usuarios u        ON u.id = p.id_usuario
      LEFT JOIN info_usuario i ON i.id_usuario = p.id_usuario
-     JOIN mascota_usuario m ON m.id_mascota = p.id_mascota
-     JOIN planes_paseos pl  ON pl.id_plan = p.id_plan";
+     JOIN mascota_usuario m ON m.id_mascota = p.id_mascota";
 
 if ($estado === 'todos') {
     $stmt = $conn->prepare("$sqlBase ORDER BY p.fecha_creacion DESC");
@@ -71,8 +69,7 @@ while ($row = $res->fetch_assoc()) {
         'id_mascota'     => (int)$row['id_mascota'],
         'mascota'        => $row['nombre_mascota'],
         'avatar_mascota' => $row['avatar_mascota'] ?? '',
-        'plan'           => $row['plan'],
-        'paseos_mes'     => (int)$row['paseos_mes'],
+        'paseos_mes'     => (int)$row['cantidad_paseos'], // clave igual que antes, por compatibilidad con mapa_admin.js
         'modalidad'      => $row['modalidad'],
         'duracion_min'   => (int)$row['duracion_min'],
         'dias_preferidos'=> $row['dias_preferidos'] ?? '',
