@@ -32,65 +32,35 @@ $ahoraServidor = $conn->query("SELECT NOW() AS ahora")->fetch_assoc()['ahora'];
 // (mismo criterio que controller/membresia_estado.php)
 $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 
-// ── 1. TODOS los pedidos pagados con membresía de paseos vigente ──────
-// (uno por mascota: si una mascota tiene varios, gana el más reciente).
-// El dashboard muestra el detalle de UNO (?id_pedido, o el más reciente)
-// y usa la lista completa para el selector de mascotas.
+// ── 1. Pedido pagado más reciente con membresía de paseos vigente ─────
 $stmt = $conn->prepare(
-    "SELECT p.id_pedido, p.id_mascota, p.id_plan, p.modalidad, p.duracion_min, p.dias_preferidos,
+    "SELECT p.id_pedido, p.id_mascota, p.modalidad, p.duracion_min, p.dias_preferidos,
             p.franja_horaria, p.fecha_inicio, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.ubicacion_validada, p.total, p.estado, p.fecha_creacion,
-            pl.nombre AS plan_nombre, pl.paseos_mes,
+            p.cantidad_paseos,
             m.fecha_inicio_paseos,
             DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) AS fecha_renovacion,
             mu.nombre_mascota, mu.avatar_mascota
      FROM pedidos_paseo p
-     JOIN planes_paseos pl   ON pl.id_plan = p.id_plan
-     JOIN membresias m       ON m.id_usuario = p.id_usuario
+     JOIN membresias m       ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
      JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
      WHERE p.id_usuario = ?
        AND p.estado IN ('pagado', 'listo_para_asignar')
        AND m.paseos = 1
        AND m.fecha_inicio_paseos IS NOT NULL
        AND DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) > $ahoraColombia
-     ORDER BY p.fecha_creacion DESC"
+     ORDER BY p.fecha_creacion DESC
+     LIMIT 1"
 );
 $stmt->bind_param("i", $idUsuario);
 $stmt->execute();
-$res = $stmt->get_result();
-$pedidosPorMascota = [];
-while ($row = $res->fetch_assoc()) {
-    $idM = (int)$row['id_mascota'];
-    if (!isset($pedidosPorMascota[$idM])) $pedidosPorMascota[$idM] = $row; // más reciente por mascota
-}
+$pedido = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$pedidosPorMascota) {
+if (!$pedido) {
     responder(true, ['tiene_servicio' => false], 'Sin servicio de paseos activo.');
 }
-
-// Lista resumida para el selector de mascotas del dashboard
-$pedidosActivos = [];
-foreach ($pedidosPorMascota as $row) {
-    $pedidosActivos[] = [
-        'id_pedido'  => (int)$row['id_pedido'],
-        'id_mascota' => (int)$row['id_mascota'],
-        'nombre'     => $row['nombre_mascota'],
-        'avatar'     => $row['avatar_mascota'] ?? '',
-    ];
-}
-
-// Pedido a detallar: el solicitado por ?id_pedido (si es suyo y está activo),
-// o el más reciente de todos.
-$idPedidoFiltro = intval($_GET['id_pedido'] ?? 0);
-$pedido = null;
-if ($idPedidoFiltro > 0) {
-    foreach ($pedidosPorMascota as $row) {
-        if ((int)$row['id_pedido'] === $idPedidoFiltro) { $pedido = $row; break; }
-    }
-}
-if (!$pedido) $pedido = reset($pedidosPorMascota);
 
 $idPedido  = (int)$pedido['id_pedido'];
 $idMascota = (int)$pedido['id_mascota'];
@@ -177,9 +147,6 @@ if ($crono) {
 }
 
 // ── 3. Ruta de HOY con parada del cliente (paseo en vivo) ─────────────
-// Se filtra por id_pedido (no solo por id_usuario_cliente): un mismo
-// cliente puede tener varias mascotas con paradas en la MISMA ruta del
-// paseador, y cada una necesita su propio progreso sin mezclarse.
 $hoy = date('Y-m-d');
 $stmt = $conn->prepare(
     "SELECT DISTINCT r.id_ruta, r.id_paseador, r.id_estado, er.nombre AS estado_ruta,
@@ -187,70 +154,48 @@ $stmt = $conn->prepare(
      FROM rutas r
      JOIN ruta_paradas rp ON rp.id_ruta = r.id_ruta
      JOIN estados_ruta er ON er.id_estado = r.id_estado
-     WHERE rp.id_pedido = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3)
+     WHERE rp.id_usuario_cliente = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3)
      ORDER BY r.hora_inicio ASC
      LIMIT 1"
 );
-$stmt->bind_param("is", $idPedido, $hoy);
+$stmt->bind_param("is", $idUsuario, $hoy);
 $stmt->execute();
 $ruta = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 $rutaHoy = null;
 if ($ruta) {
-    // Paradas de ESTE pedido (mascota) dentro de esa ruta (recogida y entrega)
+    // Paradas del cliente dentro de esa ruta (recogida y entrega)
     $stmt = $conn->prepare(
-        "SELECT rp.tipo, rp.id_estado, ep.nombre AS estado, rp.hora_llegada, rp.hora_completado,
-                rp.hora_recogida, rp.hora_entrega, rp.hora_cancelacion, rp.motivo_cancelacion
+        "SELECT rp.tipo, rp.id_estado, ep.nombre AS estado, rp.hora_llegada, rp.hora_completado
          FROM ruta_paradas rp
          JOIN estados_parada ep ON ep.id_estado = rp.id_estado
-         WHERE rp.id_ruta = ? AND rp.id_pedido = ?
+         WHERE rp.id_ruta = ? AND rp.id_usuario_cliente = ?
          ORDER BY rp.orden ASC"
     );
     $idRuta = (int)$ruta['id_ruta'];
-    $stmt->bind_param("ii", $idRuta, $idPedido);
+    $stmt->bind_param("ii", $idRuta, $idUsuario);
     $stmt->execute();
     $res = $stmt->get_result();
     $recogida = null;
     $entrega  = null;
     while ($p = $res->fetch_assoc()) {
         $dato = [
-            'estado'             => $p['estado'],
-            'hora_llegada'       => $p['hora_llegada'],
-            'hora_completado'    => $p['hora_completado'],
-            'hora_recogida'      => $p['hora_recogida'],
-            'hora_entrega'       => $p['hora_entrega'],
-            'hora_cancelacion'   => $p['hora_cancelacion'],
-            'motivo_cancelacion' => $p['motivo_cancelacion'],
+            'estado'          => $p['estado'],
+            'hora_llegada'    => $p['hora_llegada'],
+            'hora_completado' => $p['hora_completado'],
         ];
         if ($p['tipo'] === 'recogida' && !$recogida) $recogida = $dato;
-        if ($p['tipo'] === 'entrega' && (!$entrega || $p['hora_entrega'])) $entrega = $dato;
+        if ($p['tipo'] === 'entrega') $entrega = $dato;
     }
     $stmt->close();
 
-    // Fase del paseo derivada de los timestamps de la parada (Fase 5 del
-    // plan de consolidación de rutas), no de id_estado.
+    // Fase del paseo derivada de las paradas del cliente
     $fase = 'en_camino'; // el paseador va hacia la recogida
-    if ($recogida && $recogida['hora_cancelacion']) {
-        $fase = 'cancelado';
-    } elseif ($entrega && $entrega['hora_entrega']) {
+    if ($entrega && $entrega['estado'] === 'completada') {
         $fase = 'finalizado';
-    } elseif ($recogida && $recogida['hora_recogida']) {
+    } elseif ($recogida && $recogida['estado'] === 'completada') {
         $fase = 'en_curso'; // mascota recogida, paseo en marcha
-    }
-
-    // Si ya se entregó hoy, saber si el cliente ya lo calificó (para no
-    // volver a pedir estrellas una vez calificado).
-    $calificacion = null;
-    if ($fase === 'finalizado') {
-        $stmt = $conn->prepare(
-            "SELECT estrellas, comentario FROM calificaciones_paseo WHERE id_pedido = ? AND id_ruta = ?"
-        );
-        $stmt->bind_param("ii", $idPedido, $idRuta);
-        $stmt->execute();
-        $c = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        if ($c) $calificacion = ['estrellas' => (int)$c['estrellas'], 'comentario' => $c['comentario']];
     }
 
     $rutaHoy = [
@@ -263,7 +208,6 @@ if ($ruta) {
         'fase'                  => $fase,
         'recogida'              => $recogida,
         'entrega'               => $entrega,
-        'calificacion'          => $calificacion,
     ];
 }
 
@@ -283,7 +227,7 @@ $stmt->execute();
 $usados = (int)$stmt->get_result()->fetch_assoc()['usados'];
 $stmt->close();
 
-$paseosMes = (int)$pedido['paseos_mes'];
+$paseosMes = (int)$pedido['cantidad_paseos'];
 $restantes = max(0, $paseosMes - $usados);
 
 // ── 5. Historial reciente (eventos reales, más nuevo primero) ─────────
@@ -330,13 +274,8 @@ usort($historial, function ($a, $b) {
 });
 
 // ── 6. Estado global del servicio ─────────────────────────────────────
-// En curso solo cuando el paseador ya arrancó (ruta en_curso o pausada) Y
-// el paseo de ESTA mascota sigue en marcha (ni cancelado ni ya entregado
-// hoy). Si ya se canceló o ya se entregó, no tiene sentido mostrarle el
-// timeline/cronómetro "en curso" aunque la ruta del paseador siga activa
-// para otros clientes del mismo grupo.
-if ($rutaHoy && in_array($rutaHoy['fase'], ['en_camino', 'en_curso'], true)
-    && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true)) {
+// En curso solo cuando el paseador ya arrancó (ruta en_curso o pausada).
+if ($rutaHoy && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true)) {
     $estadoServicio = 'paseo_en_curso';
 } elseif ($asignacion) {
     $estadoServicio = 'paseador_asignado';
@@ -352,13 +291,11 @@ $diasRestantes = $ahora < $finMembresia ? $ahora->diff($finMembresia)->days : 0;
 responder(true, [
     'tiene_servicio' => true,
     'ahora_servidor' => $ahoraServidor,
-    'pedidos_activos' => $pedidosActivos,
     'servicio' => [
         'estado' => $estadoServicio,
         'pedido' => [
             'id_pedido'       => $idPedido,
             'id_mascota'      => $idMascota,
-            'id_plan'         => (int)$pedido['id_plan'],
             'mascota'         => $pedido['nombre_mascota'],
             'avatar_mascota'  => $pedido['avatar_mascota'] ?? '',
             'modalidad'       => $pedido['modalidad'],
@@ -379,7 +316,6 @@ responder(true, [
             'fecha_compra'    => $pedido['fecha_creacion'],
         ],
         'plan' => [
-            'nombre'     => $pedido['plan_nombre'],
             'paseos_mes' => $paseosMes,
             'usados'     => $usados,
             'restantes'  => $restantes,

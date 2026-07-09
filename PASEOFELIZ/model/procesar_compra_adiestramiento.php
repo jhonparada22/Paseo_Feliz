@@ -1,28 +1,12 @@
 <?php
 /**
- * procesar_compra_paseos.php
- * Paso 4 del wizard "Contratar Mensualidad de Paseos".
- * Registra el pedido, procesa el pago (capa simulada, reemplazable por
- * pasarela real) y activa la membresía de paseos del usuario.
+ * procesar_compra_adiestramiento.php
+ * Paso 4 del wizard "Contratar Adiestramiento canino".
+ * Mismo patrón que procesar_compra_paseos.php: registra el pedido,
+ * procesa el pago (capa simulada) y activa la membresía de adiestramiento.
  *
- * POST JSON esperado:
- * {
- *   "id_mascota": 6, "cantidad_paseos": 8,
- *   "modalidad": "grupal", "duracion_min": 60,
- *   "dias_preferidos": "lun,mie,vie", "franja_horaria": "8:00 a.m. – 11:00 a.m.",
- *   "fecha_inicio": "2026-07-10",
- *   "comportamiento": "sociable", "observaciones": "...",
- *   "ubicacion": { "direccion": "...", "barrio": "...", "referencia": "...",
- *                  "instrucciones": "...", "lat": 7.89, "lng": -72.50, "validada": true },
- *   "pago": { "metodo": "tarjeta", "titular": "...", "ultimos4": "4242", "cuotas": 1,
- *             "banco": null, "tipo_persona": null, "documento": null, "email_confirmacion": null },
- *   "facturacion": { "usar_perfil": true, "pais": null, "ciudad": null, "departamento": null,
- *                    "direccion": null, "complemento": null, "codigo_postal": null },
- *   "confirmaciones": { "datos": true, "terminos": true, "autorizo": true }
- * }
- *
- * NOTA DE SEGURIDAD: el frontend NUNCA envía el número completo de la
- * tarjeta ni el CVV — solo el titular y los últimos 4 dígitos.
+ * POST JSON esperado: igual que paseos, pero "cantidad_sesiones" en vez
+ * de "cantidad_paseos".
  */
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
@@ -31,20 +15,11 @@ include_once '../model/conexion.php';
 include_once '../model/modelotelegram.php';
 include_once 'precios_helper.php';
 
-// Errores SQL como excepciones -> los captura el try/catch y responden JSON limpio
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 verificarSesion();
 
-// ═══════════════════════════════════════════════════════════════════
-// CAPA DE PROCESAMIENTO DE PAGO (SIMULADA)
-// Cuando exista una pasarela real (Wompi, MercadoPago, PayU, etc.),
-// reemplazar SOLO esta función: recibe el método y los datos no
-// sensibles, y devuelve el resultado de la transacción.
-// ═══════════════════════════════════════════════════════════════════
-function procesarPagoSimulado($metodo, $monto, $datosPago) {
-    // Simulación controlada: la transacción siempre se aprueba y se
-    // genera una referencia única identificable como simulada.
+function procesarPagoSimuladoAdi($metodo, $monto, $datosPago) {
     return [
         'aprobado'   => true,
         'referencia' => 'PF-SIM-' . strtoupper(bin2hex(random_bytes(5))),
@@ -52,37 +27,27 @@ function procesarPagoSimulado($metodo, $monto, $datosPago) {
     ];
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// El precio por día y los descuentos por cantidad se configuran desde
-// el botón "Precios" del panel admin (tabla precios_servicios /
-// descuentos_servicios) — ya no está fijo en el código.
-// ═══════════════════════════════════════════════════════════════════
-define('MIN_PASEOS_MES', 1);
-define('MAX_PASEOS_MES', 31);
+define('MIN_SESIONES_MES', 1);
+define('MAX_SESIONES_MES', 31);
 
-// ═══════════════════════════════════════════════════════════════════
-// 1. LEER Y VALIDAR LA SOLICITUD
-// ═══════════════════════════════════════════════════════════════════
 $idUsuario = (int)$_SESSION['usuario_id'];
 $data      = leerJsonBody();
 
-$idMascota      = intval($data['id_mascota'] ?? 0);
-$cantidadPaseos = intval($data['cantidad_paseos'] ?? 0);
+$idMascota        = intval($data['id_mascota'] ?? 0);
+$cantidadSesiones = intval($data['cantidad_sesiones'] ?? 0);
 $ubicacion = $data['ubicacion'] ?? [];
 $pago      = $data['pago'] ?? [];
 $fact      = $data['facturacion'] ?? [];
 $conf      = $data['confirmaciones'] ?? [];
 
-if ($cantidadPaseos < MIN_PASEOS_MES || $cantidadPaseos > MAX_PASEOS_MES) {
-    responder(false, [], 'La cantidad de paseos al mes debe estar entre ' . MIN_PASEOS_MES . ' y ' . MAX_PASEOS_MES . '.');
+if ($cantidadSesiones < MIN_SESIONES_MES || $cantidadSesiones > MAX_SESIONES_MES) {
+    responder(false, [], 'La cantidad de sesiones al mes debe estar entre ' . MIN_SESIONES_MES . ' y ' . MAX_SESIONES_MES . '.');
 }
 
-// Confirmaciones obligatorias
 if (empty($conf['datos']) || empty($conf['terminos']) || empty($conf['autorizo'])) {
     responder(false, [], 'Debes aceptar todas las confirmaciones para continuar.');
 }
 
-// Método de pago soportado
 $metodo = $pago['metodo'] ?? '';
 if (!in_array($metodo, ['tarjeta', 'pse'])) {
     responder(false, [], $metodo === 'nequi'
@@ -90,7 +55,6 @@ if (!in_array($metodo, ['tarjeta', 'pse'])) {
         : 'Método de pago no válido.');
 }
 
-// Datos mínimos del pago según método
 $titular = trim($pago['titular'] ?? '');
 if ($titular === '') responder(false, [], 'El nombre del titular es obligatorio.');
 if ($metodo === 'tarjeta' && !preg_match('/^\d{4}$/', $pago['ultimos4'] ?? '')) {
@@ -102,22 +66,19 @@ if ($metodo === 'pse') {
     }
 }
 
-// Ubicación validada en el paso 2
 $lat = floatval($ubicacion['lat'] ?? 0);
 $lng = floatval($ubicacion['lng'] ?? 0);
 $direccion = trim($ubicacion['direccion'] ?? '');
 if (!$lat || !$lng || $direccion === '' || empty($ubicacion['validada'])) {
-    responder(false, [], 'La ubicación de recogida no ha sido confirmada. Vuelve al paso 2.');
+    responder(false, [], 'La ubicación no ha sido confirmada. Vuelve al paso 2.');
 }
 
-// Fecha de inicio válida (hoy o futura)
 $fechaInicio = $data['fecha_inicio'] ?? '';
 $d = DateTime::createFromFormat('Y-m-d', $fechaInicio);
 if (!$d || $d->format('Y-m-d') < date('Y-m-d')) {
-    responder(false, [], 'La fecha de inicio de la membresía no es válida.');
+    responder(false, [], 'La fecha de inicio no es válida.');
 }
 
-// La mascota debe pertenecer al usuario en sesión
 $stmt = $conn->prepare("SELECT id_mascota, nombre_mascota FROM mascota_usuario WHERE id_mascota = ? AND id_usuario = ?");
 $stmt->bind_param("ii", $idMascota, $idUsuario);
 $stmt->execute();
@@ -131,17 +92,13 @@ $stmtU->execute();
 $usuarioRow = $stmtU->get_result()->fetch_assoc();
 $stmtU->close();
 
-// El precio SIEMPRE se calcula en el servidor, usando lo configurado
-// en el panel admin (precio por día + descuento por cantidad, si aplica)
-$precio = calcularPrecioServicio($conn, 'paseos', $cantidadPaseos);
-if (!$precio) responder(false, [], 'El servicio de Paseos no tiene un precio configurado todavía. Contacta al administrador.');
+$precio = calcularPrecioServicio($conn, 'adiestramiento', $cantidadSesiones);
+if (!$precio) responder(false, [], 'El servicio de Adiestramiento no tiene un precio configurado todavía. Contacta al administrador.');
 $subtotal  = $precio['subtotal'];
 $descuento = $precio['descuento'];
 $total     = $precio['total'];
 
-// Campos opcionales del pedido
-$modalidad     = in_array($data['modalidad'] ?? '', ['individual', 'grupal']) ? $data['modalidad'] : 'grupal';
-$duracion      = in_array(intval($data['duracion_min'] ?? 60), [30, 45, 60]) ? intval($data['duracion_min']) : 60;
+$duracion      = in_array(intval($data['duracion_min'] ?? 60), [30, 45, 60, 90]) ? intval($data['duracion_min']) : 60;
 $dias          = substr(trim($data['dias_preferidos'] ?? ''), 0, 60);
 $franja        = substr(trim($data['franja_horaria'] ?? ''), 0, 40);
 $comportamiento= substr(trim($data['comportamiento'] ?? ''), 0, 30);
@@ -150,31 +107,27 @@ $barrio        = substr(trim($ubicacion['barrio'] ?? ''), 0, 100);
 $referencia    = substr(trim($ubicacion['referencia'] ?? ''), 0, 255);
 $instrucciones = substr(trim($ubicacion['instrucciones'] ?? ''), 0, 255);
 
-// ═══════════════════════════════════════════════════════════════════
-// 2. REGISTRAR PEDIDO + PAGO + ACTIVAR MEMBRESÍA (transacción)
-// ═══════════════════════════════════════════════════════════════════
 $conn->begin_transaction();
 try {
-    // 2.1 Pedido en estado pendiente_pago (id_plan queda NULL: ya no se usa)
     $stmt = $conn->prepare(
-        "INSERT INTO pedidos_paseo
-            (id_usuario, id_mascota, cantidad_paseos, modalidad, duracion_min, dias_preferidos,
+        "INSERT INTO pedidos_adiestramiento
+            (id_usuario, id_mascota, cantidad_sesiones, duracion_min, dias_preferidos,
              franja_horaria, fecha_inicio, comportamiento, observaciones,
              direccion, barrio, referencia, instrucciones, lat, lng, ubicacion_validada,
              subtotal, descuento, total, metodo_pago, estado)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'pendiente_pago')"
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'pendiente_pago')"
     );
-    $tiposPedido = 'iii'   // id_usuario, id_mascota, cantidad_paseos
-                 . 's'     // modalidad
-                 . 'i'     // duracion_min
-                 . 'sssss' // dias, franja, fecha_inicio, comportamiento, observaciones
-                 . 'ssss'  // direccion, barrio, referencia, instrucciones
-                 . 'dd'    // lat, lng
-                 . 'ddd'   // subtotal, descuento, total
-                 . 's';    // metodo_pago
+    $tipos = 'ii'      // id_usuario, id_mascota
+           . 'i'        // cantidad_sesiones
+           . 'i'        // duracion_min
+           . 'sssss'    // dias, franja, fecha_inicio, comportamiento, observaciones
+           . 'ssss'     // direccion, barrio, referencia, instrucciones
+           . 'dd'       // lat, lng
+           . 'ddd'      // subtotal, descuento, total
+           . 's';       // metodo_pago
     $stmt->bind_param(
-        $tiposPedido,
-        $idUsuario, $idMascota, $cantidadPaseos, $modalidad, $duracion, $dias,
+        $tipos,
+        $idUsuario, $idMascota, $cantidadSesiones, $duracion, $dias,
         $franja, $fechaInicio, $comportamiento, $observaciones,
         $direccion, $barrio, $referencia, $instrucciones, $lat, $lng,
         $subtotal, $descuento, $total, $metodo
@@ -183,12 +136,10 @@ try {
     $idPedido = $conn->insert_id;
     $stmt->close();
 
-    // 2.2 Procesar el pago (capa simulada, reemplazable)
-    $resultado = procesarPagoSimulado($metodo, $total, $pago);
+    $resultado = procesarPagoSimuladoAdi($metodo, $total, $pago);
 
     if (!$resultado['aprobado']) {
-        // Registrar el intento fallido y salir limpio
-        $u = $conn->prepare("UPDATE pedidos_paseo SET estado = 'pago_fallido' WHERE id_pedido = ?");
+        $u = $conn->prepare("UPDATE pedidos_adiestramiento SET estado = 'pago_fallido' WHERE id_pedido = ?");
         $u->bind_param("i", $idPedido);
         $u->execute();
         $u->close();
@@ -196,7 +147,6 @@ try {
         responder(false, ['id_pedido' => $idPedido], 'El pago fue rechazado: ' . $resultado['mensaje']);
     }
 
-    // 2.3 Registrar el pago aprobado (sin datos sensibles de tarjeta)
     $ultimos4   = $metodo === 'tarjeta' ? ($pago['ultimos4'] ?? null) : null;
     $cuotas     = $metodo === 'tarjeta' ? intval($pago['cuotas'] ?? 1) : null;
     $banco      = $metodo === 'pse' ? substr(trim($pago['banco'] ?? ''), 0, 60) : null;
@@ -215,7 +165,7 @@ try {
 
     $stmt = $conn->prepare(
         "INSERT INTO pagos
-            (id_pedido, id_usuario, id_mascota, metodo, monto, estado_pago, referencia, titular, ultimos4, cuotas,
+            (id_pedido_adiestramiento, id_usuario, id_mascota, metodo, monto, estado_pago, referencia, titular, ultimos4, cuotas,
              banco, tipo_persona, documento, email_confirmacion,
              fact_usar_perfil, fact_pais, fact_ciudad, fact_departamento,
              fact_direccion, fact_complemento, fact_codigo_postal)
@@ -232,25 +182,20 @@ try {
     $idPago = $conn->insert_id;
     $stmt->close();
 
-    // 2.4 Pedido pagado y con ubicación validada -> listo para asignación
-    $u = $conn->prepare("UPDATE pedidos_paseo SET estado = 'listo_para_asignar' WHERE id_pedido = ?");
+    $u = $conn->prepare("UPDATE pedidos_adiestramiento SET estado = 'listo_para_asignar' WHERE id_pedido = ?");
     $u->bind_param("i", $idPedido);
     $u->execute();
     $u->close();
 
-    // 2.5 Activar la membresía de paseos PARA ESTA MASCOTA (upsert por
-    //     usuario+mascota, igual que registrar_pago.php — antes esto
-    //     actualizaba por id_usuario solamente y no coincidía con ninguna
-    //     fila del sistema de membresía por mascota).
     $ahoraPago = date('Y-m-d H:i:s');
     $sqlMem = "
-        INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, id_pago_paseos)
+        INSERT INTO membresias (id_usuario, id_mascota, adiestramiento, fecha_inicio_adiestramiento, id_pago_adiestramiento)
         VALUES (?, ?, 1, ?, ?)
         ON DUPLICATE KEY UPDATE
-            paseos              = 1,
-            id_mascota          = VALUES(id_mascota),
-            fecha_inicio_paseos = VALUES(fecha_inicio_paseos),
-            id_pago_paseos      = VALUES(id_pago_paseos)
+            adiestramiento              = 1,
+            id_mascota                  = VALUES(id_mascota),
+            fecha_inicio_adiestramiento = VALUES(fecha_inicio_adiestramiento),
+            id_pago_adiestramiento      = VALUES(id_pago_adiestramiento)
     ";
     $u = $conn->prepare($sqlMem);
     $u->bind_param("iisi", $idUsuario, $idMascota, $ahoraPago, $idPago);
@@ -265,8 +210,8 @@ try {
         "👤 <b>Usuario:</b> " . htmlspecialchars($usuarioRow['nombre'] ?? '') . "\n" .
         "✉️ <b>Email:</b> "   . htmlspecialchars($usuarioRow['email'] ?? '')  . "\n" .
         "🐾 <b>Mascota:</b> " . htmlspecialchars($mascotaRow['nombre_mascota']) . "\n" .
-        "📦 <b>Membresía:</b> 🐶 Paseos\n" .
-        "📆 <b>Días solicitados:</b> " . $cantidadPaseos . " paseos al mes\n" .
+        "📦 <b>Membresía:</b> 🎓 Adiestramiento\n" .
+        "📆 <b>Días solicitados:</b> " . $cantidadSesiones . " sesiones al mes\n" .
         ($precio['descuento_pct'] > 0 ? "🏷️ <b>Descuento aplicado:</b> " . $precio['descuento_pct'] . "%\n" : "") .
         "💰 <b>Monto:</b> $" . number_format($total, 0, '.', ',') . " COP\n" .
         "🔧 <b>Método:</b> " . htmlspecialchars($metodo) . "\n" .
@@ -280,7 +225,7 @@ try {
         'referencia' => $resultado['referencia'],
         'total'      => $total,
         'estado'     => 'listo_para_asignar',
-    ], 'Pago aprobado. Tu membresía de paseos quedó activa.');
+    ], 'Pago aprobado. Tu membresía de adiestramiento quedó activa.');
 
 } catch (Exception $e) {
     $conn->rollback();
