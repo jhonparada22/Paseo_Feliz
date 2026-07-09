@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../../css/admin/admin.css">
   <link rel="stylesheet" href="../../css/admin/pagos_admin.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
 </head>
 <body>
@@ -57,9 +58,14 @@
           <h1>Gestión de Pagos</h1>
           <div class="sub">Registra pagos y controla las membresías activas.</div>
         </div>
-        <button class="btn-nuevo-pago" id="btnNuevoPago">
-          <i class="fas fa-plus"></i> Registrar pago
-        </button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-nuevo-pago" id="btnPrecios" style="background:#475569;">
+            <i class="fas fa-tags"></i> Precios
+          </button>
+          <button class="btn-nuevo-pago" id="btnNuevoPago">
+            <i class="fas fa-plus"></i> Registrar pago
+          </button>
+        </div>
       </div>
 
       <div class="mini-stats mini-stats-5">
@@ -145,7 +151,65 @@
   </div>
 </div>
 
+<!-- ══ MODAL PRECIOS Y DESCUENTOS ════════════════════════════ -->
+<div class="modal-overlay" id="modalPrecios">
+  <div class="modal modal-pago">
+    <div class="modal-head">
+      <div>
+        <div class="m-title">Precios y descuentos</div>
+        <div class="m-sub">Precio por unidad y descuentos por cantidad de cada servicio</div>
+      </div>
+      <button class="btn-close-modal" id="closeModalPrecios"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label>Servicio</label>
+        <div class="mem-opciones" id="precTipoTabs">
+          <label class="mem-opcion">
+            <input type="radio" name="prec_tipo" value="paseos" checked>
+            <span><i class="fas fa-dog"></i> Paseos</span>
+          </label>
+          <label class="mem-opcion">
+            <input type="radio" name="prec_tipo" value="adiestramiento">
+            <span><i class="fas fa-graduation-cap"></i> Adiestramiento</span>
+          </label>
+          <label class="mem-opcion">
+            <input type="radio" name="prec_tipo" value="hospedaje">
+            <span><i class="fas fa-house"></i> Hospedaje</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Precio por unidad (COP)</label>
+          <input type="number" id="precPrecioUnidad" class="mp-input-simple" min="0" step="500">
+        </div>
+        <div class="form-group">
+          <label>Unidad</label>
+          <input type="text" id="precUnidadLabel" class="mp-input-simple" placeholder="día, sesión, noche...">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Descuentos por cantidad <span class="mp-req-hint">(ej: 8+ = 5%, 12+ = 10%)</span></label>
+        <div id="precDescuentosLista"></div>
+        <button type="button" class="mem-opcion" id="btnAgregarDescuento" style="margin-top:8px; padding:8px 14px; cursor:pointer; background:none;">
+          <i class="fas fa-plus"></i> Agregar tramo de descuento
+        </button>
+      </div>
+
+      <button class="btn-confirmar-pago" id="btnGuardarPrecios">
+        <i class="fas fa-check"></i> Guardar precio de este servicio
+      </button>
+
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL REGISTRAR PAGO ══════════════════════════════════ -->
+
 <div class="modal-overlay" id="modalPago">
   <div class="modal modal-pago">
     <div class="modal-head">
@@ -168,12 +232,30 @@
         </div>
       </div>
 
+      <!-- Aviso: el usuario elegido no tiene ninguna mascota registrada -->
+      <div class="mp-aviso-sin-mascota" id="mpAvisoSinMascota" style="display:none;">
+        <i class="fas fa-triangle-exclamation"></i>
+        Este usuario no tiene ninguna mascota registrada. No se puede registrar un pago
+        (la membresía se activa por mascota) hasta que registre al menos una.
+      </div>
+
+      <div class="form-group" id="mpMascotaGroup" style="display:none;">
+        <label>Mascota</label>
+        <div class="select-wrap">
+          <i class="fas fa-paw"></i>
+          <select id="mpMascota">
+            <option value="">Seleccionar mascota...</option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Membresía</label>
         <div class="mem-opciones" id="mpTipo">
           <label class="mem-opcion">
             <input type="radio" name="tipo_mem" value="paseos">
-            <span><i class="fas fa-dog"></i> Paseos<br><small>$18.000</small></span>
+            <span><i class="fas fa-dog"></i> Paseos<br><small>Según plan</small></span>
           </label>
           <label class="mem-opcion">
             <input type="radio" name="tipo_mem" value="adiestramiento">
@@ -184,6 +266,105 @@
             <span><i class="fas fa-house"></i> Hospedaje<br><small>$28.000</small></span>
           </label>
         </div>
+      </div>
+
+      <!-- ═══ Detalles del pedido de Paseos (solo si tipo_mem = paseos) ═══
+           Crea un pedido_paseo real, igual que el wizard del cliente, para
+           que después se pueda asignar cronograma/paseador normalmente. -->
+      <div id="mpPaseosDetalle" style="display:none;">
+
+        <div class="form-group">
+          <label>Paseos al mes <span class="mp-req-hint" id="mpPrecioUnidadHint">($18.000 c/u)</span></label>
+          <div class="select-wrap">
+            <i class="fas fa-calendar-days"></i>
+            <input type="number" id="mpCantidadPaseos" class="mp-input-simple" style="padding-left:36px;" min="1" max="31" value="8">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Modalidad</label>
+            <div class="select-wrap">
+              <select id="mpModalidad">
+                <option value="grupal">Grupal</option>
+                <option value="individual">Individual</option>
+              </select>
+              <i class="fas fa-chevron-down select-arrow"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Duración del paseo</label>
+            <div class="select-wrap">
+              <select id="mpDuracion">
+                <option value="30">30 minutos</option>
+                <option value="60" selected>60 minutos</option>
+                <option value="120">2 horas</option>
+                <option value="180">3 horas</option>
+              </select>
+              <i class="fas fa-chevron-down select-arrow"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Días preferidos</label>
+          <div class="dias-semana-grid" id="mpDias">
+            <label><input type="checkbox" value="lun" checked><span>Lun</span></label>
+            <label><input type="checkbox" value="mar"><span>Mar</span></label>
+            <label><input type="checkbox" value="mie" checked><span>Mié</span></label>
+            <label><input type="checkbox" value="jue"><span>Jue</span></label>
+            <label><input type="checkbox" value="vie" checked><span>Vie</span></label>
+            <label><input type="checkbox" value="sab"><span>Sáb</span></label>
+            <label><input type="checkbox" value="dom"><span>Dom</span></label>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Franja horaria</label>
+            <div class="select-wrap">
+              <select id="mpFranja">
+                <option>6:00 a.m. – 8:00 a.m.</option>
+                <option selected>8:00 a.m. – 11:00 a.m.</option>
+                <option>11:00 a.m. – 2:00 p.m.</option>
+                <option>2:00 p.m. – 5:00 p.m.</option>
+              </select>
+              <i class="fas fa-chevron-down select-arrow"></i>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Fecha de inicio</label>
+            <input type="date" id="mpFechaInicio" class="mp-input-simple">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dirección de recogida</label>
+          <input type="text" id="mpDireccion" class="mp-input-simple" placeholder="Ej: Cra 5 # 10-20, Cúcuta">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Barrio (opcional)</label>
+            <input type="text" id="mpBarrio" class="mp-input-simple">
+          </div>
+          <div class="form-group">
+            <label>Referencia (opcional)</label>
+            <input type="text" id="mpReferencia" class="mp-input-simple" placeholder="Casa esquinera, portón azul...">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Instrucciones para el paseador (opcional)</label>
+          <input type="text" id="mpInstrucciones" class="mp-input-simple">
+        </div>
+
+        <div class="form-group">
+          <label>Ubicación en el mapa <span class="mp-req-hint">(clic para marcar el punto de recogida)</span></label>
+          <div id="mpMapa" class="mp-mapa-box"></div>
+          <div class="mp-coords" id="mpCoordsTexto">Sin ubicación marcada</div>
+        </div>
+
       </div>
 
       <!-- Precio mostrado automáticamente, sin input editable -->
@@ -223,6 +404,7 @@
   <span id="toastMsg">Cambio guardado</span>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="../../js/admin/pagos_admin.js"></script>
 </body>
 </html>
