@@ -209,10 +209,12 @@
             : '';
 
         if (estado === 'paseo_en_curso') {
-            sub  = 'El paseo de ' + esc(S.pedido.mascota) + ' está en curso. Puedes seguirlo en tiempo real.';
-            col1 = cardMapa(true) + cardInstrucciones() + cardMascotas();
+            sub  = entregadoHoy
+                ? esc(S.pedido.mascota) + ' fue entregado. Aquí tienes el resumen de su paseo de hoy.'
+                : 'El paseo de ' + esc(S.pedido.mascota) + ' está en curso. Puedes seguirlo en tiempo real.';
+            col1 = cardMapa(!entregadoHoy) + cardInstrucciones() + cardMascotas();
             col2 = cardEstadoPaseo() + cardInfoPaseo() + cardHistorial('Historial del paseo de hoy');
-            col3 = cardPaseador(true) + cardAcciones() + cardPlan();
+            col3 = cardPaseador(!entregadoHoy) + cardAcciones() + cardPlan();
         } else if (estado === 'paseador_asignado') {
             sub  = 'Tu paseador ha sido asignado y tu próximo paseo está programado.';
             col1 = cardMapa(false) + cardProximoPaseo() + cardMascotas();
@@ -436,28 +438,35 @@
     }
 
     // ── Vista "en curso": estado del paseo + info ─────────────────
+    // Usa hora_recogida/hora_entrega (confirmación manual del paseador,
+    // específica de ESTE pedido) en vez de fecha_inicio_real (que es a
+    // nivel de TODA la ruta del paseador y puede pertenecer a otra mascota
+    // si el paseador atiende a varias en la misma salida).
     function fasesPaseo() {
         const r = S.ruta_hoy || {};
         const rec = r.recogida || {}, ent = r.entrega || {};
-        const recogido = rec.estado === 'completada';
-        const finalizado = ent.estado === 'completada';
+        const recogido = !!rec.hora_recogida;
+        const finalizado = !!ent.hora_entrega;
         return [
-            { titulo: 'Paseador en camino', hora: r.fecha_inicio_real, desc: 'Salió hacia tu ubicación.',
+            { titulo: 'Paseador en camino', hora: null, desc: 'Tu paseador está en camino.',
               hecho: true },
-            { titulo: 'Mascota recogida', hora: rec.hora_completado, desc: esc(S.pedido.mascota) + (recogido ? ' ya está con el paseador.' : ' aún no ha sido recogido.'),
+            { titulo: 'Mascota recogida', hora: rec.hora_recogida, desc: esc(S.pedido.mascota) + (recogido ? ' ya está con el paseador.' : ' aún no ha sido recogido.'),
               hecho: recogido },
             { titulo: 'Paseo en curso', hora: null, desc: recogido && !finalizado ? 'Disfrutando del paseo.' : 'A la espera de la recogida.',
               hecho: finalizado, activo: recogido && !finalizado },
-            { titulo: 'Paseo finalizado', hora: ent.hora_completado, desc: finalizado ? esc(S.pedido.mascota) + ' fue entregado en casa.' : 'A la espera de finalizar el paseo.',
+            { titulo: 'Paseo finalizado', hora: ent.hora_entrega, desc: finalizado ? esc(S.pedido.mascota) + ' fue entregado en casa.' : 'A la espera de finalizar el paseo.',
               hecho: finalizado },
         ];
     }
 
     function cardEstadoPaseo() {
         const fases = fasesPaseo();
+        const finalizado = S.ruta_hoy && S.ruta_hoy.fase === 'finalizado';
+        const chip = finalizado
+            ? '<span class="dz-chip dz-chip-verde"><i class="ph ph-check-circle"></i> Finalizado</span>'
+            : '<span class="dz-chip dz-chip-verde"><span class="dz-dot-vivo"></span> En curso</span>';
         return '<div class="dz-card">' +
-                    '<div class="dz-card-head"><h3 class="dz-h3">Estado del paseo</h3>' +
-                    '<span class="dz-chip dz-chip-verde"><span class="dz-dot-vivo"></span> En curso</span></div>' +
+                    '<div class="dz-card-head"><h3 class="dz-h3">Estado del paseo</h3>' + chip + '</div>' +
                     '<div class="dz-tl-vertical">' +
                     fases.map(function (f) {
                         const cls = f.hecho ? 'hecho' : (f.activo ? 'activo' : '');
@@ -475,26 +484,37 @@
                '</div>';
     }
 
+    // "Tiempo transcurrido" es información operativa del paseador (ya la
+    // ve en su propio mapa) y se retira de la vista del cliente. "Recogido
+    // a las" reemplaza al viejo "Inicio del paseo" porque usa hora_recogida
+    // (específica de esta mascota) en vez de fecha_inicio_real (de toda la
+    // ruta del paseador, que podía pertenecer a otro perro).
     function cardInfoPaseo() {
         const r = S.ruta_hoy || {};
+        const finalizado = r.fase === 'finalizado';
+        const recogido = r.recogida && r.recogida.hora_recogida;
+        const estadoTxt = finalizado ? 'Entregado' : (recogido ? 'Paseo en curso' : (r.estado === 'pausada' ? 'Paseo pausado' : 'Paseador en camino'));
         const filas = [
-            ['ph-play',            'Inicio del paseo',    r.fecha_inicio_real ? fmtHora(r.fecha_inicio_real) : '—'],
+            ['ph-paw-print',       'Recogido a las',      recogido ? fmtHora(r.recogida.hora_recogida) : '—'],
             ['ph-clock',           'Duración programada', S.pedido.duracion_min + ' minutos'],
-            ['ph-timer',           'Tiempo transcurrido', '<span id="dz-transcurrido">—</span>'],
             ['ph-person-simple-walk', 'Paseador',         esc(S.asignacion ? S.asignacion.nombre : '—')],
-            ['ph-activity',        'Estado',              r.estado === 'pausada' ? 'Paseo pausado' : 'Paseo en curso'],
-            ['ph-map-pin',         'Última actualización','<span id="dz-gps-updated">—</span>'],
+            ['ph-activity',        'Estado',              estadoTxt],
         ];
+        if (finalizado) {
+            filas.push(['ph-flag-checkered', 'Entregado a las', r.entrega && r.entrega.hora_entrega ? fmtHora(r.entrega.hora_entrega) : '—']);
+        } else {
+            filas.push(['ph-map-pin', 'Última actualización', '<span id="dz-gps-updated">—</span>']);
+        }
         return '<div class="dz-card">' +
-                    '<h3 class="dz-h3">Información del paseo en curso</h3>' +
+                    '<h3 class="dz-h3">Información del paseo' + (finalizado ? '' : ' en curso') + '</h3>' +
                     filas.map(function (f) {
                         return '<div class="dz-fila"><i class="ph ' + f[0] + '"></i>' +
                                '<span class="dz-fila-lbl">' + f[1] + ':</span><span class="dz-fila-val">' + f[2] + '</span></div>';
                     }).join('') +
+                    (finalizado ? '' :
                     '<div class="dz-stats-mini" id="dz-stats-mini">' +
-                        '<div class="dz-stat"><div class="dz-stat-val" id="dz-stat-tiempo">—</div><div class="dz-stat-lbl">Transcurrido</div></div>' +
                         '<div class="dz-stat"><div class="dz-stat-val" id="dz-stat-eta">—</div><div class="dz-stat-lbl">Fin estimado</div></div>' +
-                    '</div>' +
+                    '</div>') +
                '</div>';
     }
 
@@ -586,8 +606,10 @@
         setTimeout(function () { if (mapa) mapa.invalidateSize(); }, 150);
     }
 
-    // ── Modo "en curso": GPS del paseador + reloj ─────────────────
+    // ── Modo "en curso": GPS del paseador + ETA ────────────────────
     function iniciarModoEnCurso() {
+        const finalizado = S.ruta_hoy && S.ruta_hoy.fase === 'finalizado';
+        if (finalizado) return; // ya se entregó: nada en vivo que mostrar
         actualizarGps();
         gpsTimer = setInterval(actualizarGps, 8000);
         actualizarReloj();
@@ -623,18 +645,16 @@
             .catch(function () {});
     }
 
+    // Fin estimado = hora de recogida (de ESTA mascota) + duración
+    // contratada. No se muestra tiempo transcurrido en la vista del
+    // cliente (es información operativa que solo ve el paseador).
     function actualizarReloj() {
         const r = S && S.ruta_hoy;
-        if (!r || !r.fecha_inicio_real) return;
-        const inicioMs = msServidor(r.fecha_inicio_real);
+        if (!r || !r.recogida || !r.recogida.hora_recogida) return;
+        const inicioMs = msServidor(r.recogida.hora_recogida);
         if (isNaN(inicioMs)) return;
-        const seg = Math.max(0, (Date.now() - inicioMs) / 1000);
         const fin = new Date(inicioMs + S.pedido.duracion_min * 60000);
-        const elT = document.getElementById('dz-transcurrido');
-        const elS = document.getElementById('dz-stat-tiempo');
         const elE = document.getElementById('dz-stat-eta');
-        if (elT) elT.textContent = fmtDuracion(seg);
-        if (elS) elS.textContent = fmtDuracion(seg);
         if (elE) elE.textContent = fin.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true });
     }
 

@@ -180,6 +180,10 @@ if ($crono) {
 // Se filtra por id_pedido (no solo por id_usuario_cliente): un mismo
 // cliente puede tener varias mascotas con paradas en la MISMA ruta del
 // paseador, y cada una necesita su propio progreso sin mezclarse.
+// Incluye rutas ya finalizadas (id_estado=4): si el paseador cierra toda
+// la ruta justo después de entregar esta mascota, igual necesitamos poder
+// encontrarla para sostener la ventana de gracia de 1h post-entrega (más
+// abajo, sección 6). Se excluyen solo las canceladas (5).
 $hoy = date('Y-m-d');
 $stmt = $conn->prepare(
     "SELECT DISTINCT r.id_ruta, r.id_paseador, r.id_estado, er.nombre AS estado_ruta,
@@ -187,8 +191,8 @@ $stmt = $conn->prepare(
      FROM rutas r
      JOIN ruta_paradas rp ON rp.id_ruta = r.id_ruta
      JOIN estados_ruta er ON er.id_estado = r.id_estado
-     WHERE rp.id_pedido = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3)
-     ORDER BY r.hora_inicio ASC
+     WHERE rp.id_pedido = ? AND r.fecha_paseo = ? AND r.id_estado IN (1,2,3,4)
+     ORDER BY (r.id_estado IN (1,2,3)) DESC, r.hora_inicio ASC
      LIMIT 1"
 );
 $stmt->bind_param("is", $idPedido, $hoy);
@@ -331,12 +335,25 @@ usort($historial, function ($a, $b) {
 
 // ── 6. Estado global del servicio ─────────────────────────────────────
 // En curso solo cuando el paseador ya arrancó (ruta en_curso o pausada) Y
-// el paseo de ESTA mascota sigue en marcha (ni cancelado ni ya entregado
-// hoy). Si ya se canceló o ya se entregó, no tiene sentido mostrarle el
-// timeline/cronómetro "en curso" aunque la ruta del paseador siga activa
-// para otros clientes del mismo grupo.
-if ($rutaHoy && in_array($rutaHoy['fase'], ['en_camino', 'en_curso'], true)
-    && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true)) {
+// el paseo de ESTA mascota sigue en marcha (ni cancelado ni ya entregado).
+//
+// Ventana de gracia: si el paseo de esta mascota ya se entregó HOY, se
+// sigue mostrando la vista detallada "en curso" (con el resumen y el
+// timeline) durante la 1a hora después de la entrega, para que el
+// cliente pueda revisar los horarios con calma; pasada esa hora, cae a
+// la vista normal de "paseador asignado". No exige que la ruta siga
+// activa, porque el paseador pudo haber finalizado toda la ruta ya.
+$dentroDeGraciaPostEntrega = false;
+if ($rutaHoy && $rutaHoy['fase'] === 'finalizado' && $entrega && $entrega['hora_entrega']) {
+    $minutosDesdeEntrega = (strtotime($ahoraServidor) - strtotime($entrega['hora_entrega'])) / 60;
+    $dentroDeGraciaPostEntrega = $minutosDesdeEntrega >= 0 && $minutosDesdeEntrega < 60;
+}
+
+$genuinamenteEnCurso = $rutaHoy
+    && in_array($rutaHoy['fase'], ['en_camino', 'en_curso'], true)
+    && in_array($rutaHoy['estado'], ['en_curso', 'pausada'], true);
+
+if ($genuinamenteEnCurso || $dentroDeGraciaPostEntrega) {
     $estadoServicio = 'paseo_en_curso';
 } elseif ($asignacion) {
     $estadoServicio = 'paseador_asignado';
