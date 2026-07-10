@@ -59,7 +59,8 @@ body.usuario-page .app-container,
 ══════════════════════════════════════════════════════════════════════════ */
 #contenedor_general .profile-main-content,
 #contenedor_general .edit-main-content,
-#contenedor_general .main-content {
+#contenedor_general .main-content,
+#contenedor_general .main {
     flex: 1 !important;
     height: 100vh !important;
     overflow-y: auto !important;

@@ -214,6 +214,7 @@
 
     function cerrarWizard() {
         $('#wizard-paseos').classList.remove('visible');
+        $('#wizard-paseos').style.display = 'none';
         if (mapaWz) { mapaWz.remove(); mapaWz = null; marcadorWz = null; }
         // Si la compra fue exitosa, refrescar los botones de membresía del inicio
         if (W && W.__exito && typeof cargarMembresias === 'function') cargarMembresias();
@@ -337,6 +338,16 @@
     // ═══════════════════════════════════════════════════════
     // PASO 1 — MASCOTA Y SERVICIO
     // ═══════════════════════════════════════════════════════
+    // Tarjeta "+ Registrar mascota" (abre el formulario dentro del wizard,
+    // sin salir a Usuario → tu perfil). Se agrega al final de cardsMascotas
+    // tanto en el paso 1 normal como en el modo exprés.
+    function cardRegistrarWz() {
+        return `<div class="wz-card wz-card-registrar" data-registrar-mascota>
+                  <div class="wz-card-mas">+</div>
+                  <div class="wz-card-nombre">Registrar mascota</div>
+                </div>`;
+    }
+
     function renderPaso1() {
         const sinMascotas = !datos.mascotas.length;
 
@@ -348,7 +359,7 @@
                       <div class="wz-card-nombre">${m.nombre}</div>
                       <div class="wz-card-sub">${bloqueada ? 'Ya tiene esta membresía activa' : ((m.biografia || '').slice(0, 26) || 'Tu mascota')}</div>
                     </div>`;
-        }).join('');
+        }).join('') + cardRegistrarWz();
 
         const chipsDias = DIAS.map(d =>
             `<span class="wz-dia ${W.dias.includes(d.k) ? 'sel' : ''}" data-dia="${d.k}">${d.n}</span>`
@@ -367,8 +378,9 @@
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-paw-print"></i> 1. Selecciona la mascota</div>
               ${sinMascotas
-                ? `<div class="wz-banner-info"><i class="ph ph-info"></i> No tienes mascotas registradas. Ve a <strong>&nbsp;Usuario → tu perfil&nbsp;</strong> y registra tu mascota antes de contratar el plan.</div>`
-                : `<div class="wz-cards">${cardsMascotas}</div>`}
+                ? `<div class="wz-banner-info" style="margin-bottom:10px"><i class="ph ph-info"></i> No tienes mascotas registradas. Regístrala aquí mismo con el botón <strong>&nbsp;Registrar mascota</strong>.</div>`
+                : ''}
+              <div class="wz-cards">${cardsMascotas}</div>
             </div>
 
             <div class="wz-bloque">
@@ -434,6 +446,10 @@
             $$('#wz-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
             refrescarLateral(true);
         }));
+        {
+            const btnReg = $('#wz-cuerpo [data-registrar-mascota]');
+            if (btnReg) btnReg.addEventListener('click', abrirFormRegistrarMascota);
+        }
         $$('#wz-cuerpo [data-comp]').forEach(c => c.addEventListener('click', () => {
             W.comportamiento = c.dataset.comp;
             $$('#wz-cuerpo [data-comp]').forEach(x => x.classList.toggle('sel', x === c));
@@ -491,7 +507,7 @@
                       <div class="wz-card-nombre">${m.nombre}</div>
                       <div class="wz-card-sub">${bloqueada ? 'Ya está en el servicio' : ((m.biografia || '').slice(0, 26) || 'Tu mascota')}</div>
                     </div>`;
-        }).join('');
+        }).join('') + cardRegistrarWz();
 
         $('#wz-cuerpo').innerHTML = `
         <div class="wz-grid">
@@ -509,7 +525,7 @@
             <div class="wz-bloque">
               <div class="wz-titulo-seccion"><i class="ph ph-paw-print"></i> ¿Qué mascota quieres añadir?</div>
               ${!disponibles.length
-                ? `<div class="wz-banner-info" style="margin-bottom:10px"><i class="ph ph-info"></i> Todas tus mascotas registradas ya están en el servicio. Ve a <strong>&nbsp;Usuario → tu perfil&nbsp;</strong> para registrar una nueva.</div>`
+                ? `<div class="wz-banner-info" style="margin-bottom:10px"><i class="ph ph-info"></i> Todas tus mascotas registradas ya están en el servicio. Puedes registrar una nueva aquí mismo.</div>`
                 : ''}
               <div class="wz-cards">${cardsMascotas}</div>
             </div>
@@ -523,12 +539,102 @@
             $$('#wz-cuerpo [data-mascota]').forEach(x => x.classList.toggle('sel', x === c));
             refrescarLateral(true);
         }));
+        {
+            const btnReg = $('#wz-cuerpo [data-registrar-mascota]');
+            if (btnReg) btnReg.addEventListener('click', abrirFormRegistrarMascota);
+        }
 
         botonesFooter(false, 'Continuar al resumen <i class="ph ph-arrow-right"></i>', () => {
             if (!W.id_mascota) return alertaPaso('Selecciona la mascota que quieres añadir.');
             const mSel = datos.mascotas.find(m => m.id_mascota === W.id_mascota);
             if (mSel && mSel.yaTieneEsta) return alertaPaso('Esta mascota ya está en el servicio. Elige otra mascota.');
             renderPaso(3);
+        });
+    }
+
+    // ── Registrar una mascota nueva sin salir del wizard ────
+    // Mismos campos que el formulario del perfil (usuario_info.php)
+    function abrirFormRegistrarMascota() {
+        let ov = document.getElementById('wz-reg-overlay');
+        if (ov) ov.remove();
+        ov = document.createElement('div');
+        ov.id = 'wz-reg-overlay';
+        ov.innerHTML = `
+        <div class="wz-reg-box">
+          <div class="wz-reg-head">
+            <h3><i class="ph ph-paw-print"></i> Registrar nueva mascota</h3>
+            <button class="wz-close" id="wz-reg-cerrar"><i class="ph ph-x"></i></button>
+          </div>
+          <div class="wz-alerta-error" id="wz-reg-error"></div>
+          <div class="wz-campo">
+            <label>Nombre de la mascota *</label>
+            <input type="text" id="wz-reg-nombre" maxlength="100" placeholder="Nombre del peludito">
+          </div>
+          <div class="wz-form-fila">
+            <div class="wz-campo">
+              <label>Raza</label>
+              <input type="text" id="wz-reg-raza" maxlength="80" placeholder="Ej: Golden Retriever">
+            </div>
+            <div class="wz-campo">
+              <label>Edad (años)</label>
+              <input type="number" id="wz-reg-edad" min="0" max="30" placeholder="Ej: 3">
+            </div>
+          </div>
+          <div class="wz-campo">
+            <label>Foto de la mascota <span style="font-weight:400;color:#94a3b8">(opcional)</span></label>
+            <input type="file" id="wz-reg-avatar" accept="image/*">
+          </div>
+          <div class="wz-campo">
+            <label>Biografía canina</label>
+            <textarea id="wz-reg-bio" rows="3" maxlength="1000" placeholder="Cuéntanos su historia..."></textarea>
+          </div>
+          <div class="wz-campo">
+            <label>Enfermedades y/o discapacidades</label>
+            <textarea id="wz-reg-enf" rows="2" maxlength="1000" placeholder="Ninguna / Alergias..."></textarea>
+          </div>
+          <button class="wz-btn wz-btn-prim" id="wz-reg-guardar" style="width:100%"><i class="ph ph-check"></i> Registrar mascota</button>
+        </div>`;
+        document.querySelector('#wizard-paseos .wz-modal').appendChild(ov);
+
+        document.getElementById('wz-reg-cerrar').addEventListener('click', () => ov.remove());
+        ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+
+        document.getElementById('wz-reg-guardar').addEventListener('click', async () => {
+            const nombre = document.getElementById('wz-reg-nombre').value.trim();
+            const err = document.getElementById('wz-reg-error');
+            if (!nombre) {
+                err.textContent = '⚠ El nombre de la mascota es obligatorio.';
+                err.classList.add('visible');
+                return;
+            }
+            const btn = document.getElementById('wz-reg-guardar');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="wz-spinner"></span> Registrando...';
+
+            const fd = new FormData();
+            fd.append('nombre_mascota', nombre);
+            fd.append('raza', document.getElementById('wz-reg-raza').value.trim());
+            fd.append('edad', document.getElementById('wz-reg-edad').value);
+            fd.append('biografia_canina', document.getElementById('wz-reg-bio').value.trim());
+            fd.append('enfermedades_discapacidades', document.getElementById('wz-reg-enf').value.trim());
+            const archivo = document.getElementById('wz-reg-avatar').files[0];
+            if (archivo) fd.append('avatar_mascota', archivo);
+
+            try {
+                const r = await fetch(API_WZ + 'registrar_mascota_cliente.php', { method: 'POST', body: fd });
+                const data = await r.json();
+                if (!data.success) throw new Error(data.message || 'No se pudo registrar la mascota.');
+
+                datos.mascotas.push(data.mascota);
+                W.id_mascota = data.mascota.id_mascota; // queda seleccionada
+                ov.remove();
+                renderPaso(1); // repinta el paso actual (normal o exprés) con la mascota nueva
+            } catch (e) {
+                err.textContent = '⚠ ' + e.message;
+                err.classList.add('visible');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-check"></i> Registrar mascota';
+            }
         });
     }
 
