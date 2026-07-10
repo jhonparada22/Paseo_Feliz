@@ -15,6 +15,7 @@
  */
 header("Access-Control-Allow-Origin: *");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -22,6 +23,11 @@ date_default_timezone_set('America/Bogota');
 
 verificarSesion();
 $idUsuario = (int)$_SESSION['usuario_id'];
+
+// Generación perezosa de paseos programados (throttled — sin cron en el
+// hosting). Mantiene las instancias de los próximos días al día y liquida
+// como no_ejecutado lo que quedó pendiente de días pasados.
+materializarPaseosProgramados($conn);
 
 // Hora actual del MISMO reloj que escribe NOW() en rutas/paradas.
 // El front la usa para calcular el desfase con el reloj del navegador
@@ -178,6 +184,50 @@ if ($crono) {
         'es_hoy'     => $mejorDelta === 0,
         'franja'     => $pedido['franja_horaria'] ?? '',
     ];
+}
+
+// ── 2b. Paseos programados con fecha concreta (fase 11) ───────────────
+// Las instancias reales de paseos_programados reemplazan a la inferencia
+// por cronograma: el cliente ve FECHAS, no una proyección del día de la
+// semana. Si la tabla aún no está migrada, se conserva el cálculo previo.
+$proximosPaseos = [];
+try {
+    $stmt = $conn->prepare(
+        "SELECT pp.fecha, pp.franja_horaria, pp.estado, pp.duracion_min
+         FROM paseos_programados pp
+         WHERE pp.id_pedido = ? AND pp.fecha >= CURDATE()
+           AND pp.estado IN ('programado','asignado','en_ruta','recogido')
+         ORDER BY pp.fecha ASC
+         LIMIT 5"
+    );
+    $stmt->bind_param("i", $idPedido);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        $dow = (int)date('N', strtotime($row['fecha']));
+        $proximosPaseos[] = [
+            'fecha'      => $row['fecha'],
+            'dia_semana' => $dow,
+            'dia_nombre' => $diasNombres[$dow],
+            'es_hoy'     => $row['fecha'] === date('Y-m-d'),
+            'franja'     => $row['franja_horaria'] ?? '',
+            'estado'     => $row['estado'],
+        ];
+    }
+    $stmt->close();
+
+    // El "próximo paseo" pasa a ser la primera instancia real
+    if ($proximosPaseos) {
+        $proximoPaseo = [
+            'fecha'      => $proximosPaseos[0]['fecha'],
+            'dia_semana' => $proximosPaseos[0]['dia_semana'],
+            'dia_nombre' => $proximosPaseos[0]['dia_nombre'],
+            'es_hoy'     => $proximosPaseos[0]['es_hoy'],
+            'franja'     => $proximosPaseos[0]['franja'],
+        ];
+    }
+} catch (mysqli_sql_exception $e) {
+    if (!ppTablaFaltante($e)) throw $e; // sin migrar: se usa el cálculo previo
 }
 
 // ── 3. Ruta de HOY con parada del cliente (paseo en vivo) ─────────────
@@ -412,10 +462,11 @@ responder(true, [
             'renovacion'     => $pedido['fecha_renovacion'],
             'dias_restantes' => $diasRestantes,
         ],
-        'asignacion'    => $asignacion,
-        'proximo_paseo' => $proximoPaseo,
-        'ruta_hoy'      => $rutaHoy,
-        'historial'     => array_slice($historial, 0, 8),
+        'asignacion'      => $asignacion,
+        'proximo_paseo'   => $proximoPaseo,
+        'proximos_paseos' => $proximosPaseos,
+        'ruta_hoy'        => $rutaHoy,
+        'historial'       => array_slice($historial, 0, 8),
     ],
 ]);
 ?>

@@ -14,6 +14,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -91,6 +92,10 @@ if ($accion === 'reemplazar_dia') {
             $i->close();
         }
         $conn->commit();
+        // Reflejar el cambio en los paseos programados de los próximos días
+        // (instancias con fecha concreta que ven el cliente y el paseador)
+        sincronizarInstanciasConCronograma($conn);
+        materializarPaseosProgramados($conn, true);
         responder(true, ['asignados' => count($idsPedidos)], 'Cronograma del ' . $DIAS_NOMBRE[$dia] . ' actualizado.');
     } catch (Exception $e) {
         $conn->rollback();
@@ -121,6 +126,10 @@ if ($accion === 'reemplazar_dia') {
         }
         $i->close();
         $conn->commit();
+        // Generar de inmediato los paseos programados de los próximos días:
+        // el cliente ve sus fechas concretas apenas el admin asigna
+        sincronizarInstanciasConCronograma($conn);
+        materializarPaseosProgramados($conn, true);
         $nombres = implode(', ', array_map(function ($d) use ($DIAS_NOMBRE) { return $DIAS_NOMBRE[$d]; }, $dias));
         responder(true, [], "Pedido asignado al cronograma ($nombres).");
     } catch (Exception $e) {

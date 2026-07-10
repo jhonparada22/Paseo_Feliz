@@ -20,6 +20,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 verificarAdmin();
@@ -45,6 +46,19 @@ if ($definitivo) {
     if ($conActividad) {
         responder(false, [], 'Esta ruta tiene paseos ya ejecutados: eliminarla borraría ese historial y el conteo del plan de los clientes. Usa "Cancelar" para las paradas pendientes.');
     }
+    // Los paseos programados que estaban en esta ruta vuelven a "asignado"
+    // (la ruta desaparece pero el paseo del día sigue debiendo ejecutarse)
+    try {
+        $stmt = $conn->prepare(
+            "UPDATE paseos_programados SET estado = 'asignado', id_ruta = NULL
+             WHERE id_ruta = ? AND estado IN ('en_ruta','recogido')"
+        );
+        $stmt->bind_param("i", $idRuta);
+        $stmt->execute();
+        $stmt->close();
+    } catch (mysqli_sql_exception $e) {
+        if (!ppTablaFaltante($e)) throw $e;
+    }
     // Elimina la ruta y, en cascada, sus paradas/clientes/historial relacionado
     $stmt = $conn->prepare("DELETE FROM rutas WHERE id_ruta = ?");
     $stmt->bind_param("i", $idRuta);
@@ -58,8 +72,9 @@ $conn->begin_transaction();
 try {
     // 1. Clientes con paradas aún pendientes (para notificarles)
     $stmt = $conn->prepare(
-        "SELECT DISTINCT rp.id_usuario_cliente, mu.nombre_mascota
+        "SELECT DISTINCT rp.id_usuario_cliente, rp.id_pedido, r.fecha_paseo, mu.nombre_mascota
          FROM ruta_paradas rp
+         JOIN rutas r ON r.id_ruta = rp.id_ruta
          LEFT JOIN mascota_usuario mu ON mu.id_mascota = rp.id_mascota
          WHERE rp.id_ruta = ? AND rp.id_usuario_cliente IS NOT NULL
            AND rp.hora_entrega IS NULL AND rp.hora_cancelacion IS NULL"
@@ -88,11 +103,16 @@ try {
     $stmt->execute();
     $stmt->close();
 
-    // 4. Notificar a cada cliente afectado
+    // 4. Notificar a cada cliente afectado y cancelar su paseo programado
     foreach ($afectados as $a) {
         $mascota = $a['nombre_mascota'] ?: 'tu mascota';
         crearNotificacionInterna($conn, (int)$a['id_usuario_cliente'], $idRuta,
             'sistema', "El paseo de hoy de $mascota fue cancelado. Motivo: $motivo");
+        if (!empty($a['id_pedido'])) {
+            transicionPaseoProgramado($conn, (int)$a['id_pedido'], $a['fecha_paseo'], 'cancelado', [
+                'actor' => 'admin', 'motivo' => $motivo, 'cancelado_por' => 'admin',
+            ]);
+        }
     }
 
     $conn->commit();

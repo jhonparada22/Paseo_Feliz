@@ -270,12 +270,26 @@
         const p = S.pedido, pp = S.proximo_paseo;
         if (!pp) return cardDireccion();
         const fecha = pp.es_hoy ? 'Hoy, ' + fmtFecha(pp.fecha) : pp.dia_nombre + ', ' + fmtFecha(pp.fecha);
+
+        // Paseos programados con fecha concreta (después del próximo):
+        // vienen de paseos_programados, ya no son una proyección del cronograma
+        const siguientes = (S.proximos_paseos || []).slice(1, 4);
+        const listaSig = siguientes.length
+            ? '<div class="dz-fila" style="align-items:flex-start"><i class="ph ph-calendar-plus"></i>' +
+                  '<span><strong>Siguientes:</strong> ' +
+                  siguientes.map(function (s) {
+                      return esc((DIAS_CORTOS[s.dia_semana] || s.dia_nombre) + ' ' + fmtFechaCorta(s.fecha).slice(0, 5));
+                  }).join(' · ') +
+                  '</span></div>'
+            : '';
+
         return '<div class="dz-card">' +
                     '<h3 class="dz-h3 dz-h3-verde"><i class="ph ph-calendar-check"></i> Información del próximo paseo</h3>' +
                     '<div class="dz-fila"><i class="ph ph-calendar-blank"></i><span><strong>Fecha:</strong> ' + esc(fecha) + '</span></div>' +
                     (pp.franja ? '<div class="dz-fila"><i class="ph ph-clock"></i><span><strong>Hora:</strong> ' + esc(pp.franja) + ' (' + S.pedido.duracion_min + ' min)</span></div>' : '') +
                     '<div class="dz-fila"><i class="ph ph-map-pin"></i><span><strong>Recogida:</strong> ' + esc(p.direccion) + (p.barrio ? ', ' + esc(p.barrio) : '') + '</span></div>' +
                     (p.referencia ? '<div class="dz-fila"><i class="ph ph-note"></i><span><strong>Referencia:</strong> ' + esc(p.referencia) + '</span></div>' : '') +
+                    listaSig +
                     '<div class="dz-aviso"><i class="ph ph-bell"></i> Te notificaremos cuando tu paseador esté en camino a la recogida.</div>' +
                '</div>';
     }

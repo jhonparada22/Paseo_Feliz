@@ -17,6 +17,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 $idPaseador = obtenerIdPaseadorSesion($conn);
@@ -32,7 +33,7 @@ if ($accion !== 'completar') responder(false, [], 'Acción no soportada.');
 $stmt = $conn->prepare(
     "SELECT rp.id_parada, rp.id_estado, rp.tipo, rp.id_usuario_cliente, rp.id_ruta,
             rp.id_pedido, rp.hora_recogida, rp.hora_entrega, rp.hora_cancelacion,
-            mu.nombre_mascota
+            r.fecha_paseo, mu.nombre_mascota
      FROM ruta_paradas rp
      JOIN rutas r ON r.id_ruta = rp.id_ruta
      LEFT JOIN mascota_usuario mu ON mu.id_mascota = rp.id_mascota
@@ -66,6 +67,10 @@ if ($parada['tipo'] === 'recogida') {
     $u->close();
     if (!$ok) responder(false, [], 'No se pudo confirmar la recogida.');
 
+    transicionPaseoProgramado($conn, $idPedido, $parada['fecha_paseo'], 'recogido', [
+        'actor' => 'paseador', 'detalle' => "Recogida de $mascota confirmada (panel de paradas)",
+    ]);
+
     if ($idCliente) {
         crearNotificacionInterna($conn, $idCliente, $idRuta,
             'llegada_parada', "El paseador recogió a $mascota. ¡El paseo está por comenzar!");
@@ -94,6 +99,10 @@ if ($parada['tipo'] === 'recogida') {
     $ok = $u->affected_rows > 0;
     $u->close();
     if (!$ok) responder(false, [], 'No se puede entregar: primero confirma la recogida de esta mascota.');
+
+    transicionPaseoProgramado($conn, $idPedido, $parada['fecha_paseo'], 'completado', [
+        'actor' => 'paseador', 'detalle' => "Entrega de $mascota confirmada (panel de paradas)",
+    ]);
 
     if ($idCliente) {
         crearNotificacionInterna($conn, $idCliente, $idRuta,

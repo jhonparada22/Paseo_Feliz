@@ -15,6 +15,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -88,7 +89,29 @@ try {
     $paradasCanceladas = $stmt->affected_rows;
     $stmt->close();
 
-    // 6. Notificar al cliente
+    // 6. Cancelar los paseos programados de hoy en adelante (con evento)
+    try {
+        $stmt = $conn->prepare(
+            "SELECT id_paseo, fecha FROM paseos_programados
+             WHERE id_pedido = ? AND fecha >= CURDATE()
+               AND estado IN ('programado','asignado','en_ruta','recogido')"
+        );
+        $stmt->bind_param("i", $idPedido);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $instancias = [];
+        while ($row = $res->fetch_assoc()) $instancias[] = $row;
+        $stmt->close();
+        foreach ($instancias as $inst) {
+            transicionPaseoProgramado($conn, $idPedido, $inst['fecha'], 'cancelado', [
+                'actor' => 'admin', 'motivo' => $motivo, 'cancelado_por' => 'admin',
+            ]);
+        }
+    } catch (mysqli_sql_exception $e) {
+        if (!ppTablaFaltante($e)) throw $e;
+    }
+
+    // 7. Notificar al cliente
     crearNotificacionInterna($conn, $idUsuario, null,
         'sistema', "Tu servicio de paseos para $mascota fue cancelado. Motivo: $motivo. Si tienes dudas, contáctanos por el centro de ayuda.");
 

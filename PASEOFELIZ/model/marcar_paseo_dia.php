@@ -33,6 +33,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
+include_once 'helpers_paseos_programados.php';
 include_once '../model/conexion.php';
 
 $idPaseador = obtenerIdPaseadorSesion($conn);
@@ -87,6 +88,13 @@ if ($accion === 'entregar_grupal') {
     $marcados = $stmt->affected_rows;
     $stmt->close();
 
+    // Reflejar en los paseos programados (uno por pedido) + log de eventos
+    foreach ($ids as $idP) {
+        transicionPaseoProgramado($conn, $idP, $hoy, 'completado', [
+            'actor' => 'paseador', 'detalle' => 'Entrega grupal confirmada',
+        ]);
+    }
+
     responder(true, ['marcados' => $marcados], "Grupo entregado: $marcados perro(s).");
 }
 
@@ -129,6 +137,10 @@ if ($accion === 'recogido') {
 
     if (!$ok) responder(false, [], 'No se pudo marcar como recogido (ya estaba recogido o cancelado).');
 
+    transicionPaseoProgramado($conn, $idPedido, $hoy, 'recogido', [
+        'actor' => 'paseador', 'detalle' => "Recogida de $mascota confirmada",
+    ]);
+
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'llegada_parada', "El paseador recogió a $mascota. ¡El paseo está por comenzar!");
 
@@ -155,6 +167,10 @@ if ($accion === 'recogido') {
 
     if (!$ok) responder(false, [], 'No se puede entregar: falta confirmar la recogida, o ya fue entregado/cancelado.');
 
+    transicionPaseoProgramado($conn, $idPedido, $hoy, 'completado', [
+        'actor' => 'paseador', 'detalle' => "Entrega de $mascota confirmada",
+    ]);
+
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'sistema', "$mascota fue entregado. ¡Gracias por confiar en Paseo Feliz!");
 
@@ -173,6 +189,13 @@ if ($accion === 'recogido') {
     $stmt->close();
 
     if (!$ok) responder(false, [], 'No se puede deshacer: el paseo ya fue entregado.');
+
+    // El deshacer queda en el log como evento (no se borra la historia del
+    // paseo programado); la instancia vuelve a "en_ruta".
+    transicionPaseoProgramado($conn, $idPedido, $hoy, 'en_ruta', [
+        'actor' => 'paseador', 'evento_tipo' => 'deshecho',
+        'detalle' => 'El paseador deshizo la recogida (marcada por error)',
+    ]);
 
     responder(true, ['estado' => 'pendiente'], 'Paseo devuelto a pendiente.');
 
@@ -195,6 +218,10 @@ if ($accion === 'recogido') {
     $stmt->close();
 
     if (!$afectadas) responder(false, [], 'No se puede cancelar: el paseo ya fue entregado o ya estaba cancelado.');
+
+    transicionPaseoProgramado($conn, $idPedido, $hoy, 'cancelado', [
+        'actor' => 'paseador', 'motivo' => $motivo, 'cancelado_por' => 'paseador',
+    ]);
 
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'sistema', "El paseo de hoy de $mascota fue cancelado. Motivo: $motivo. El paseador puede darte más detalles por el chat.");
