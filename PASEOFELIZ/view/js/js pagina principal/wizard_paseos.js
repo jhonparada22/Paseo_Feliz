@@ -1180,7 +1180,9 @@
           <div class="icono"><i class="ph ph-check-circle"></i></div>
           <h3>¡Tu membresía de paseos está activa! 🎉</h3>
           <p>${m ? m.nombre : 'Tu mascota'} ya tiene <strong>${W.cantidad_paseos} paseos al mes</strong>.
-             Tu pedido quedó registrado y pasará a asignación de ruta con un paseador.</p>
+             ${EXPRESS
+               ? 'Tu pedido quedó registrado y pasará a asignación de ruta con un paseador.'
+               : 'Verificaremos la dirección de recogida y luego te asignaremos un paseador. Te avisaremos en cada paso.'}</p>
           <div class="ref">
             Pedido <strong>#${data.id_pedido}</strong> · Referencia de pago <strong>${data.referencia}</strong><br>
             Total pagado: <strong>${cop(data.total)}</strong>

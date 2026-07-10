@@ -44,7 +44,7 @@ $stmt = $conn->prepare(
      JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
      JOIN usuarios u         ON u.id = p.id_usuario
      WHERE p.id_pedido = ? AND p.id_usuario = ?
-       AND p.estado IN ('pagado', 'listo_para_asignar')"
+       AND p.estado IN ('pagado', 'listo_para_asignar', 'en_validacion')"
 );
 $stmt->bind_param("ii", $idPedido, $idUsuario);
 $stmt->execute();

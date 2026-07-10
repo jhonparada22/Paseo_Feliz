@@ -30,6 +30,8 @@ function diasTexto(dias) {
 
 function estadoPedido(p) {
     if (p.estado === 'cancelado')  return { lbl: 'Cancelado',          cls: 'b-cancelado',  dot: '#ef4444' };
+    if (p.estado === 'en_validacion')
+                                   return { lbl: 'Dirección por validar', cls: 'b-proceso', dot: '#8b5cf6' };
     if (p.asignacion)              return { lbl: 'En cronograma',      cls: 'b-completado', dot: '#25D366' };
     if (p.estado === 'listo_para_asignar' || p.estado === 'pagado')
                                    return { lbl: 'Listo para asignar', cls: 'b-programado', dot: '#f97316' };
@@ -67,12 +69,71 @@ async function cargarPaseadores() {
 
 // ── Stats ──────────────────────────────────────────────────────
 function renderStats() {
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('st-total').textContent  = PEDIDOS.length;
-    document.getElementById('st-listos').textContent = PEDIDOS.filter(p => !p.asignacion && (p.estado === 'listo_para_asignar' || p.estado === 'pagado')).length;
-    document.getElementById('st-crono').textContent  = PEDIDOS.filter(p => p.asignacion).length;
-    document.getElementById('st-hoy').textContent    = PEDIDOS.filter(p => p.fecha_inicio === hoy && p.estado !== 'cancelado').length;
-    document.getElementById('st-cancel').textContent = PEDIDOS.filter(p => p.estado === 'cancelado').length;
+    document.getElementById('st-total').textContent   = PEDIDOS.length;
+    document.getElementById('st-validar').textContent = PEDIDOS.filter(p => p.estado === 'en_validacion').length;
+    document.getElementById('st-listos').textContent  = PEDIDOS.filter(p => !p.asignacion && (p.estado === 'listo_para_asignar' || p.estado === 'pagado')).length;
+    document.getElementById('st-crono').textContent   = PEDIDOS.filter(p => p.asignacion).length;
+    document.getElementById('st-cancel').textContent  = PEDIDOS.filter(p => p.estado === 'cancelado').length;
+}
+
+// ── Torre de control: operación de HOY (cronograma vs realidad) ──
+async function cargarTorre() {
+    try {
+        const r = await fetch(API + 'torre_control.php');
+        const data = await r.json();
+        if (!data.success) return; // migración pendiente: la torre no se muestra
+        renderTorre(data);
+    } catch (e) { /* sin conexión: se reintenta en el próximo ciclo */ }
+}
+
+function renderTorre(data) {
+    const cont = document.getElementById('torreHoy');
+    if (!cont) return;
+    const ps  = data.paseadores_hoy || [];
+    const ne  = data.no_ejecutados || [];
+    if (!ps.length && !ne.length) { cont.style.display = 'none'; return; }
+
+    const filas = ps.map(p => {
+        const estado = p.alerta_no_inicio
+            ? '<span style="background:#fee2e2;color:#b91c1c;font-weight:700;padding:2px 8px;border-radius:999px;font-size:.7rem">⚠ No ha iniciado</span>'
+            : (p.inicio_jornada
+                ? '<span style="background:#dcfce7;color:#15803d;font-weight:700;padding:2px 8px;border-radius:999px;font-size:.7rem">● En jornada</span>'
+                : '<span style="background:#fef3c7;color:#b45309;font-weight:700;padding:2px 8px;border-radius:999px;font-size:.7rem">○ Sin iniciar</span>');
+        return `
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #f1f5f9;font-size:.78rem">
+            <strong style="min-width:130px">${p.nombre}</strong>
+            ${estado}
+            <span style="color:#64748b">${p.primera_hora ? 'desde las ' + p.primera_hora : (p.primera_franja || '')}</span>
+            <span style="margin-left:auto;display:flex;gap:8px;color:#475569">
+                <span title="Pendientes">⏰ ${p.pendientes}</span>
+                <span title="Recogidos">🐕 ${p.recogidos}</span>
+                <span title="Completados">✅ ${p.completados}</span>
+                ${p.cancelados ? `<span title="Cancelados" style="color:#b91c1c">✖ ${p.cancelados}</span>` : ''}
+            </span>
+        </div>`;
+    }).join('');
+
+    const neHtml = ne.length ? `
+        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0">
+            <div style="font-size:.72rem;font-weight:800;color:#b45309;margin-bottom:4px">
+                <i class="fas fa-calendar-xmark"></i> Paseos NO ejecutados (últimos 7 días) — candidatos a reposición
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${ne.map(x => `<span style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:999px;padding:3px 10px;font-size:.7rem;cursor:pointer" onclick="seleccionar(${x.id_pedido})">
+                    ${x.fecha.slice(5)} · ${x.mascota} (${x.paseador})</span>`).join('')}
+            </div>
+        </div>` : '';
+
+    cont.style.display = 'block';
+    cont.innerHTML = `
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span style="font-weight:800;font-size:.85rem">🚦 Operación de hoy</span>
+                <span style="font-size:.7rem;color:#94a3b8">se actualiza cada minuto</span>
+            </div>
+            ${filas || '<div style="font-size:.78rem;color:#94a3b8;padding:6px 0">Ningún paseador tiene paseos programados hoy.</div>'}
+            ${neHtml}
+        </div>`;
 }
 
 // ── Alertas (pedidos pagados sin cronograma) ───────────────────
@@ -99,6 +160,7 @@ function pedidosFiltrados() {
         const texto = `${p.mascota} ${p.cliente} ${p.barrio} ${p.plan} ${p.asignacion ? p.asignacion.paseador : ''}`.toLowerCase();
         const matchQ = !q || texto.includes(q);
         let matchF = true;
+        if (filtroActual === 'validar')    matchF = p.estado === 'en_validacion';
         if (filtroActual === 'listos')     matchF = !p.asignacion && (p.estado === 'listo_para_asignar' || p.estado === 'pagado');
         if (filtroActual === 'asignados')  matchF = !!p.asignacion;
         if (filtroActual === 'cancelados') matchF = p.estado === 'cancelado';
@@ -193,19 +255,57 @@ function renderDetalle(id) {
             ${p.observaciones ? `<div class="dp-note">⚠ ${p.observaciones}</div>` : ''}
         </div>` : ''}
 
+        ${p.estado === 'en_validacion' ? `
+        <div class="dp-section" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:10px">
+            <div class="dp-label" style="color:#6d28d9"><i class="fas fa-map-pin"></i> Dirección pendiente de validar</div>
+            <div class="dp-row" style="font-size:.76rem;color:var(--muted)">Verifica que el pin coincida con la dirección escrita antes de liberar el pedido a la cola de asignación.</div>
+            <a class="btn-outline" style="width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none"
+               href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=18/${p.lat}/${p.lng}" target="_blank" rel="noopener">
+                <i class="fas fa-map-location-dot"></i> Ver pin en el mapa
+            </a>
+            <button class="btn-primary" style="width:100%;margin-top:8px" onclick="aprobarDireccion(${p.id_pedido})">
+                <i class="fas fa-check"></i> Aprobar dirección
+            </button>
+        </div>` : ''}
+
         <div class="dp-section">
             <div class="dp-label">Cronograma</div>
             ${p.asignacion
                 ? `<div class="dp-row" style="color:#15803d"><i class="fas fa-person-walking"></i> ${p.asignacion.paseador} — ${diasTexto(p.asignacion.dias)}</div>`
                 : `<div class="dp-row" style="color:var(--muted)"><i class="fas fa-circle-info"></i> Aún sin asignar a un paseador</div>`}
-            ${p.estado !== 'cancelado' ? `
+            ${p.estado !== 'cancelado' && p.estado !== 'en_validacion' ? `
             <button class="btn-primary" style="width:100%;margin-top:10px" onclick="abrirModalAsignar(${p.id_pedido})">
                 <i class="fas fa-calendar-plus"></i> ${p.asignacion ? 'Agregar días / cambiar' : 'Asignar al cronograma'}
-            </button>
+            </button>` : ''}
+            ${p.asignacion && p.estado !== 'cancelado' ? `
+            <button class="btn-primary" style="width:100%;margin-top:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe" onclick="abrirModalReasignar(${p.id_pedido})">
+                <i class="fas fa-people-arrows"></i> Reasignar a otro paseador
+            </button>` : ''}
+            ${p.estado !== 'cancelado' ? `
             <button class="btn-primary" style="width:100%;margin-top:8px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca" onclick="cancelarPedido(${p.id_pedido})">
                 <i class="fas fa-ban"></i> Cancelar servicio
             </button>` : ''}
         </div>`;
+}
+
+// ── Aprobar dirección (pedido en_validacion -> listo_para_asignar) ──
+async function aprobarDireccion(idPedido) {
+    const p = PEDIDOS.find(x => x.id_pedido === idPedido);
+    if (!p) return;
+    if (!confirm(`¿Confirmas que el pin de "${p.direccion}${p.barrio ? ', ' + p.barrio : ''}" es correcto?\nEl pedido de ${p.mascota} pasará a la cola de asignación.`)) return;
+    try {
+        const r = await fetch(API + 'validar_direccion_pedido.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_pedido: idPedido, accion: 'aprobar' }),
+        });
+        const data = await r.json();
+        if (!data.success) { showToast(data.message || 'No se pudo aprobar', 'error'); return; }
+        showToast('✅ ' + data.message, 'success');
+        cargarPedidos();
+    } catch (e) {
+        showToast('Error de conexión al aprobar la dirección', 'error');
+    }
 }
 
 // ── Cancelar servicio (pedido + membresía + cronograma) ────────
@@ -294,6 +394,56 @@ async function confirmarAsignacion() {
     }
 }
 
+// ── Modal reasignar a otro paseador ────────────────────────────
+function abrirModalReasignar(idPedido) {
+    const p = PEDIDOS.find(x => x.id_pedido === idPedido);
+    if (!p || !p.asignacion) return;
+    document.getElementById('reassignPedidoId').value = idPedido;
+    document.getElementById('reassignModalTitle').textContent = `Reasignar a ${p.mascota} (${p.cliente})`;
+    document.getElementById('reassignModalSub').textContent =
+        `Paseador actual: ${p.asignacion.paseador} — ${diasTexto(p.asignacion.dias)}`;
+
+    // Select de paseadores (excluye al actual)
+    const sel = document.getElementById('reassignPaseador');
+    sel.innerHTML = '<option value="">— Seleccionar paseador —</option>' +
+        PASEADORES.filter(x => x.id !== p.asignacion.id_paseador)
+                  .map(x => `<option value="${x.id}">${x.nombre}</option>`).join('');
+
+    document.getElementById('reassignModal').classList.add('open');
+}
+
+async function confirmarReasignacion() {
+    const idPedido  = parseInt(document.getElementById('reassignPedidoId').value);
+    const idDestino = parseInt(document.getElementById('reassignPaseador').value || '0');
+    const alcance   = document.querySelector('input[name="reassignAlcance"]:checked').value;
+
+    if (!idDestino) { showToast('Selecciona el nuevo paseador', 'error'); return; }
+
+    const btn = document.getElementById('confirmReassign');
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reasignando...';
+
+    try {
+        const r = await fetch(API + 'reasignar_paseo.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_pedido: idPedido, id_paseador_destino: idDestino, alcance }),
+        });
+        const data = await r.json();
+        if (!data.success) { showToast(data.message || 'No se pudo reasignar', 'error'); return; }
+        document.getElementById('reassignModal').classList.remove('open');
+        showToast('✅ ' + data.message, 'success');
+        cargarPedidos();
+        cargarTorre();
+    } catch (e) {
+        showToast('Error de conexión al reasignar', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+    }
+}
+
 // ── Filtros / listeners ────────────────────────────────────────
 document.querySelectorAll('.filter-bar .sf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -313,6 +463,13 @@ document.getElementById('assignModal').addEventListener('click', e => {
 });
 document.getElementById('confirmAssign').addEventListener('click', confirmarAsignacion);
 
+document.getElementById('closeReassignModal').addEventListener('click', () => document.getElementById('reassignModal').classList.remove('open'));
+document.getElementById('cancelReassign').addEventListener('click', () => document.getElementById('reassignModal').classList.remove('open'));
+document.getElementById('reassignModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('reassignModal')) document.getElementById('reassignModal').classList.remove('open');
+});
+document.getElementById('confirmReassign').addEventListener('click', confirmarReasignacion);
+
 // ── Sidebar hamburguesa ────────────────────────────────────────
 const btnMenu = document.getElementById('btn-menu');
 const menuLatente = document.getElementById('menu-latente');
@@ -324,3 +481,8 @@ window.addEventListener('click', e => {
 // ── INIT ───────────────────────────────────────────────────────
 cargarPedidos();
 cargarPaseadores();
+cargarTorre();
+// La torre se refresca cada minuto y el listado de pedidos cada dos:
+// el admin ve llegar pedidos nuevos y el avance del día sin recargar.
+setInterval(cargarTorre, 60000);
+setInterval(cargarPedidos, 120000);

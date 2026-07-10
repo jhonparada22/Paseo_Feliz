@@ -15,6 +15,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once 'helpers_paseos_programados.php';
+include_once 'helpers_logistica.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -33,7 +34,7 @@ function validarPaseador($conn, $idPaseador) {
     if (!$ok) responder(false, [], 'El paseador no existe.');
 }
 
-// ── Validar que un pedido sea asignable (pagado, o ya del cronograma) ─
+// ── Validar que un pedido sea asignable (pagado y con dirección validada) ─
 function validarPedido($conn, $idPedido) {
     $s = $conn->prepare("SELECT estado FROM pedidos_paseo WHERE id_pedido = ?");
     $s->bind_param("i", $idPedido);
@@ -41,7 +42,10 @@ function validarPedido($conn, $idPedido) {
     $row = $s->get_result()->fetch_assoc();
     $s->close();
     if (!$row) responder(false, [], "El pedido #$idPedido no existe.");
-    if (!in_array($row['estado'], ['listo_para_asignar', 'en_validacion', 'pagado'])) {
+    if ($row['estado'] === 'en_validacion') {
+        responder(false, [], "El pedido #$idPedido tiene la dirección pendiente de validar. Apruébala primero desde el detalle del pedido.");
+    }
+    if (!in_array($row['estado'], ['listo_para_asignar', 'pagado'])) {
         responder(false, [], "El pedido #$idPedido no está pagado/listo para asignar (estado: {$row['estado']}).");
     }
 }
@@ -75,6 +79,10 @@ if ($accion === 'reemplazar_dia') {
         $otro = conflictoDia($conn, $idPedido, $dia, $idPaseador);
         if ($otro) responder(false, [], "El pedido #$idPedido ya está asignado el {$DIAS_NOMBRE[$dia]} al paseador $otro. Quítalo de su cronograma primero.");
     }
+
+    // Cupos y modalidad: se valida el conjunto COMPLETO que quedaría ese día
+    $errCupo = validarConjuntoDia($conn, $idPaseador, $dia, $idsPedidos);
+    if ($errCupo) responder(false, [], $errCupo);
 
     $conn->begin_transaction();
     try {
@@ -114,6 +122,14 @@ if ($accion === 'reemplazar_dia') {
     foreach ($dias as $dia) {
         $otro = conflictoDia($conn, $idPedido, $dia, $idPaseador);
         if ($otro) responder(false, [], "Ese pedido ya está asignado el {$DIAS_NOMBRE[$dia]} al paseador $otro.");
+    }
+
+    // Cupos y modalidad por cada día: lo ya asignado al paseador + este pedido
+    foreach ($dias as $dia) {
+        $conjunto = pedidosDelDia($conn, $idPaseador, $dia);
+        if (!in_array($idPedido, $conjunto, true)) $conjunto[] = $idPedido;
+        $errCupo = validarConjuntoDia($conn, $idPaseador, $dia, $conjunto);
+        if ($errCupo) responder(false, [], "{$DIAS_NOMBRE[$dia]}: $errCupo");
     }
 
     $conn->begin_transaction();

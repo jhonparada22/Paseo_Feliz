@@ -376,11 +376,17 @@
     // ── Columna central ───────────────────────────────────────────
     function timelineHorizontal() {
         const estado = S.estado;
-        // índice del paso activo: 2 = asignando, 3 = próximo paseo, 4 = en curso
-        const activo = estado === 'paseo_en_curso' ? 4 : (estado === 'paseador_asignado' ? 3 : 2);
+        // Si el admin aún no aprobó el pin de la dirección, el paso activo
+        // es la validación (índice 1) — ya no se muestra como completada
+        // solo porque el cliente confirmó su propio pin en el wizard.
+        const enValidacion = S.pedido.en_validacion;
+        // índice del paso activo: 1 = validando dirección, 2 = asignando,
+        // 3 = próximo paseo, 4 = en curso
+        const activo = estado === 'paseo_en_curso' ? 4
+                     : (estado === 'paseador_asignado' ? 3 : (enValidacion ? 1 : 2));
         const pasos = [
             { icon: 'ph-check',        txt: 'Compra<br>confirmada' },
-            { icon: 'ph-check',        txt: 'Dirección<br>validada' },
+            { icon: 'ph-map-pin',      txt: enValidacion ? 'Verificando<br>dirección' : 'Dirección<br>validada' },
             { icon: 'ph-paw-print',    txt: estado === 'pendiente_asignacion' ? 'Asignando<br>paseador' : 'Paseador<br>asignado' },
             { icon: 'ph-calendar',     txt: 'Próximo<br>paseo' },
             { icon: 'ph-person-simple-walk', txt: 'En curso' },
@@ -397,19 +403,27 @@
 
     function cardEstadoServicio() {
         const asignado = S.estado === 'paseador_asignado';
+        const enValidacion = S.pedido.en_validacion;
         const chip = asignado
             ? '<span class="dz-chip dz-chip-verde"><span class="dz-dot-vivo"></span> Servicio activo</span>'
             : '<span class="dz-chip dz-chip-ambar"><i class="ph ph-clock"></i> Servicio pendiente</span>';
         const titulo = asignado ? 'Paseador asignado' : '¡Tu compra fue confirmada!';
         const sub = asignado
             ? 'Todo listo para el próximo paseo de ' + esc(S.pedido.mascota) + '.'
-            : 'Estamos asignando el mejor paseador para ' + esc(S.pedido.mascota) + '.';
-        const extra = asignado ? '' :
-            '<div class="dz-aviso dz-aviso-morado dz-aviso-grande">' +
-                '<i class="ph ph-clock"></i>' +
-                '<div><strong>Tiempo estimado de asignación</strong><br>Normalmente entre unas horas y 1 día hábil.' +
-                '<br><small>Te notificaremos cuando tengamos un paseador disponible.</small></div>' +
-            '</div>';
+            : (enValidacion
+                ? 'Estamos verificando la dirección de recogida de ' + esc(S.pedido.mascota) + '.'
+                : 'Estamos asignando el mejor paseador para ' + esc(S.pedido.mascota) + '.');
+        const extra = asignado ? '' : (enValidacion
+            ? '<div class="dz-aviso dz-aviso-morado dz-aviso-grande">' +
+                  '<i class="ph ph-map-pin"></i>' +
+                  '<div><strong>Verificación de dirección</strong><br>Nuestro equipo confirma el punto exacto de recogida antes de asignar a tu paseador.' +
+                  '<br><small>Te notificaremos apenas quede verificada.</small></div>' +
+              '</div>'
+            : '<div class="dz-aviso dz-aviso-morado dz-aviso-grande">' +
+                  '<i class="ph ph-clock"></i>' +
+                  '<div><strong>Tiempo estimado de asignación</strong><br>Normalmente entre unas horas y 1 día hábil.' +
+                  '<br><small>Te notificaremos cuando tengamos un paseador disponible.</small></div>' +
+              '</div>');
         return '<div class="dz-card">' +
                     '<div class="dz-card-head"><h3 class="dz-h3">Estado del servicio</h3>' + chip + '</div>' +
                     '<div class="dz-titulo' + (asignado ? ' dz-titulo-verde' : '') + '">' + titulo + '</div>' +

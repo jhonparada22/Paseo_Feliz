@@ -60,7 +60,7 @@ $stmt = $conn->prepare(
      JOIN membresias m       ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
      JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
      WHERE p.id_usuario = ?
-       AND p.estado IN ('pagado', 'listo_para_asignar')
+       AND p.estado IN ('pagado', 'listo_para_asignar', 'en_validacion')
        AND m.paseos = 1
        AND m.fecha_fin_paseos IS NOT NULL
        AND m.fecha_fin_paseos > $ahoraColombia
@@ -449,6 +449,7 @@ responder(true, [
             'lat'             => (float)$pedido['lat'],
             'lng'             => (float)$pedido['lng'],
             'ubicacion_validada' => (int)$pedido['ubicacion_validada'] === 1,
+            'en_validacion'   => $pedido['estado'] === 'en_validacion',
             'total'           => (float)$pedido['total'],
             'fecha_compra'    => $pedido['fecha_creacion'],
         ],

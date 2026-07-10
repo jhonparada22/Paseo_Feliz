@@ -82,17 +82,21 @@
 
       <div class="mini-stats">
         <div class="mini-stat"><div class="ms-icon ms-blue"><i class="fas fa-receipt"></i></div><div><div class="ms-val" id="st-total">0</div><div class="ms-lbl">Pedidos totales</div></div></div>
+        <div class="mini-stat"><div class="ms-icon ms-purple"><i class="fas fa-map-pin"></i></div><div><div class="ms-val" id="st-validar">0</div><div class="ms-lbl">Por validar</div></div></div>
         <div class="mini-stat"><div class="ms-icon ms-orange"><i class="fas fa-clock"></i></div><div><div class="ms-val" id="st-listos">0</div><div class="ms-lbl">Listos para asignar</div></div></div>
         <div class="mini-stat"><div class="ms-icon ms-green"><i class="fas fa-calendar-check"></i></div><div><div class="ms-val" id="st-crono">0</div><div class="ms-lbl">En cronograma</div></div></div>
-        <div class="mini-stat"><div class="ms-icon ms-purple"><i class="fas fa-play"></i></div><div><div class="ms-val" id="st-hoy">0</div><div class="ms-lbl">Inician hoy</div></div></div>
         <div class="mini-stat"><div class="ms-icon ms-red"><i class="fas fa-ban"></i></div><div><div class="ms-val" id="st-cancel">0</div><div class="ms-lbl">Cancelados</div></div></div>
       </div>
+
+      <!-- Torre de control: operación de HOY (cronograma vs realidad) -->
+      <div id="torreHoy" style="display:none"></div>
 
       <div class="alertas-strip" id="alertasStrip"></div>
 
       <div class="filter-bar">
         <div class="si-wrap"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Buscar por mascota, cliente, barrio, plan o paseador..."/></div>
         <button class="sf-btn active" data-filter="todos">Todos</button>
+        <button class="sf-btn" data-filter="validar">Por validar</button>
         <button class="sf-btn" data-filter="listos">Listos para asignar</button>
         <button class="sf-btn" data-filter="asignados">En cronograma</button>
         <button class="sf-btn" data-filter="cancelados">Cancelados</button>
@@ -142,7 +146,41 @@
   </div>
 </div>
 
+<!-- Modal reasignar a otro paseador -->
+<div class="modal-overlay" id="reassignModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="m-title" id="reassignModalTitle">Reasignar pedido</div><div class="m-sub" id="reassignModalSub"></div></div>
+      <button class="btn-close-modal" id="closeReassignModal"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reassignPedidoId"/>
+      <div class="form-field">
+        <label style="font-size:.76rem;font-weight:700;color:var(--muted)">Nuevo paseador</label>
+        <select id="reassignPaseador" class="filter-select" style="width:100%">
+          <option value="">— Seleccionar paseador —</option>
+        </select>
+      </div>
+      <div class="form-field" style="margin-top:12px">
+        <label style="font-size:.76rem;font-weight:700;color:var(--muted)">Alcance del cambio</label>
+        <label style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;font-size:.8rem;cursor:pointer">
+          <input type="radio" name="reassignAlcance" value="hoy" checked>
+          <span><strong>Solo el paseo de hoy</strong><br><small style="color:var(--muted)">Emergencia puntual: el cronograma semanal no cambia.</small></span>
+        </label>
+        <label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:.8rem;cursor:pointer">
+          <input type="radio" name="reassignAlcance" value="permanente">
+          <span><strong>Permanente</strong><br><small style="color:var(--muted)">Todos sus días del cronograma pasan al nuevo paseador (y el paseo de hoy, si aún no se ejecutó).</small></span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelReassign">Cancelar</button>
+      <button class="btn-confirm" id="confirmReassign"><i class="fas fa-people-arrows"></i> Reasignar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-<script src="../../js/admin/paseos_admin.js?v=2"></script>
+<script src="../../js/admin/paseos_admin.js?v=3"></script>
 </body>
 </html>

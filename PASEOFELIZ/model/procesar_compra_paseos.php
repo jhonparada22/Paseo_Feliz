@@ -111,7 +111,7 @@ if ($idPedidoBase > 0) {
     // La mascota nueva no puede tener ya un servicio activo
     $stmt = $conn->prepare(
         "SELECT id_pedido FROM pedidos_paseo
-         WHERE id_mascota = ? AND estado IN ('pagado', 'listo_para_asignar') LIMIT 1"
+         WHERE id_mascota = ? AND estado IN ('pagado', 'listo_para_asignar', 'en_validacion') LIMIT 1"
     );
     $stmt->bind_param("i", $idMascota);
     $stmt->execute();
@@ -204,7 +204,7 @@ if (!$pedidoBase) {
          FROM pedidos_paseo p
          JOIN membresias m ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
          WHERE p.id_mascota = ? AND p.id_usuario = ?
-           AND p.estado IN ('pagado', 'listo_para_asignar')
+           AND p.estado IN ('pagado', 'listo_para_asignar', 'en_validacion')
            AND m.paseos = 1
            AND m.fecha_fin_paseos IS NOT NULL
            AND m.fecha_fin_paseos > $ahoraColombiaChk
@@ -249,14 +249,18 @@ $instrucciones = substr(trim($ubicacion['instrucciones'] ?? ''), 0, 255);
 // ═══════════════════════════════════════════════════════════════════
 $conn->begin_transaction();
 try {
-    // 2.1 Pedido en estado pendiente_pago (id_plan queda NULL: ya no se usa)
+    // 2.1 Pedido en estado pendiente_pago (id_plan queda NULL: ya no se usa).
+    // ubicacion_validada refleja la validación ADMINISTRATIVA: solo nace en 1
+    // en el modo exprés (dirección heredada de un pedido ya validado); en la
+    // compra normal queda en 0 hasta que el admin apruebe el pin.
+    $ubicacionValidada = $pedidoBase ? 1 : 0;
     $stmt = $conn->prepare(
         "INSERT INTO pedidos_paseo
             (id_usuario, id_mascota, cantidad_paseos, modalidad, duracion_min, dias_preferidos,
              franja_horaria, fecha_inicio, comportamiento, observaciones,
              direccion, barrio, referencia, instrucciones, lat, lng, ubicacion_validada,
              subtotal, descuento, total, metodo_pago, estado)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'pendiente_pago')"
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, $ubicacionValidada, ?, ?, ?, ?, 'pendiente_pago')"
     );
     $tiposPedido = 'iii'   // id_usuario, id_mascota, cantidad_paseos
                  . 's'     // modalidad
@@ -326,9 +330,14 @@ try {
     $idPago = $conn->insert_id;
     $stmt->close();
 
-    // 2.4 Pedido pagado y con ubicación validada -> listo para asignación
-    $u = $conn->prepare("UPDATE pedidos_paseo SET estado = 'listo_para_asignar' WHERE id_pedido = ?");
-    $u->bind_param("i", $idPedido);
+    // 2.4 Pedido pagado. La compra normal pasa a EN VALIDACIÓN: el admin
+    //     revisa el pin de la dirección antes de liberarla a la cola de
+    //     asignación (el pin lo puso el cliente y Nominatim puede fallar).
+    //     El modo exprés hereda una dirección YA validada del pedido base,
+    //     así que va directo a listo_para_asignar.
+    $estadoPostPago = $pedidoBase ? 'listo_para_asignar' : 'en_validacion';
+    $u = $conn->prepare("UPDATE pedidos_paseo SET estado = ? WHERE id_pedido = ?");
+    $u->bind_param("si", $estadoPostPago, $idPedido);
     $u->execute();
     $u->close();
 
@@ -402,7 +411,7 @@ try {
         'id_pago'    => $idPago,
         'referencia' => $resultado['referencia'],
         'total'      => $total,
-        'estado'     => 'listo_para_asignar',
+        'estado'     => $estadoPostPago,
     ], 'Pago aprobado. Tu membresía de paseos quedó activa.');
 
 } catch (Exception $e) {

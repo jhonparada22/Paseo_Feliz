@@ -14,4 +14,19 @@
  * IMPORTANTE: al pasar a producción real, poner este valor en false.
  */
 define('PERMITIR_GPS_SIMULADO', true);
+
+/**
+ * Cupos operativos de asignación (validados server-side al armar el
+ * cronograma y al reasignar). Ajustables según crezca la operación.
+ *
+ * CUPO_MAX_PEDIDOS_DIA:   máximo de mascotas que un paseador puede tener
+ *                         asignadas en un mismo día.
+ * CUPO_MAX_GRUPAL_FRANJA: máximo de mascotas en modalidad grupal que
+ *                         comparten paseador + día + franja horaria
+ *                         (el "máx. 4 perros" que se promete al vender).
+ * La modalidad individual es EXCLUSIVA: una mascota individual no
+ * comparte franja con ninguna otra (ni grupal ni individual).
+ */
+define('CUPO_MAX_PEDIDOS_DIA', 8);
+define('CUPO_MAX_GRUPAL_FRANJA', 4);
 ?>
