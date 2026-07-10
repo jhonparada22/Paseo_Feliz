@@ -201,8 +201,38 @@ function renderDetalle(id) {
             ${p.estado !== 'cancelado' ? `
             <button class="btn-primary" style="width:100%;margin-top:10px" onclick="abrirModalAsignar(${p.id_pedido})">
                 <i class="fas fa-calendar-plus"></i> ${p.asignacion ? 'Agregar días / cambiar' : 'Asignar al cronograma'}
+            </button>
+            <button class="btn-primary" style="width:100%;margin-top:8px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca" onclick="cancelarPedido(${p.id_pedido})">
+                <i class="fas fa-ban"></i> Cancelar servicio
             </button>` : ''}
         </div>`;
+}
+
+// ── Cancelar servicio (pedido + membresía + cronograma) ────────
+async function cancelarPedido(idPedido) {
+    const p = PEDIDOS.find(x => x.id_pedido === idPedido);
+    if (!p) return;
+    const motivo = prompt(
+        `Vas a cancelar el servicio de paseos de ${p.mascota} (${p.cliente}).\n` +
+        `Se desactivará su membresía, saldrá del cronograma y se avisará al cliente.\n\n` +
+        `Motivo de la cancelación:`
+    );
+    if (motivo === null) return; // canceló el diálogo
+    if (!motivo.trim()) { showToast('Debes indicar un motivo', 'error'); return; }
+
+    try {
+        const r = await fetch(API + 'cancelar_pedido_paseos.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_pedido: idPedido, motivo: motivo.trim() }),
+        });
+        const data = await r.json();
+        if (!data.success) { showToast(data.message || 'No se pudo cancelar', 'error'); return; }
+        showToast('✅ ' + data.message, 'success');
+        cargarPedidos();
+    } catch (e) {
+        showToast('Error de conexión al cancelar', 'error');
+    }
 }
 
 // ── Modal asignar al cronograma ────────────────────────────────

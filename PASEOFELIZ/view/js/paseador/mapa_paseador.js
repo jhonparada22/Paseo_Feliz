@@ -16,6 +16,13 @@ let watchId = null, timerInterval = null, simInterval = null, gpsInterval = null
 let elapsedSec = 0, distKm = 0;
 let lastLat = null, lastLng = null;
 let paradasMarkers = [];
+// GPS simulado: se marca en cada envío para que el servidor pueda
+// rechazarlo en producción (el tracking real no debe mezclarse con
+// posiciones inventadas por el navegador).
+let gpsEsSimulado = false;
+// Paradas por las que ya se avisó "estás cerca, confirma" (evita repetir
+// la notificación con cada ping de GPS mientras sigue en el punto).
+const paradasAvisadasCerca = new Set();
 
 // ← Antes: const PASEADOR = {...} y const RUTA = {...} hardcodeados
 // Ahora se cargan del backend:
@@ -262,20 +269,23 @@ function completarParada(idx) {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success) {
-            RUTA.paradas[idx].estado = 'completado';
-            paradaActual = RUTA.paradas.findIndex((p, i) => i > idx && p.estado === 'pendiente');
-            if (paradaActual < 0) paradaActual = idx; // último punto
-            renderParadas();
-            renderRouteOnMap();
-            updateProgress();
-            showNotif(`✅ Punto ${parada.label} completado`, 'success');
+        if (!data.success) {
+            // Ej: "No se puede entregar: primero confirma la recogida"
+            showNotif('⚠️ ' + (data.message || 'No se pudo completar la parada'), 'warning');
+            return;
         }
+        RUTA.paradas[idx].estado = 'completado';
+        paradaActual = RUTA.paradas.findIndex((p, i) => i > idx && p.estado === 'pendiente');
+        if (paradaActual < 0) paradaActual = idx; // último punto
+        renderParadas();
+        renderRouteOnMap();
+        updateProgress();
+        showNotif(`✅ Punto ${parada.label} completado`, 'success');
     })
     .catch(() => {
-        // Fallback local si no hay conexión
-        RUTA.paradas[idx].estado = 'completado';
-        renderParadas(); renderRouteOnMap(); updateProgress();
+        // Sin conexión: NO se marca localmente — la confirmación real vive
+        // en el servidor; marcarla solo en pantalla desincroniza al cliente.
+        showNotif('⚠️ Sin conexión. Inténtalo de nuevo.', 'warning');
     });
 }
 
@@ -332,6 +342,7 @@ function detenerPaseo() {
 // ═══════════════════════════════════════════════════════════════
 function startGPS() {
     if ('geolocation' in navigator) {
+        gpsEsSimulado = false;
         watchId = navigator.geolocation.watchPosition(
             pos => {
                 const { latitude: lat, longitude: lng, speed, accuracy } = pos.coords;
@@ -353,6 +364,7 @@ function startGPS() {
 }
 
 function startGPSSimulation() {
+    gpsEsSimulado = true;
     document.getElementById('gpsLabel').textContent = 'GPS Simulado';
     simInterval = setInterval(() => {
         const target = RUTA.paradas[paradaActual];
@@ -371,32 +383,44 @@ function stopGPS() {
 }
 
 // ── Enviar coordenadas al backend ──────────────────────────────
+// El servidor ya NO completa paradas por proximidad: solo avisa que el
+// paseador está en el punto para que CONFIRME manualmente la recogida o
+// entrega (la confirmación es la que escribe los timestamps de negocio).
 function enviarGPS(lat, lng, velocidad, precision) {
     fetch(API + 'actualizar_gps.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng, velocidad, precision }),
+        body: JSON.stringify({ lat, lng, velocidad, precision, simulado: gpsEsSimulado }),
     })
     .then(r => r.json())
     .then(data => {
-        if (!data.success) return;
-        // Procesar eventos automáticos de paradas detectados por el servidor
+        if (!data.success) {
+            // Producción: el servidor rechaza posiciones simuladas
+            if (data.gps_simulado_rechazado) {
+                stopGPS();
+                document.getElementById('gpsLabel').textContent = 'GPS deshabilitado';
+                showNotif('⚠️ Activa la ubicación real de tu dispositivo para continuar el paseo', 'warning');
+            }
+            return;
+        }
         if (data.eventos && data.eventos.length) {
             data.eventos.forEach(ev => {
+                if (ev.tipo !== 'cerca_de_parada') return;
+                if (paradasAvisadasCerca.has(ev.id_parada)) return;
+                paradasAvisadasCerca.add(ev.id_parada);
+
                 const idx = RUTA.paradas.findIndex(p => p.id === ev.id_parada);
                 if (idx < 0) return;
-                if (ev.tipo === 'llegada') {
-                    RUTA.paradas[idx].estado = 'llegada';
-                    showNotif(`📍 Llegaste al punto ${RUTA.paradas[idx].label}`, 'success');
-                } else if (ev.tipo === 'completada') {
-                    RUTA.paradas[idx].estado = 'completado';
-                    paradaActual = RUTA.paradas.findIndex((p, i) => i > idx && p.estado === 'pendiente');
-                    if (paradaActual < 0) paradaActual = idx;
-                    showNotif(`✅ Punto ${RUTA.paradas[idx].label} completado automáticamente`, 'success');
+                const p = RUTA.paradas[idx];
+                const accion = p.tipo === 'entrega' ? 'la entrega' : 'la recogida';
+                showNotif(`📍 Estás en el punto ${p.label} — confirma ${accion} en la lista`, 'success');
+
+                // Resaltar la parada para que el botón de confirmar quede visible
+                if (p.estado === 'pendiente') {
+                    paradaActual = idx;
+                    renderParadas();
+                    renderRouteOnMap();
                 }
-                renderParadas();
-                renderRouteOnMap();
-                updateProgress();
             });
         }
     })

@@ -96,8 +96,8 @@ if ($idPedidoBase > 0) {
          WHERE p.id_pedido = ? AND p.id_usuario = ?
            AND p.estado IN ('pagado', 'listo_para_asignar')
            AND m.paseos = 1
-           AND m.fecha_inicio_paseos IS NOT NULL
-           AND DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) > $ahoraColombia"
+           AND m.fecha_fin_paseos IS NOT NULL
+           AND m.fecha_fin_paseos > $ahoraColombia"
     );
     $stmt->bind_param("ii", $idPedidoBase, $idUsuario);
     $stmt->execute();
@@ -191,6 +191,33 @@ $stmt->execute();
 $mascotaRow = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 if (!$mascotaRow) responder(false, [], 'La mascota seleccionada no pertenece a tu cuenta.');
+
+// ── ANTI DOBLE COMPRA (todos los flujos, no solo el exprés) ──────────
+// La mascota no puede tener ya un servicio de paseos activo: pedido pagado
+// + membresía vigente. Antes este chequeo solo existía en el modo exprés y
+// el frontend era la única barrera: un doble envío (dos pestañas, replay)
+// generaba un segundo cobro y el UPSERT de membresías pisaba la vigencia.
+if (!$pedidoBase) {
+    $ahoraColombiaChk = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
+    $stmt = $conn->prepare(
+        "SELECT p.id_pedido
+         FROM pedidos_paseo p
+         JOIN membresias m ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
+         WHERE p.id_mascota = ? AND p.id_usuario = ?
+           AND p.estado IN ('pagado', 'listo_para_asignar')
+           AND m.paseos = 1
+           AND m.fecha_fin_paseos IS NOT NULL
+           AND m.fecha_fin_paseos > $ahoraColombiaChk
+         LIMIT 1"
+    );
+    $stmt->bind_param("ii", $idMascota, $idUsuario);
+    $stmt->execute();
+    $yaActiva = $stmt->get_result()->num_rows > 0;
+    $stmt->close();
+    if ($yaActiva) {
+        responder(false, [], 'Esta mascota ya tiene un servicio de paseos activo. Si quieres extenderlo, usa la opción Renovar de tu panel.');
+    }
+}
 
 $stmtU = $conn->prepare("SELECT nombre, email FROM usuarios WHERE id = ? LIMIT 1");
 $stmtU->bind_param("i", $idUsuario);
@@ -306,21 +333,21 @@ try {
     $u->close();
 
     // 2.5 Activar la membresía de paseos PARA ESTA MASCOTA (upsert por
-    //     usuario+mascota, igual que registrar_pago.php — antes esto
-    //     actualizaba por id_usuario solamente y no coincidía con ninguna
-    //     fila del sistema de membresía por mascota).
+    //     usuario+mascota). fecha_fin_paseos ahora es una columna real
+    //     (renovable): en compra nueva es inicio + 30 días.
     $ahoraPago = date('Y-m-d H:i:s');
     $sqlMem = "
-        INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, id_pago_paseos)
-        VALUES (?, ?, 1, ?, ?)
+        INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, fecha_fin_paseos, id_pago_paseos)
+        VALUES (?, ?, 1, ?, DATE_ADD(?, INTERVAL 30 DAY), ?)
         ON DUPLICATE KEY UPDATE
             paseos              = 1,
             id_mascota          = VALUES(id_mascota),
             fecha_inicio_paseos = VALUES(fecha_inicio_paseos),
+            fecha_fin_paseos    = VALUES(fecha_fin_paseos),
             id_pago_paseos      = VALUES(id_pago_paseos)
     ";
     $u = $conn->prepare($sqlMem);
-    $u->bind_param("iisi", $idUsuario, $idMascota, $ahoraPago, $idPago);
+    $u->bind_param("iissi", $idUsuario, $idMascota, $ahoraPago, $ahoraPago, $idPago);
     $u->execute();
     $u->close();
 

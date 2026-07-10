@@ -143,18 +143,20 @@ if ($crearPedido) {
         $id_pago = $conn->insert_id;
         $stmtP->close();
 
-        // Activar membresía de paseos para esta mascota (30 días desde hoy)
+        // Activar membresía de paseos para esta mascota (30 días desde hoy).
+        // fecha_fin_paseos es columna real (renovable): aquí, inicio + 30 días.
         $sqlMem = "
-            INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, id_pago_paseos)
-            VALUES (?, ?, 1, ?, ?)
+            INSERT INTO membresias (id_usuario, id_mascota, paseos, fecha_inicio_paseos, fecha_fin_paseos, id_pago_paseos)
+            VALUES (?, ?, 1, ?, DATE_ADD(?, INTERVAL 30 DAY), ?)
             ON DUPLICATE KEY UPDATE
                 paseos               = 1,
                 id_mascota           = VALUES(id_mascota),
                 fecha_inicio_paseos  = VALUES(fecha_inicio_paseos),
+                fecha_fin_paseos     = VALUES(fecha_fin_paseos),
                 id_pago_paseos       = VALUES(id_pago_paseos)
         ";
         $stmtM = $conn->prepare($sqlMem);
-        $stmtM->bind_param('iisi', $id_usuario, $id_mascota, $ahora, $id_pago);
+        $stmtM->bind_param('iissi', $id_usuario, $id_mascota, $ahora, $ahora, $id_pago);
         $stmtM->execute();
         $stmtM->close();
 

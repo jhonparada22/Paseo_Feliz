@@ -63,7 +63,7 @@ $stmt = $conn->prepare(
     "SELECT p.id_pedido, p.franja_horaria,
             pl.nombre AS plan_nombre, pl.paseos_mes,
             m.paseos AS membresia_activa, m.fecha_inicio_paseos,
-            DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) AS fecha_renovacion
+            m.fecha_fin_paseos AS fecha_renovacion
      FROM pedidos_paseo p
      LEFT JOIN planes_paseos pl ON pl.id_plan = p.id_plan
      LEFT JOIN membresias m     ON m.id_usuario = p.id_usuario

@@ -571,8 +571,11 @@
     function cardPlan() {
         const pl = S.plan, mem = S.membresia;
         const pct = pl.paseos_mes ? Math.min(100, Math.round(pl.usados / pl.paseos_mes * 100)) : 0;
-        const renovarPronto = mem.dias_restantes <= 1;
-        const btnRenovar = (renovarPronto && typeof abrirWizardPaseos === 'function')
+        // La renovación tiene su propio flujo (renovar_membresia_paseos.php):
+        // extiende la vigencia desde el vencimiento. NO usa el wizard de
+        // compra, que bloquea a las mascotas con membresía activa.
+        const renovarPronto = mem.dias_restantes <= 5;
+        const btnRenovar = renovarPronto
             ? '<button class="dz-btn dz-btn-primario" data-accion="renovar"><i class="ph ph-arrow-clockwise"></i> Renovar membresía</button>'
             : '';
         return '<div class="dz-card">' +
@@ -670,7 +673,7 @@
                 if (a === 'instrucciones') abrirModalInstrucciones();
                 else if (a === 'direccion') centrarMapa();
                 else if (a === 'perfil') abrirModalPerfil();
-                else if (a === 'renovar' && typeof abrirWizardPaseos === 'function') abrirWizardPaseos();
+                else if (a === 'renovar') abrirModalRenovar();
                 else if (a === 'agregar-mascota') abrirModalAgregarMascota();
             });
         });
@@ -789,6 +792,53 @@
                 err.textContent = '⚠ ' + e.message;
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ph ph-check"></i> Guardar cambios';
+            });
+        });
+    }
+
+    // — Renovación de la mensualidad (extiende la vigencia desde el
+    //   vencimiento; el precio lo calcula el servidor con la config vigente) —
+    function abrirModalRenovar() {
+        const p = S.pedido, pl = S.plan, mem = S.membresia;
+        const m = abrirModalDz(
+            '<button class="dz-modal-x" data-cerrar><i class="ph ph-x"></i></button>' +
+            '<h3 class="dz-h3"><i class="ph ph-arrow-clockwise"></i> Renovar membresía de paseos</h3>' +
+            '<div class="dz-fila"><i class="ph ph-paw-print"></i><span class="dz-fila-lbl">Mascota:</span><span class="dz-fila-val">' + esc(p.mascota) + '</span></div>' +
+            '<div class="dz-fila"><i class="ph ph-calendar-blank"></i><span class="dz-fila-lbl">Plan:</span><span class="dz-fila-val">' + pl.paseos_mes + ' paseos al mes</span></div>' +
+            '<div class="dz-fila"><i class="ph ph-calendar-check"></i><span class="dz-fila-lbl">Vence:</span><span class="dz-fila-val">' + fmtFecha(mem.renovacion) + '</span></div>' +
+            '<div class="dz-aviso dz-aviso-morado"><i class="ph ph-info"></i> El nuevo mes empieza cuando termine el actual: renovar hoy no te quita días. Se cobrará el precio vigente del plan.</div>' +
+            '<div id="dz-modal-error" class="dz-modal-error" hidden></div>' +
+            '<button id="dz-btn-renovar" class="dz-btn dz-btn-primario dz-btn-full"><i class="ph ph-lock-simple"></i> Pagar renovación</button>'
+        );
+        m.querySelector('#dz-btn-renovar').addEventListener('click', function () {
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-circle-notch"></i> Procesando pago...';
+            fetch(API + 'renovar_membresia_paseos.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_pedido: p.id_pedido }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.success) throw new Error(data.message || 'No se pudo renovar.');
+                cerrarModalDz();
+                firmaRender = ''; // forzar repintado con la nueva vigencia
+                cargarEstado().catch(function () {});
+                abrirModalDz(
+                    '<button class="dz-modal-x" data-cerrar><i class="ph ph-x"></i></button>' +
+                    '<div class="dz-card-centrada">' +
+                        '<h3 class="dz-h3"><i class="ph ph-check-circle"></i> ¡Renovación exitosa!</h3>' +
+                        '<p class="dz-modal-txt">Pagaste ' + fmtDinero(data.total) + '. Tu servicio sigue activo hasta el <strong>' + fmtFecha(data.fecha_fin) + '</strong>.</p>' +
+                        '<p class="dz-modal-txt" style="font-size:.76rem">Referencia: ' + esc(data.referencia) + '</p>' +
+                    '</div>'
+                );
+            })
+            .catch(function (e) {
+                const err = document.getElementById('dz-modal-error');
+                if (err) { err.hidden = false; err.textContent = '⚠ ' + e.message; }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-lock-simple"></i> Pagar renovación';
             });
         });
     }

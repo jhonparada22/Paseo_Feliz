@@ -37,8 +37,8 @@ $id = (int) $_SESSION['usuario_id'];
 $ahora_colombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 $conn->query("
     UPDATE membresias SET
-        paseos         = IF(fecha_inicio_paseos         IS NOT NULL
-                            AND DATE_ADD(fecha_inicio_paseos, INTERVAL 30 DAY) < $ahora_colombia,
+        paseos         = IF(fecha_fin_paseos IS NOT NULL
+                            AND fecha_fin_paseos < $ahora_colombia,
                             0, paseos),
         adiestramiento = IF(fecha_inicio_adiestramiento IS NOT NULL
                             AND DATE_ADD(fecha_inicio_adiestramiento, INTERVAL 30 DAY) < $ahora_colombia,
@@ -68,7 +68,7 @@ $stmt = $conn->prepare("
     SELECT
         id_mascota, paseos, adiestramiento, hospedaje,
         fecha_inicio_paseos, fecha_inicio_adiestramiento, fecha_inicio_hospedaje,
-        DATE_ADD(fecha_inicio_paseos,         INTERVAL 30 DAY) AS fin_paseos,
+        fecha_fin_paseos                                       AS fin_paseos,
         DATE_ADD(fecha_inicio_adiestramiento, INTERVAL 30 DAY) AS fin_adiestramiento,
         DATE_ADD(fecha_inicio_hospedaje,      INTERVAL 30 DAY) AS fin_hospedaje
     FROM membresias

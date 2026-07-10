@@ -13,6 +13,13 @@ verificarAdmin();
 
 $estado = $_GET['estado'] ?? 'listo_para_asignar';
 
+// Vigencia de la membresía de paseos de la mascota del pedido (hora Colombia,
+// mismo criterio que el dashboard del cliente). La cola de asignación
+// EXCLUYE pedidos con membresía vencida: el cliente ya no los ve en su
+// panel y asignarles paseador crearía una asignación fantasma.
+$ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
+$exprVigente   = "(mem.paseos = 1 AND mem.fecha_fin_paseos IS NOT NULL AND mem.fecha_fin_paseos > $ahoraColombia)";
+
 $sqlBase =
     "SELECT p.id_pedido, p.id_usuario, p.id_mascota, p.cantidad_paseos,
             p.modalidad, p.duracion_min, p.dias_preferidos, p.franja_horaria,
@@ -20,14 +27,20 @@ $sqlBase =
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.total, p.estado, p.fecha_creacion,
             u.nombre AS cliente, i.telefono,
-            m.nombre_mascota, m.avatar_mascota
+            m.nombre_mascota, m.avatar_mascota,
+            $exprVigente AS membresia_vigente
      FROM pedidos_paseo p
      JOIN usuarios u        ON u.id = p.id_usuario
      LEFT JOIN info_usuario i ON i.id_usuario = p.id_usuario
-     JOIN mascota_usuario m ON m.id_mascota = p.id_mascota";
+     JOIN mascota_usuario m ON m.id_mascota = p.id_mascota
+     LEFT JOIN membresias mem ON mem.id_usuario = p.id_usuario AND mem.id_mascota = p.id_mascota";
 
 if ($estado === 'todos') {
     $stmt = $conn->prepare("$sqlBase ORDER BY p.fecha_creacion DESC");
+} elseif ($estado === 'listo_para_asignar') {
+    // Cola de trabajo: solo pedidos que el cliente todavía tiene activos
+    $stmt = $conn->prepare("$sqlBase WHERE p.estado = ? AND $exprVigente ORDER BY p.fecha_creacion DESC");
+    $stmt->bind_param("s", $estado);
 } else {
     $stmt = $conn->prepare("$sqlBase WHERE p.estado = ? ORDER BY p.fecha_creacion DESC");
     $stmt->bind_param("s", $estado);
@@ -85,6 +98,7 @@ while ($row = $res->fetch_assoc()) {
         'lng'            => (float)$row['lng'],
         'total'          => (float)$row['total'],
         'estado'         => $row['estado'],
+        'membresia_vigente' => (int)$row['membresia_vigente'] === 1,
         'fecha_compra'   => $row['fecha_creacion'],
         'asignacion'     => $asignaciones[(int)$row['id_pedido']] ?? null,
     ];

@@ -36,6 +36,10 @@ $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 // (uno por mascota: si una mascota tiene varios, gana el más reciente).
 // El dashboard muestra el detalle de UNO (?id_pedido, o el más reciente)
 // y usa la lista completa para el selector de mascotas.
+// La vigencia se lee de fecha_fin_paseos (columna real, renovable): con la
+// renovación el fin ya NO es siempre inicio+30 días. El inicio del periodo
+// vigente se deriva del fin (fin - 30 días) para contar los paseos usados
+// SOLO del periodo actual, no de periodos anteriores ya renovados.
 $stmt = $conn->prepare(
     "SELECT p.id_pedido, p.id_mascota, p.modalidad, p.duracion_min, p.dias_preferidos,
             p.franja_horaria, p.fecha_inicio, p.comportamiento, p.observaciones,
@@ -43,7 +47,8 @@ $stmt = $conn->prepare(
             p.lat, p.lng, p.ubicacion_validada, p.total, p.estado, p.fecha_creacion,
             p.cantidad_paseos,
             m.fecha_inicio_paseos,
-            DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) AS fecha_renovacion,
+            m.fecha_fin_paseos AS fecha_renovacion,
+            DATE_SUB(m.fecha_fin_paseos, INTERVAL 30 DAY) AS inicio_periodo,
             mu.nombre_mascota, mu.avatar_mascota
      FROM pedidos_paseo p
      JOIN membresias m       ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
@@ -51,8 +56,8 @@ $stmt = $conn->prepare(
      WHERE p.id_usuario = ?
        AND p.estado IN ('pagado', 'listo_para_asignar')
        AND m.paseos = 1
-       AND m.fecha_inicio_paseos IS NOT NULL
-       AND DATE_ADD(m.fecha_inicio_paseos, INTERVAL 30 DAY) > $ahoraColombia
+       AND m.fecha_fin_paseos IS NOT NULL
+       AND m.fecha_fin_paseos > $ahoraColombia
      ORDER BY p.fecha_creacion DESC"
 );
 $stmt->bind_param("i", $idUsuario);
@@ -271,17 +276,19 @@ if ($ruta) {
 }
 
 // ── 4. Paseos usados / restantes en el periodo de la membresía ────────
-// Un paseo "usado" = parada de ENTREGA completada del cliente+mascota
-// en una ruta desde que inició la membresía vigente.
+// Un paseo "usado" = parada de ENTREGA con hora_entrega confirmada por el
+// paseador (acción manual en marcar_paseo_dia.php). NO se usa id_estado:
+// ese campo lo podía escribir la detección automática por GPS y permitía
+// descontar paseos del plan sin que la entrega ocurriera de verdad.
 $stmt = $conn->prepare(
     "SELECT COUNT(*) AS usados
      FROM ruta_paradas rp
      JOIN rutas r ON r.id_ruta = rp.id_ruta
      WHERE rp.id_usuario_cliente = ? AND rp.id_mascota = ?
-       AND rp.tipo = 'entrega' AND rp.id_estado = 3
+       AND rp.tipo = 'entrega' AND rp.hora_entrega IS NOT NULL
        AND r.fecha_paseo >= DATE(?)"
 );
-$stmt->bind_param("iis", $idUsuario, $idMascota, $pedido['fecha_inicio_paseos']);
+$stmt->bind_param("iis", $idUsuario, $idMascota, $pedido['inicio_periodo']);
 $stmt->execute();
 $usados = (int)$stmt->get_result()->fetch_assoc()['usados'];
 $stmt->close();
@@ -302,14 +309,16 @@ if ($asignacion && $asignacion['fecha_asignacion']) {
                     'texto' => 'Paseador asignado: ' . $asignacion['nombre']];
 }
 
-// Últimos paseos completados (entrega completada en ruta finalizada)
+// Últimos paseos completados (entrega confirmada por el paseador).
+// Se usa hora_entrega como fecha del evento: es específica de esta mascota
+// y existe aunque la ruta del paseador siga activa para otros clientes.
 $stmt = $conn->prepare(
-    "SELECT r.fecha_fin_real
+    "SELECT rp.hora_entrega AS fecha_fin_real
      FROM rutas r
      JOIN ruta_paradas rp ON rp.id_ruta = r.id_ruta
      WHERE rp.id_usuario_cliente = ? AND rp.id_mascota = ?
-       AND rp.tipo = 'entrega' AND rp.id_estado = 3 AND r.id_estado = 4
-     ORDER BY r.fecha_fin_real DESC
+       AND rp.tipo = 'entrega' AND rp.hora_entrega IS NOT NULL
+     ORDER BY rp.hora_entrega DESC
      LIMIT 3"
 );
 $stmt->bind_param("ii", $idUsuario, $idMascota);
@@ -399,7 +408,7 @@ responder(true, [
             'restantes'  => $restantes,
         ],
         'membresia' => [
-            'inicio'         => $pedido['fecha_inicio_paseos'],
+            'inicio'         => $pedido['inicio_periodo'],
             'renovacion'     => $pedido['fecha_renovacion'],
             'dias_restantes' => $diasRestantes,
         ],
