@@ -48,7 +48,7 @@ $stmt = $conn->prepare(
      JOIN usuarios u        ON u.id = p.id_usuario
      LEFT JOIN info_usuario i ON i.id_usuario = p.id_usuario
      JOIN mascota_usuario m ON m.id_mascota = p.id_mascota
-     JOIN planes_paseos pl  ON pl.id_plan = p.id_plan
+     LEFT JOIN planes_paseos pl ON pl.id_plan = p.id_plan
      WHERE c.id_paseador = ?
      ORDER BY c.dia_semana ASC, p.franja_horaria ASC"
 );
@@ -69,7 +69,7 @@ while ($row = $res->fetch_assoc()) {
         'id_mascota'     => (int)$row['id_mascota'],
         'mascota'        => $row['nombre_mascota'],
         'avatar_mascota' => $row['avatar_mascota'] ?? '',
-        'plan'           => $row['plan'],
+        'plan'           => $row['plan'] ?? '',
         'franja_horaria' => $row['franja_horaria'] ?? '',
         'duracion_min'   => (int)$row['duracion_min'],
         'modalidad'      => $row['modalidad'],

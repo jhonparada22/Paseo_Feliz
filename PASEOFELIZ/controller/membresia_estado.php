@@ -2,6 +2,13 @@
 // ═══════════════════════════════════════════════════════════
 //  controller/membresia_estado.php
 //  Devuelve el estado de membresía del usuario en sesión.
+//  La membresía es POR MASCOTA (una fila en `membresias` por
+//  cada id_mascota), así que este endpoint:
+//    - lee las mascotas reales del cliente (mascota_usuario) para
+//      saber si tiene_mascotas y armar el detalle por mascota.
+//    - agrega un resumen global por servicio (¿al menos una
+//      mascota lo tiene activo?) para mantener compatibilidad con
+//      el código que solo necesita un booleano por servicio.
 //  También auto-expira servicios vencidos en cada consulta
 //  (no depende del Event Scheduler del servidor).
 // ═══════════════════════════════════════════════════════════
@@ -25,8 +32,8 @@ include_once '../model/conexion.php';   // $conn
 $id = (int) $_SESSION['usuario_id'];
 
 // ── 1. Auto-expirar servicios vencidos ───────────────────
-// Ponemos en 0 cualquier servicio cuya fecha_fin ya pasó.
-// CONVERT_TZ convierte NOW() del servidor a hora Colombia (UTC-5)
+// Ponemos en 0 cualquier servicio cuya fecha_fin ya pasó (afecta a
+// todas las filas de membresía del usuario, una por mascota).
 $ahora_colombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 $conn->query("
     UPDATE membresias SET
@@ -42,48 +49,39 @@ $conn->query("
     WHERE id_usuario = $id
 ");
 
-// ── 2. Leer estado actualizado ────────────────────────────
+// ── 2. Mascotas reales del cliente ───────────────────────
+// Fuente de verdad de "tiene_mascotas": la tabla mascota_usuario,
+// no la tabla membresias (antes se devolvía tiene_mascotas=false
+// siempre porque este archivo nunca consultaba esta tabla).
+$stmt = $conn->prepare("SELECT id_mascota FROM mascota_usuario WHERE id_usuario = ? ORDER BY id_mascota ASC");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+$resMasc = $stmt->get_result();
+$idsMascotas = [];
+while ($r = $resMasc->fetch_assoc()) $idsMascotas[] = (int)$r['id_mascota'];
+$stmt->close();
+
+// ── 3. Filas de membresía del usuario (una por mascota; puede
+//      existir además una fila "legado" con id_mascota NULL de
+//      antes de que la membresía fuera por mascota) ──────────
 $stmt = $conn->prepare("
     SELECT
-        paseos,
-        adiestramiento,
-        hospedaje,
-        fecha_inicio_paseos,
-        fecha_inicio_adiestramiento,
-        fecha_inicio_hospedaje,
+        id_mascota, paseos, adiestramiento, hospedaje,
+        fecha_inicio_paseos, fecha_inicio_adiestramiento, fecha_inicio_hospedaje,
         DATE_ADD(fecha_inicio_paseos,         INTERVAL 30 DAY) AS fin_paseos,
         DATE_ADD(fecha_inicio_adiestramiento, INTERVAL 30 DAY) AS fin_adiestramiento,
         DATE_ADD(fecha_inicio_hospedaje,      INTERVAL 30 DAY) AS fin_hospedaje
     FROM membresias
     WHERE id_usuario = ?
 ");
-
-// Si el usuario no tiene fila aún, devolvemos todo en 0
-if (!$stmt) {
-    echo json_encode(['success' => false, 'message' => 'Error en consulta']);
-    exit;
-}
-
 $stmt->bind_param('i', $id);
 $stmt->execute();
-$res = $stmt->get_result();
+$resMem = $stmt->get_result();
+$filasMem = [];
+while ($r = $resMem->fetch_assoc()) $filasMem[] = $r;
+$stmt->close();
 
-if ($res->num_rows === 0) {
-    // Sin membresía registrada → todo inactivo
-    echo json_encode([
-        'success' => true,
-        'paseos'         => false,
-        'adiestramiento' => false,
-        'hospedaje'      => false,
-        'dias_restantes' => ['paseos' => null, 'adiestramiento' => null, 'hospedaje' => null]
-    ]);
-    exit;
-}
-
-$row = $res->fetch_assoc();
-$now = new DateTime();
-
-// ── 3. Calcular días restantes y avisos de renovación ────
+// ── 4. Calcular días restantes y avisos de renovación ────
 function diasRestantes($fechaFin, $pagado) {
     if (!$pagado || $fechaFin === null) return null;
     $zona = new DateTimeZone('America/Bogota');
@@ -94,24 +92,67 @@ function diasRestantes($fechaFin, $pagado) {
     return $diff->invert ? 0 : ($diff->days * 24 * 60 + $diff->h * 60 + $diff->i); // minutos restantes
 }
 
-$minPaseos  = diasRestantes($row['fin_paseos'],         (bool)$row['paseos']);
-$minAdiest  = diasRestantes($row['fin_adiestramiento'], (bool)$row['adiestramiento']);
-$minHosp    = diasRestantes($row['fin_hospedaje'],      (bool)$row['hospedaje']);
+// Resumen global por servicio: activo si AL MENOS UNA fila (de
+// cualquier mascota, o la fila legado) lo tiene activo. "Renovar
+// pronto" y "minutos_restantes" toman el caso más próximo a vencer.
+$paseosActivo = false; $adiestActivo = false; $hospActivo = false;
+$renovarPaseos = false; $renovarAdiest = false; $renovarHosp = false;
+$minPaseosMin = null; $minAdiestMin = null; $minHospMin = null;
 
-// "Renovar pronto" = menos de 1 día (1440 minutos)
+foreach ($filasMem as $f) {
+    if ($f['paseos']) {
+        $paseosActivo = true;
+        $min = diasRestantes($f['fin_paseos'], true);
+        if ($min !== null && $min < 1440) $renovarPaseos = true;
+        if ($min !== null && ($minPaseosMin === null || $min < $minPaseosMin)) $minPaseosMin = $min;
+    }
+    if ($f['adiestramiento']) {
+        $adiestActivo = true;
+        $min = diasRestantes($f['fin_adiestramiento'], true);
+        if ($min !== null && $min < 1440) $renovarAdiest = true;
+        if ($min !== null && ($minAdiestMin === null || $min < $minAdiestMin)) $minAdiestMin = $min;
+    }
+    if ($f['hospedaje']) {
+        $hospActivo = true;
+        $min = diasRestantes($f['fin_hospedaje'], true);
+        if ($min !== null && $min < 1440) $renovarHosp = true;
+        if ($min !== null && ($minHospMin === null || $min < $minHospMin)) $minHospMin = $min;
+    }
+}
+
+// ── 5. Detalle por mascota (lo usan los wizards para bloquear la
+//      compra de una membresía que esa mascota ya tiene activa) ──
+$filaPorMascota = [];
+foreach ($filasMem as $f) {
+    if ($f['id_mascota'] === null) continue; // fila legado, sin mascota asociada
+    $filaPorMascota[(int)$f['id_mascota']] = $f;
+}
+$mascotas = [];
+foreach ($idsMascotas as $idM) {
+    $f = $filaPorMascota[$idM] ?? null;
+    $mascotas[] = [
+        'id_mascota'     => $idM,
+        'paseos'         => (bool)($f['paseos'] ?? false),
+        'adiestramiento' => (bool)($f['adiestramiento'] ?? false),
+        'hospedaje'      => (bool)($f['hospedaje'] ?? false),
+    ];
+}
+
 echo json_encode([
-    'success'        => true,
-    'paseos'         => (bool)$row['paseos'],
-    'adiestramiento' => (bool)$row['adiestramiento'],
-    'hospedaje'      => (bool)$row['hospedaje'],
-    'renovar'        => [
-        'paseos'         => $minPaseos  !== null && $minPaseos  < 1440,
-        'adiestramiento' => $minAdiest  !== null && $minAdiest  < 1440,
-        'hospedaje'      => $minHosp    !== null && $minHosp    < 1440,
+    'success'           => true,
+    'tiene_mascotas'    => count($idsMascotas) > 0,
+    'mascotas'          => $mascotas,
+    'paseos'            => $paseosActivo,
+    'adiestramiento'    => $adiestActivo,
+    'hospedaje'         => $hospActivo,
+    'renovar'           => [
+        'paseos'         => $renovarPaseos,
+        'adiestramiento' => $renovarAdiest,
+        'hospedaje'      => $renovarHosp,
     ],
     'minutos_restantes' => [
-        'paseos'         => $minPaseos,
-        'adiestramiento' => $minAdiest,
-        'hospedaje'      => $minHosp,
-    ]
+        'paseos'         => $minPaseosMin,
+        'adiestramiento' => $minAdiestMin,
+        'hospedaje'      => $minHospMin,
+    ],
 ]);
