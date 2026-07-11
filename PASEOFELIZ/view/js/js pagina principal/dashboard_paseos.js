@@ -11,6 +11,7 @@
 
     let S = null;             // servicio (respuesta del endpoint)
     let pedidosActivos = [];  // [{id_pedido, id_mascota, nombre, avatar}] para el selector
+    let pedidosVencidos = []; // membresías vencidas <=30 días: se ofrecen a renovar
     let idPedidoSel = null;   // pedido elegido en el selector (persiste entre polls)
     let firmaRender = '';     // firma del último render (evita repintar sin cambios)
     let visible = false;
@@ -109,10 +110,11 @@
         }
         S = data.servicio;
         pedidosActivos = data.pedidos_activos || [];
+        pedidosVencidos = data.pedidos_vencidos || [];
         // Sincronizar la selección con lo que el servidor realmente devolvió
         // (si el pedido elegido venció, cae al más reciente)
         idPedidoSel = S.pedido && S.pedido.id_pedido ? S.pedido.id_pedido : null;
-        const firma = JSON.stringify(S) + '|' + JSON.stringify(pedidosActivos);
+        const firma = JSON.stringify(S) + '|' + JSON.stringify(pedidosActivos) + '|' + JSON.stringify(pedidosVencidos);
         if (firma !== firmaRender) {
             firmaRender = firma;
             render();
@@ -128,22 +130,35 @@
         cargarEstado().catch(function () {});
     }
 
+    // Poll adaptativo: 15 s solo cuando hay un paseo EN CURSO (el cliente
+    // está mirando el mapa en vivo); 45 s el resto del tiempo. El estado
+    // fuera de un paseo cambia con horas de diferencia — el poll fijo de
+    // 15 s multiplicaba por 3 la carga del endpoint más pesado sin aportar.
+    function intervaloPoll() {
+        return (S && S.estado === 'paseo_en_curso') ? 15000 : 45000;
+    }
+
     function iniciarTimers() {
         detenerTimers();
-        pollTimer = setInterval(function () {
-            if (!visible) return;
-            cargarEstado().then(function (ok) {
-                // Si la membresía expiró en caliente, volver a la vista de compra
-                if (!ok && typeof cargarMembresias === 'function') {
-                    window.ocultarDashboardPaseos();
-                    cargarMembresias();
-                }
-            }).catch(function () {});
-        }, 15000);
+        function programar() {
+            pollTimer = setTimeout(function () {
+                if (!visible) return;
+                cargarEstado().then(function (ok) {
+                    // Si la membresía expiró en caliente, volver a la vista de compra
+                    if (!ok && typeof cargarMembresias === 'function') {
+                        window.ocultarDashboardPaseos();
+                        cargarMembresias();
+                        return;
+                    }
+                    programar();
+                }).catch(function () { programar(); });
+            }, intervaloPoll());
+        }
+        programar();
     }
 
     function detenerTimers() {
-        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
         detenerTimersEnCurso();
     }
     function detenerTimersEnCurso() {
@@ -185,17 +200,21 @@
         // calificó este paseo.
         const entregadoHoy   = S.ruta_hoy && S.ruta_hoy.fase === 'finalizado';
         const yaCalificado   = entregadoHoy && S.ruta_hoy.calificacion;
+        // Widget de estrellas reutilizable (data-ruta: qué paseo se califica)
+        function widgetRating(idRuta) {
+            return '<div class="dz-rating-widget" id="dzRatingWidget" data-pedido="' + S.pedido.id_pedido + '" data-ruta="' + (idRuta || 0) + '">' +
+                       '<span class="dz-rating-lbl">Califica el servicio:</span>' +
+                       '<span class="dz-rating-stars">' +
+                           [1, 2, 3, 4, 5].map(function (n) {
+                               return '<button type="button" class="dz-star" data-estrellas="' + n + '" title="' + n + ' estrella' + (n > 1 ? 's' : '') + '"><i class="ph ph-star"></i></button>';
+                           }).join('') +
+                       '</span>' +
+                   '</div>';
+        }
         const ratingHtml = !entregadoHoy ? '' : (
             yaCalificado
                 ? '<div class="dz-rating-hecha">Calificaste este paseo: ' + '★'.repeat(yaCalificado.estrellas) + '☆'.repeat(5 - yaCalificado.estrellas) + '</div>'
-                : '<div class="dz-rating-widget" id="dzRatingWidget" data-pedido="' + S.pedido.id_pedido + '">' +
-                      '<span class="dz-rating-lbl">Califica el servicio:</span>' +
-                      '<span class="dz-rating-stars">' +
-                          [1, 2, 3, 4, 5].map(function (n) {
-                              return '<button type="button" class="dz-star" data-estrellas="' + n + '" title="' + n + ' estrella' + (n > 1 ? 's' : '') + '"><i class="ph ph-star"></i></button>';
-                          }).join('') +
-                      '</span>' +
-                  '</div>'
+                : widgetRating(S.ruta_hoy.id_ruta)
         );
         const avisoEntregado = entregadoHoy
             ? '<div class="dz-aviso dz-aviso-verde dz-aviso-grande" style="margin-bottom:14px">' +
@@ -204,6 +223,19 @@
                       '<strong>' + esc(S.pedido.mascota) + ' ya fue paseado y entregado hoy.</strong> ' +
                       '¡Gracias por confiar en Paseo Feliz!' +
                       ratingHtml +
+                  '</div>' +
+              '</div>'
+            : '';
+
+        // Paseos entregados en los últimos días que quedaron sin calificar
+        // (antes esa posibilidad se perdía al pasar la medianoche)
+        const pendCal = (!entregadoHoy && S.por_calificar && S.por_calificar.length) ? S.por_calificar[0] : null;
+        const avisoCalificar = pendCal
+            ? '<div class="dz-aviso dz-aviso-morado dz-aviso-grande" style="margin-bottom:14px">' +
+                  '<i class="ph ph-star"></i>' +
+                  '<div style="flex:1">' +
+                      '<strong>¿Cómo estuvo el paseo de ' + esc(S.pedido.mascota) + ' del ' + fmtFecha(pendCal.fecha) + '?</strong>' +
+                      widgetRating(pendCal.id_ruta) +
                   '</div>' +
               '</div>'
             : '';
@@ -229,7 +261,7 @@
 
         cont.innerHTML =
             '<div class="dz-sub">' + sub + '</div>' +
-            avisoCancelado + avisoEntregado +
+            avisoCancelado + avisoEntregado + avisoCalificar +
             '<div class="dz-grid">' +
                 '<div class="dz-col">' + col1 + '</div>' +
                 '<div class="dz-col dz-col-centro">' + col2 + '</div>' +
@@ -294,7 +326,7 @@
                '</div>';
     }
 
-    // Selector de mascotas en servicio + botón para añadir otra
+    // Selector de mascotas en servicio + vencidas (con renovación) + añadir
     function cardMascotas() {
         const filas = pedidosActivos.map(function (pa) {
             const sel = pa.id_pedido === (S.pedido && S.pedido.id_pedido);
@@ -307,8 +339,24 @@
                    '</div>';
         }).join('');
 
+        // Mascotas con membresía vencida: visibles con opción de renovar
+        // (antes desaparecían del selector sin ningún aviso)
+        const filasVencidas = pedidosVencidos.map(function (pv) {
+            const av = avatarUrl(pv.avatar, '');
+            return '<div class="dz-mascota-fila" style="opacity:.75">' +
+                       (av ? '<img class="dz-mascota-av" src="' + esc(av) + '" style="filter:grayscale(.6)" onerror="this.outerHTML=\'<span class=dz-mascota-emoji>🐶</span>\'">'
+                           : '<span class="dz-mascota-emoji">🐶</span>') +
+                       '<span class="dz-mascota-nombre">' + esc(pv.nombre) +
+                           ' <span style="background:#fef3c7;color:#b45309;font-size:.64rem;font-weight:800;padding:1px 7px;border-radius:999px;vertical-align:middle">Vencida</span>' +
+                       '</span>' +
+                       '<button class="dz-btn-mini" data-renovar-pedido="' + pv.id_pedido + '" style="margin-left:auto">' +
+                           '<i class="ph ph-arrow-clockwise"></i> Renovar' +
+                       '</button>' +
+                   '</div>';
+        }).join('');
+
         return '<div class="dz-card">' +
-                    filas +
+                    filas + filasVencidas +
                     '<button class="dz-btn-add-mascota" data-accion="agregar-mascota">' +
                         '<i class="ph ph-plus"></i> Añadir a otra mascota al servicio' +
                     '</button>' +
@@ -455,7 +503,8 @@
     function cardHistorial(titulo) {
         const h = S.historial || [];
         const iconos = { compra: 'ph-check-circle', direccion: 'ph-map-pin', asignacion: 'ph-user-check',
-                         completado: 'ph-flag-checkered', programado: 'ph-calendar-blank' };
+                         completado: 'ph-flag-checkered', programado: 'ph-calendar-blank',
+                         calificacion: 'ph-star' };
         const cuerpo = h.length ? h.map(function (e) {
             const futuro = e.futuro ? ' dz-hist-futuro' : '';
             return '<div class="dz-hist-item' + futuro + '">' +
@@ -730,15 +779,33 @@
                 seleccionarPedido(parseInt(fila.getAttribute('data-pedido'), 10));
             });
         });
-        // Widget de calificación por estrellas (paseo ya entregado hoy)
+        // Renovar una mascota con membresía vencida (desde el selector)
+        document.querySelectorAll('#paseos-dashboard [data-renovar-pedido]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const idP = parseInt(btn.getAttribute('data-renovar-pedido'), 10);
+                const pv = pedidosVencidos.find(function (x) { return x.id_pedido === idP; });
+                if (!pv) return;
+                abrirModalRenovar({
+                    id_pedido:  pv.id_pedido,
+                    mascota:    pv.nombre,
+                    paseos_mes: pv.paseos_mes,
+                    vence:      pv.vencio,
+                    vencida:    true,
+                });
+            });
+        });
+        // Widget de calificación por estrellas (entregado hoy o pendiente
+        // de días anteriores; data-ruta indica QUÉ paseo se califica)
         const ratingWidget = document.getElementById('dzRatingWidget');
         if (ratingWidget) {
             const idPedido = parseInt(ratingWidget.getAttribute('data-pedido'), 10);
+            const idRuta   = parseInt(ratingWidget.getAttribute('data-ruta') || '0', 10);
             const stars = Array.from(ratingWidget.querySelectorAll('.dz-star'));
             stars.forEach(function (btn) {
                 const n = parseInt(btn.getAttribute('data-estrellas'), 10);
                 btn.addEventListener('mouseenter', function () { pintarEstrellas(stars, n); });
-                btn.addEventListener('click', function () { enviarCalificacion(idPedido, n); });
+                btn.addEventListener('click', function () { enviarCalificacion(idPedido, n, idRuta); });
             });
             ratingWidget.addEventListener('mouseleave', function () { pintarEstrellas(stars, 0); });
         }
@@ -751,13 +818,15 @@
         });
     }
 
-    function enviarCalificacion(idPedido, estrellas) {
+    function enviarCalificacion(idPedido, estrellas, idRuta) {
         const widget = document.getElementById('dzRatingWidget');
         if (widget) widget.style.opacity = '.5';
+        const body = { id_pedido: idPedido, estrellas: estrellas };
+        if (idRuta) body.id_ruta = idRuta;
         fetch(API + 'calificar_paseo.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_pedido: idPedido, estrellas: estrellas }),
+            body: JSON.stringify(body),
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -765,8 +834,10 @@
                     if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">' + esc(data.message || 'No se pudo calificar') + '</div>'); }
                     return;
                 }
-                if (S.ruta_hoy) S.ruta_hoy.calificacion = { estrellas: estrellas, comentario: null };
-                render();
+                // Recargar del servidor: actualiza calificación, la lista de
+                // pendientes por calificar y el historial en un solo paso
+                firmaRender = '';
+                cargarEstado().catch(function () {});
             })
             .catch(function () {
                 if (widget) { widget.style.opacity = '1'; widget.insertAdjacentHTML('beforeend', '<div class="dz-rating-error">Sin conexión. Intenta de nuevo.</div>'); }
@@ -844,16 +915,29 @@
     }
 
     // — Renovación de la mensualidad (extiende la vigencia desde el
-    //   vencimiento; el precio lo calcula el servidor con la config vigente) —
-    function abrirModalRenovar() {
-        const p = S.pedido, pl = S.plan, mem = S.membresia;
+    //   vencimiento, o reactiva si ya venció; el precio lo calcula el
+    //   servidor con la config vigente) —
+    // Sin argumentos renueva el pedido seleccionado; con `datos`
+    // ({id_pedido, mascota, paseos_mes, vence, vencida}) renueva ese
+    // pedido (mascotas vencidas del selector).
+    function abrirModalRenovar(datos) {
+        const d = datos || {
+            id_pedido:  S.pedido.id_pedido,
+            mascota:    S.pedido.mascota,
+            paseos_mes: S.plan.paseos_mes,
+            vence:      S.membresia.renovacion,
+            vencida:    false,
+        };
+        const avisoTxt = d.vencida
+            ? 'La membresía está vencida: al renovar, el servicio se reactiva por 30 días desde hoy con su mismo cronograma.'
+            : 'El nuevo mes empieza cuando termine el actual: renovar hoy no te quita días. Se cobrará el precio vigente del plan.';
         const m = abrirModalDz(
             '<button class="dz-modal-x" data-cerrar><i class="ph ph-x"></i></button>' +
             '<h3 class="dz-h3"><i class="ph ph-arrow-clockwise"></i> Renovar membresía de paseos</h3>' +
-            '<div class="dz-fila"><i class="ph ph-paw-print"></i><span class="dz-fila-lbl">Mascota:</span><span class="dz-fila-val">' + esc(p.mascota) + '</span></div>' +
-            '<div class="dz-fila"><i class="ph ph-calendar-blank"></i><span class="dz-fila-lbl">Plan:</span><span class="dz-fila-val">' + pl.paseos_mes + ' paseos al mes</span></div>' +
-            '<div class="dz-fila"><i class="ph ph-calendar-check"></i><span class="dz-fila-lbl">Vence:</span><span class="dz-fila-val">' + fmtFecha(mem.renovacion) + '</span></div>' +
-            '<div class="dz-aviso dz-aviso-morado"><i class="ph ph-info"></i> El nuevo mes empieza cuando termine el actual: renovar hoy no te quita días. Se cobrará el precio vigente del plan.</div>' +
+            '<div class="dz-fila"><i class="ph ph-paw-print"></i><span class="dz-fila-lbl">Mascota:</span><span class="dz-fila-val">' + esc(d.mascota) + '</span></div>' +
+            '<div class="dz-fila"><i class="ph ph-calendar-blank"></i><span class="dz-fila-lbl">Plan:</span><span class="dz-fila-val">' + d.paseos_mes + ' paseos al mes</span></div>' +
+            '<div class="dz-fila"><i class="ph ph-calendar-check"></i><span class="dz-fila-lbl">' + (d.vencida ? 'Venció:' : 'Vence:') + '</span><span class="dz-fila-val">' + fmtFecha(d.vence) + '</span></div>' +
+            '<div class="dz-aviso dz-aviso-morado"><i class="ph ph-info"></i> ' + avisoTxt + '</div>' +
             '<div id="dz-modal-error" class="dz-modal-error" hidden></div>' +
             '<button id="dz-btn-renovar" class="dz-btn dz-btn-primario dz-btn-full"><i class="ph ph-lock-simple"></i> Pagar renovación</button>'
         );
@@ -864,7 +948,7 @@
             fetch(API + 'renovar_membresia_paseos.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_pedido: p.id_pedido }),
+                body: JSON.stringify({ id_pedido: d.id_pedido }),
             })
             .then(function (r) { return r.json(); })
             .then(function (data) {

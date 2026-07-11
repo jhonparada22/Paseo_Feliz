@@ -91,6 +91,44 @@ foreach ($pedidosPorMascota as $row) {
     ];
 }
 
+// ── 1b. Mascotas con membresía VENCIDA hace <= 30 días ────────────────
+// Antes simplemente desaparecían del selector sin ningún aviso: el
+// cliente con 2+ mascotas podía no notar que una perdió el servicio.
+// Se muestran con chip "Vencida" y botón de renovación directa.
+$pedidosVencidos = [];
+$stmt = $conn->prepare(
+    "SELECT p.id_pedido, p.id_mascota, p.cantidad_paseos,
+            m.fecha_fin_paseos, mu.nombre_mascota, mu.avatar_mascota
+     FROM pedidos_paseo p
+     JOIN membresias m       ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
+     JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
+     WHERE p.id_usuario = ?
+       AND p.estado IN ('pagado', 'listo_para_asignar', 'en_validacion')
+       AND m.fecha_fin_paseos IS NOT NULL
+       AND (m.paseos = 0 OR m.fecha_fin_paseos <= $ahoraColombia)
+       AND m.fecha_fin_paseos > DATE_SUB($ahoraColombia, INTERVAL 30 DAY)
+     ORDER BY p.fecha_creacion DESC"
+);
+$stmt->bind_param("i", $idUsuario);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $idM = (int)$row['id_mascota'];
+    if (isset($pedidosPorMascota[$idM])) continue; // esa mascota ya tiene servicio activo
+    $yaListada = false;
+    foreach ($pedidosVencidos as $v) { if ($v['id_mascota'] === $idM) { $yaListada = true; break; } }
+    if ($yaListada) continue; // más reciente por mascota
+    $pedidosVencidos[] = [
+        'id_pedido'  => (int)$row['id_pedido'],
+        'id_mascota' => $idM,
+        'nombre'     => $row['nombre_mascota'],
+        'avatar'     => $row['avatar_mascota'] ?? '',
+        'paseos_mes' => (int)$row['cantidad_paseos'],
+        'vencio'     => $row['fecha_fin_paseos'],
+    ];
+}
+$stmt->close();
+
 // Pedido a detallar: el solicitado por ?id_pedido (si es suyo y está activo),
 // o el más reciente de todos.
 $idPedidoFiltro = intval($_GET['id_pedido'] ?? 0);
@@ -367,6 +405,34 @@ $stmt->close();
 $paseosMes = (int)$pedido['cantidad_paseos'];
 $restantes = max(0, $paseosMes - $usados);
 
+// ── 4b. Paseos entregados recientes SIN calificar (ventana de 7 días) ──
+// Antes la calificación solo existía el mismo día de la entrega: pasada
+// la medianoche se perdía. El dashboard ofrece calificar el más reciente.
+$porCalificar = [];
+$stmt = $conn->prepare(
+    "SELECT r.id_ruta, r.fecha_paseo, rp.hora_entrega
+     FROM ruta_paradas rp
+     JOIN rutas r ON r.id_ruta = rp.id_ruta
+     LEFT JOIN calificaciones_paseo c ON c.id_pedido = rp.id_pedido AND c.id_ruta = r.id_ruta
+     WHERE rp.id_pedido = ? AND rp.tipo = 'entrega' AND rp.hora_entrega IS NOT NULL
+       AND rp.id_usuario_cliente = ?
+       AND r.fecha_paseo >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+       AND c.id_calificacion IS NULL
+     ORDER BY rp.hora_entrega DESC
+     LIMIT 3"
+);
+$stmt->bind_param("ii", $idPedido, $idUsuario);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $porCalificar[] = [
+        'id_ruta'      => (int)$row['id_ruta'],
+        'fecha'        => $row['fecha_paseo'],
+        'hora_entrega' => $row['hora_entrega'],
+    ];
+}
+$stmt->close();
+
 // ── 5. Historial reciente (eventos reales, más nuevo primero) ─────────
 $historial = [];
 $historial[] = ['fecha' => $pedido['fecha_creacion'], 'tipo' => 'compra',
@@ -398,6 +464,23 @@ $res = $stmt->get_result();
 while ($row = $res->fetch_assoc()) {
     $historial[] = ['fecha' => $row['fecha_fin_real'], 'tipo' => 'completado',
                     'texto' => 'Paseo completado'];
+}
+$stmt->close();
+
+// Calificaciones hechas por el cliente (quedan en su historial)
+$stmt = $conn->prepare(
+    "SELECT fecha_creacion, estrellas FROM calificaciones_paseo
+     WHERE id_pedido = ? AND id_usuario_cliente = ?
+     ORDER BY fecha_creacion DESC
+     LIMIT 3"
+);
+$stmt->bind_param("ii", $idPedido, $idUsuario);
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
+    $n = (int)$row['estrellas'];
+    $historial[] = ['fecha' => $row['fecha_creacion'], 'tipo' => 'calificacion',
+                    'texto' => 'Calificaste el paseo: ' . str_repeat('★', $n) . str_repeat('☆', 5 - $n)];
 }
 $stmt->close();
 
@@ -449,6 +532,7 @@ responder(true, [
     'tiene_servicio' => true,
     'ahora_servidor' => $ahoraServidor,
     'pedidos_activos' => $pedidosActivos,
+    'pedidos_vencidos' => $pedidosVencidos,
     'servicio' => [
         'estado' => $estadoServicio,
         'pedido' => [
@@ -488,6 +572,7 @@ responder(true, [
         'proximo_paseo'   => $proximoPaseo,
         'proximos_paseos' => $proximosPaseos,
         'ruta_hoy'        => $rutaHoy,
+        'por_calificar'   => $porCalificar,
         'historial'       => array_slice($historial, 0, 8),
     ],
 ]);

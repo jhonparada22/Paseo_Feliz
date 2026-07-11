@@ -300,7 +300,17 @@ try {
     $banco      = $metodo === 'pse' ? substr(trim($pago['banco'] ?? ''), 0, 60) : null;
     $tipoPers   = $metodo === 'pse' && in_array($pago['tipo_persona'] ?? '', ['natural', 'juridica'])
                     ? $pago['tipo_persona'] : null;
-    $documento  = $metodo === 'pse' ? substr(trim($pago['documento'] ?? ''), 0, 20) : null;
+    // El documento PSE se guarda ENMASCARADO (solo últimos 3 dígitos):
+    // después del pago no se usa para nada y es un dato personal que no
+    // debe quedar completo en la BD (mismo criterio que ultimos4).
+    $documento  = null;
+    if ($metodo === 'pse') {
+        $docCompleto = preg_replace('/\D/', '', $pago['documento'] ?? '');
+        $documento   = $docCompleto !== ''
+            ? str_repeat('*', max(0, strlen($docCompleto) - 3)) . substr($docCompleto, -3)
+            : null;
+        $documento   = $documento !== null ? substr($documento, 0, 20) : null;
+    }
     $emailConf  = $metodo === 'pse' ? substr(trim($pago['email_confirmacion'] ?? ''), 0, 100) : null;
 
     $usarPerfil = !empty($fact['usar_perfil']) ? 1 : 0;
