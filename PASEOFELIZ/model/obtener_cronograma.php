@@ -34,10 +34,15 @@ $pas = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 if (!$pas) responder(false, [], 'Paseador no encontrado.');
 
-// Pedidos asignados por día
+// Pedidos asignados por día, en orden cronológico REAL (hora exacta;
+// los pedidos previos a la fase 15 quedan al final de su día)
+$exprHora = pedidosTienenHoraExacta($conn) ? 'p.hora_paseo' : 'NULL AS hora_paseo';
+$ordenHora = pedidosTienenHoraExacta($conn)
+    ? "ORDER BY c.dia_semana ASC, p.hora_paseo IS NULL, p.hora_paseo ASC, p.franja_horaria ASC"
+    : "ORDER BY c.dia_semana ASC, p.franja_horaria ASC";
 $stmt = $conn->prepare(
     "SELECT c.id_cronograma, c.dia_semana,
-            p.id_pedido, p.id_usuario, p.id_mascota, p.franja_horaria, p.duracion_min,
+            p.id_pedido, p.id_usuario, p.id_mascota, p.franja_horaria, $exprHora, p.duracion_min,
             p.modalidad, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones, p.lat, p.lng, p.estado,
             u.nombre AS cliente, i.telefono,
@@ -50,7 +55,7 @@ $stmt = $conn->prepare(
      JOIN mascota_usuario m ON m.id_mascota = p.id_mascota
      LEFT JOIN planes_paseos pl ON pl.id_plan = p.id_plan
      WHERE c.id_paseador = ?
-     ORDER BY c.dia_semana ASC, p.franja_horaria ASC"
+     $ordenHora"
 );
 $stmt->bind_param("i", $idPaseador);
 $stmt->execute();
@@ -71,6 +76,7 @@ while ($row = $res->fetch_assoc()) {
         'avatar_mascota' => $row['avatar_mascota'] ?? '',
         'plan'           => $row['plan'] ?? '',
         'franja_horaria' => $row['franja_horaria'] ?? '',
+        'hora_paseo'     => $row['hora_paseo'] ? substr($row['hora_paseo'], 0, 5) : null,
         'duracion_min'   => (int)$row['duracion_min'],
         'modalidad'      => $row['modalidad'],
         'comportamiento' => $row['comportamiento'] ?? '',

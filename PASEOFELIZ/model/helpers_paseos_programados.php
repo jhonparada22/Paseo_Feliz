@@ -69,12 +69,13 @@ function transicionPaseoProgramado($conn, $idPedido, $fecha, $nuevoEstado, $extr
 
         // 2. Crearla al vuelo si no existe (origen manual)
         if (!$pp) {
+            $exprHora = pedidosTienenHoraExacta($conn) ? 'p.hora_paseo' : 'NULL';
             $stmt = $conn->prepare(
                 "INSERT IGNORE INTO paseos_programados
                     (id_pedido, id_mascota, id_usuario_cliente, fecha, franja_horaria,
                      hora_objetivo, duracion_min, modalidad, id_paseador, id_ruta, estado, origen)
                  SELECT p.id_pedido, p.id_mascota, p.id_usuario, ?, p.franja_horaria,
-                        NULL, p.duracion_min, p.modalidad, ?, ?, 'programado', 'manual'
+                        $exprHora, p.duracion_min, p.modalidad, ?, ?, 'programado', 'manual'
                  FROM pedidos_paseo p WHERE p.id_pedido = ?"
             );
             $idPaseadorN = isset($extra['id_paseador']) ? (int)$extra['id_paseador'] : null;
@@ -205,9 +206,10 @@ function materializarPaseosProgramados($conn, $force = false) {
 
         // ── 2. Pedidos activos con cronograma y membresía vigente ──────
         $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
+        $exprHora = pedidosTienenHoraExacta($conn) ? 'p.hora_paseo' : 'NULL AS hora_paseo';
         $res = $conn->query(
             "SELECT p.id_pedido, p.id_mascota, p.id_usuario, p.cantidad_paseos, p.duracion_min,
-                    p.modalidad, p.franja_horaria, p.fecha_inicio,
+                    p.modalidad, p.franja_horaria, $exprHora, p.fecha_inicio,
                     m.fecha_fin_paseos,
                     DATE_SUB(m.fecha_fin_paseos, INTERVAL 30 DAY) AS inicio_periodo,
                     c.id_paseador, c.dia_semana
@@ -249,7 +251,10 @@ function materializarPaseosProgramados($conn, $force = false) {
         $hoy = new DateTime('today');
         foreach ($pedidos as $p) {
             $idPedido = (int)$p['id_pedido'];
-            $horaObj  = horaInicioDeFranja($p['franja_horaria']); // puede ser null
+            // Hora exacta contratada (fase 15); los pedidos viejos caen al
+            // inicio de su franja de texto. Puede ser null.
+            $horaObj  = $p['hora_paseo'] ? substr($p['hora_paseo'], 0, 8)
+                                         : horaInicioDeFranja($p['franja_horaria']);
 
             // Cupo del periodo: completados + programados no cancelados.
             // No se generan más instancias que las que el plan pagó.

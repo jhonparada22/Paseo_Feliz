@@ -96,6 +96,40 @@ function horaInicioDeFranja($franja) {
     return sprintf('%02d:%s', $h, $m[2]);
 }
 
+/**
+ * true si pedidos_paseo ya tiene la columna hora_paseo (migración fase 15).
+ * Permite desplegar el código antes de correr la migración sin romper nada.
+ * Cachea el resultado por petición.
+ */
+function pedidosTienenHoraExacta($conn) {
+    static $tiene = null;
+    if ($tiene === null) {
+        $res = $conn->query("SHOW COLUMNS FROM pedidos_paseo LIKE 'hora_paseo'");
+        $tiene = $res && $res->num_rows > 0;
+        if ($res) $res->close();
+    }
+    return $tiene;
+}
+
+/**
+ * Etiqueta legible del intervalo real de un paseo a partir de su hora
+ * exacta y duración: ("07:00", 60) -> "7:00 a.m. – 8:00 a.m.".
+ * Es lo que se guarda en franja_horaria para que todas las pantallas
+ * existentes sigan mostrando el horario sin cambios.
+ */
+function etiquetaHorario($hora, $duracionMin = 60) {
+    if (!$hora || !preg_match('/^(\d{1,2}):(\d{2})/', $hora, $m)) return null;
+    $ini = ((int)$m[1]) * 60 + (int)$m[2];
+    $fin = $ini + max(15, (int)$duracionMin);
+    $fmt = function ($totalMin) {
+        $h24 = intdiv($totalMin, 60) % 24;
+        $min = $totalMin % 60;
+        $h12 = $h24 % 12 ?: 12;
+        return sprintf('%d:%02d %s', $h12, $min, $h24 < 12 ? 'a.m.' : 'p.m.');
+    };
+    return $fmt($ini) . ' – ' . $fmt($fin);
+}
+
 /** Devuelve el id_ruta activa (id_estado 1/2/3) de un paseador para una fecha, o null */
 function obtenerRutaActivaHoy($conn, $idPaseador, $fecha) {
     $stmt = $conn->prepare(
@@ -138,13 +172,17 @@ function obtenerOCrearRutaHoy($conn, $idAdmin, $idPaseador, $fecha, $horaInicio)
 }
 
 /**
- * Reordena las paradas PENDIENTES de una ruta: agrupa primero por franja
- * horaria del pedido de origen (pedidos_paseo.franja_horaria) y, dentro de
- * cada franja, encadena por vecino más cercano (Haversine) desde la última
- * posición GPS conocida del paseador. Las paradas ya completadas/omitidas
- * o con algún timestamp de cierre (hora_recogida/hora_entrega/hora_cancelacion)
- * NO se tocan, conservan su 'orden' original. Recalcula orden, etiqueta y
- * hora_estimada (a ~80 m/min caminando) de las paradas reordenadas.
+ * Reordena las paradas PENDIENTES de una ruta agrupándolas en SALIDAS por
+ * la hora exacta contratada (pedidos_paseo.hora_paseo): los pedidos con la
+ * misma hora salen juntos (paseo grupal) y las salidas se encadenan en
+ * orden cronológico. Dentro de cada salida las recogidas se ordenan por
+ * vecino más cercano (Haversine) y sus entregas van inmediatamente después
+ * (recogida 7:00 → entrega 8:00 → recogida 8:30 → ...), ya no "todas las
+ * recogidas del día primero". hora_estimada de cada recogida es la hora
+ * contratada (+ caminata dentro del grupo) y la de la entrega, hora +
+ * duración. Los pedidos sin hora exacta (previos a la fase 15) van al
+ * final con el estimado de caminata de siempre (~80 m/min). Las paradas
+ * ya cerradas NO se tocan, conservan su 'orden' original.
  */
 function reordenarParadasPendientes($conn, $idRuta) {
     $stmt = $conn->prepare("SELECT fecha_paseo, hora_inicio, id_estado, id_paseador FROM rutas WHERE id_ruta = ?");
@@ -164,9 +202,12 @@ function reordenarParadasPendientes($conn, $idRuta) {
     $siguienteOrden = (int)$stmt->get_result()->fetch_assoc()['n'];
     $stmt->close();
 
+    $colHora = pedidosTienenHoraExacta($conn)
+        ? "pp.hora_paseo, COALESCE(pp.duracion_min, 60) AS duracion_min"
+        : "NULL AS hora_paseo, 60 AS duracion_min";
     $stmt = $conn->prepare(
         "SELECT rp.id_parada, rp.tipo, rp.lat, rp.lng, rp.id_pedido,
-                COALESCE(pp.franja_horaria, '') AS franja
+                COALESCE(pp.franja_horaria, '') AS franja, $colHora
          FROM ruta_paradas rp
          LEFT JOIN pedidos_paseo pp ON pp.id_pedido = rp.id_pedido
          WHERE rp.id_ruta = ? AND rp.id_estado NOT IN (3,4)
@@ -185,17 +226,23 @@ function reordenarParadasPendientes($conn, $idRuta) {
     foreach ($filas as $f) {
         $key = $f['id_pedido'] !== null ? $f['id_pedido'] : ('np' . $f['id_parada']);
         if (!isset($porPedido[$key])) {
-            $porPedido[$key] = ['horaFranja' => horaInicioDeFranja($f['franja']) ?: '99:99', 'recogida' => null, 'entrega' => null];
+            $hora = $f['hora_paseo'] ? substr($f['hora_paseo'], 0, 5) : horaInicioDeFranja($f['franja']);
+            $porPedido[$key] = [
+                'hora'     => $hora ?: '99:99', // sin hora: bucket final
+                'durMin'   => (int)$f['duracion_min'],
+                'recogida' => null,
+                'entrega'  => null,
+            ];
         }
         $porPedido[$key][$f['tipo']] = $f;
     }
 
-    // Agrupar por franja horaria y ordenar los grupos por hora de inicio
-    $porFranja = [];
+    // Una SALIDA por hora exacta; se recorren en orden cronológico
+    $salidas = [];
     foreach ($porPedido as $pedido) {
-        $porFranja[$pedido['horaFranja']][] = $pedido;
+        $salidas[$pedido['hora']][] = $pedido;
     }
-    ksort($porFranja);
+    ksort($salidas);
 
     // Origen: última posición GPS conocida del paseador
     $origen = null;
@@ -206,10 +253,26 @@ function reordenarParadasPendientes($conn, $idRuta) {
     $stmt->close();
     if ($gps) $origen = ['lat' => (float)$gps['lat'], 'lng' => (float)$gps['lng']];
 
-    // Vecino más cercano DENTRO de cada grupo de franja, encadenado entre grupos
-    $actual = $origen;
-    $secuencia = [];
-    foreach ($porFranja as $grupo) {
+    $etiquetas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $horaBase = ((int)$ruta['id_estado'] === 1)
+        ? strtotime($ruta['fecha_paseo'] . ' ' . $ruta['hora_inicio'])
+        : time();
+
+    $stmtUpd = $conn->prepare("UPDATE ruta_paradas SET orden = ?, etiqueta = ?, hora_estimada = ? WHERE id_parada = ?");
+    $emitir = function ($parada, $tsEstimado) use (&$orden, $etiquetas, $stmtUpd) {
+        $etiqueta = $etiquetas[$orden % 26];
+        $horaEstimada = date('H:i:s', $tsEstimado);
+        $stmtUpd->bind_param("issi", $orden, $etiqueta, $horaEstimada, $parada['id_parada']);
+        $stmtUpd->execute();
+        $orden++;
+    };
+
+    $orden  = $siguienteOrden;
+    $actual = $origen;   // posición al terminar la salida anterior
+    $cursor = $horaBase; // para el bucket sin hora exacta
+    foreach ($salidas as $hora => $grupo) {
+        // Vecino más cercano entre las recogidas de ESTA salida
+        $secuencia = [];
         $restantes = $grupo;
         while ($restantes) {
             if ($actual === null) {
@@ -224,39 +287,46 @@ function reordenarParadasPendientes($conn, $idRuta) {
                 $elegido = $restantes[$mejorIdx];
                 array_splice($restantes, $mejorIdx, 1);
             }
+            $secuencia[] = $elegido;
             if ($elegido['recogida']) {
-                $secuencia[] = $elegido;
                 $actual = ['lat' => (float)$elegido['recogida']['lat'], 'lng' => (float)$elegido['recogida']['lng']];
             }
         }
-    }
 
-    // Reasignar orden/etiqueta/hora_estimada: todas las recogidas primero, luego todas las entregas
-    $etiquetas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $horaBase = ((int)$ruta['id_estado'] === 1)
-        ? strtotime($ruta['fecha_paseo'] . ' ' . $ruta['hora_inicio'])
-        : time();
+        $conHora  = $hora !== '99:99';
+        $inicioTs = $conHora ? strtotime($ruta['fecha_paseo'] . ' ' . $hora . ':00') : $cursor;
+        $durMax   = 0;
+        foreach ($secuencia as $ped) $durMax = max($durMax, $ped['durMin']);
 
-    $stmtUpd = $conn->prepare("UPDATE ruta_paradas SET orden = ?, etiqueta = ?, hora_estimada = ? WHERE id_parada = ?");
-
-    $orden = $siguienteOrden;
-    foreach (['recogida', 'entrega'] as $tipoFase) {
+        // Recogidas: la primera exactamente a la hora contratada, las demás
+        // sumando la caminata entre casas del grupo
         $acumSeg = 0;
-        $prevPunto = $origen;
+        $prev = null;
         foreach ($secuencia as $ped) {
-            $p = $ped[$tipoFase];
-            if (!$p) continue;
-            if ($prevPunto) {
-                $d = distanciaMetros($prevPunto['lat'], $prevPunto['lng'], (float)$p['lat'], (float)$p['lng']);
+            if (!$ped['recogida']) continue;
+            if ($prev) {
+                $d = distanciaMetros($prev['lat'], $prev['lng'], (float)$ped['recogida']['lat'], (float)$ped['recogida']['lng']);
                 $acumSeg += (int)round(($d / 80) * 60); // ~80 m/min caminando
             }
-            $etiqueta = $etiquetas[$orden % 26];
-            $horaEstimada = date('H:i:s', $horaBase + $acumSeg);
-            $stmtUpd->bind_param("issi", $orden, $etiqueta, $horaEstimada, $p['id_parada']);
-            $stmtUpd->execute();
-            $orden++;
-            $prevPunto = ['lat' => (float)$p['lat'], 'lng' => (float)$p['lng']];
+            $emitir($ped['recogida'], $inicioTs + $acumSeg);
+            $prev = ['lat' => (float)$ped['recogida']['lat'], 'lng' => (float)$ped['recogida']['lng']];
         }
+
+        // Entregas de la misma salida: al cumplirse la duración del paseo
+        $finTs = $inicioTs + $durMax * 60;
+        $acumSeg = 0;
+        foreach ($secuencia as $ped) {
+            if (!$ped['entrega']) continue;
+            if ($prev) {
+                $d = distanciaMetros($prev['lat'], $prev['lng'], (float)$ped['entrega']['lat'], (float)$ped['entrega']['lng']);
+                $acumSeg += (int)round(($d / 80) * 60);
+            }
+            $emitir($ped['entrega'], $finTs + $acumSeg);
+            $prev = ['lat' => (float)$ped['entrega']['lat'], 'lng' => (float)$ped['entrega']['lng']];
+            $actual = $prev;
+        }
+
+        $cursor = max($cursor, $finTs + $acumSeg);
     }
     $stmtUpd->close();
 }

@@ -15,7 +15,26 @@
         { k: 'lun', n: 'Lun' }, { k: 'mar', n: 'Mar' }, { k: 'mie', n: 'Mié' },
         { k: 'jue', n: 'Jue' }, { k: 'vie', n: 'Vie' }, { k: 'sab', n: 'Sáb' }, { k: 'dom', n: 'Dom' },
     ];
-    const FRANJAS = ['6:00 a.m. – 8:00 a.m.', '8:00 a.m. – 11:00 a.m.', '11:00 a.m. – 2:00 p.m.', '2:00 p.m. – 5:00 p.m.'];
+    // Hora EXACTA de inicio del paseo (fase 15): de 6:00 a.m. a 4:30 p.m.
+    // en pasos de 30 min. Con la duración elegida queda definido el
+    // intervalo real del servicio (ej. 7:00 – 8:00), que es lo que el
+    // admin usa para asignar sin choques de horario.
+    const HORAS_PASEO = (() => {
+        const hs = [];
+        for (let m = 6 * 60; m <= 16 * 60 + 30; m += 30) {
+            hs.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
+        }
+        return hs;
+    })();
+    const hora12 = hhmm => {
+        const [h, m] = hhmm.split(':').map(Number);
+        return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' a.m.' : ' p.m.');
+    };
+    const rangoHorario = (hhmm, durMin) => {
+        const [h, m] = hhmm.split(':').map(Number);
+        const fin = h * 60 + m + (durMin || 60);
+        return hora12(hhmm) + ' – ' + hora12(String(Math.floor(fin / 60)).padStart(2, '0') + ':' + String(fin % 60).padStart(2, '0'));
+    };
     const BANCOS_PSE = ['Bancolombia', 'Banco de Bogotá', 'Davivienda', 'BBVA Colombia', 'Banco de Occidente', 'Banco Popular', 'Banco AV Villas', 'Scotiabank Colpatria'];
     // Ya no se cobra por "pack" (4/8/12): el cliente elige cuántos paseos
     // al mes quiere y se cobra $18.000 por cada uno. El precio real
@@ -51,7 +70,7 @@
             modalidad: 'grupal',
             duracion_min: 60,
             dias: ['lun', 'mie', 'vie'],
-            franja: FRANJAS[1],
+            hora: '08:00',
             fecha_inicio: hoyISO(),
             comportamiento: 'sociable',
             observaciones: '',
@@ -168,7 +187,7 @@
                 W.modalidad       = b.modalidad || W.modalidad;
                 W.duracion_min    = b.duracion_min || W.duracion_min;
                 W.dias            = (b.dias_preferidos || '').split(',').filter(Boolean);
-                W.franja          = b.franja_horaria || W.franja;
+                W.hora            = (b.hora_paseo || '').slice(0, 5) || W.hora;
                 W.fecha_inicio    = hoyISO();
                 W.ubicacion = {
                     direccion: b.direccion || '', barrio: b.barrio || '',
@@ -293,7 +312,7 @@
           <div class="wz-lat-fila"><span class="d"><i class="ph ph-clock"></i>Duración:</span><span class="v">${W.duracion_min} minutos</span></div>
           <div class="wz-lat-fila"><span class="d"><i class="ph ph-users"></i>Modalidad:</span><span class="v">${W.modalidad === 'grupal' ? 'Grupal' : 'Individual'}</span></div>
           <div class="wz-lat-fila"><span class="d"><i class="ph ph-calendar-check"></i>Días:</span><span class="v">${diasTxt}</span></div>
-          <div class="wz-lat-fila"><span class="d"><i class="ph ph-clock-clockwise"></i>Horario:</span><span class="v">${W.franja}</span></div>
+          <div class="wz-lat-fila"><span class="d"><i class="ph ph-clock-clockwise"></i>Horario:</span><span class="v">${rangoHorario(W.hora, W.duracion_min)}</span></div>
           <div class="wz-lat-fila"><span class="d"><i class="ph ph-play"></i>Inicio:</span><span class="v">${W.fecha_inicio}</span></div>`;
 
         if (W.ubicacion.validada) {
@@ -412,8 +431,11 @@
                   <div class="wz-dias">${chipsDias}</div>
                 </div>
                 <div class="wz-campo">
-                  <label>Franja horaria preferida</label>
-                  <select id="wz-franja">${FRANJAS.map(f => `<option ${W.franja === f ? 'selected' : ''}>${f}</option>`).join('')}</select>
+                  <label>Hora del paseo</label>
+                  <select id="wz-hora">${HORAS_PASEO.map(h => `<option value="${h}" ${W.hora === h ? 'selected' : ''}>${hora12(h)}</option>`).join('')}</select>
+                  <div id="wz-hora-hint" style="font-size:.72rem;color:#64748b;margin-top:4px">
+                    Tu paseo quedará reservado de ${rangoHorario(W.hora, W.duracion_min)}
+                  </div>
                 </div>
                 <div class="wz-campo">
                   <label>Inicio de la membresía</label>
@@ -467,9 +489,13 @@
             W.cantidad_paseos = v;
             refrescarLateral(true);
         });
-        $('#wz-duracion').addEventListener('change', e => { W.duracion_min = parseInt(e.target.value); refrescarLateral(true); });
+        const pintarHintHora = () => {
+            const hint = $('#wz-hora-hint');
+            if (hint) hint.textContent = 'Tu paseo quedará reservado de ' + rangoHorario(W.hora, W.duracion_min);
+        };
+        $('#wz-duracion').addEventListener('change', e => { W.duracion_min = parseInt(e.target.value); pintarHintHora(); refrescarLateral(true); });
         $('#wz-modalidad').addEventListener('change', e => { W.modalidad = e.target.value; refrescarLateral(true); });
-        $('#wz-franja').addEventListener('change', e => { W.franja = e.target.value; refrescarLateral(true); });
+        $('#wz-hora').addEventListener('change', e => { W.hora = e.target.value; pintarHintHora(); refrescarLateral(true); });
         $('#wz-fecha-inicio').addEventListener('change', e => { W.fecha_inicio = e.target.value; refrescarLateral(true); });
         $('#wz-observaciones').addEventListener('input', e => {
             W.observaciones = e.target.value;
@@ -516,7 +542,7 @@
               <i class="ph ph-info"></i>
               <div>
                 <strong>Se unirá a tu servicio actual:</strong>
-                ${W.cantidad_paseos} paseos al mes · ${diasTxt} · ${W.franja} ·
+                ${W.cantidad_paseos} paseos al mes · ${diasTxt} · ${rangoHorario(W.hora, W.duracion_min)} ·
                 misma dirección de recogida y mismo paseador.
                 Saldrán a pasear juntas desde el próximo paseo programado.
               </div>
@@ -831,7 +857,7 @@
                 <span class="d">Duración por paseo:</span><span class="v">${W.duracion_min} minutos</span>
                 <span class="d">Modalidad:</span><span class="v">${W.modalidad === 'grupal' ? 'Grupal (máx. 4 perros)' : 'Individual'}</span>
                 <span class="d">Días preferidos:</span><span class="v">${diasTxt}</span>
-                <span class="d">Horario preferido:</span><span class="v">${W.franja}</span>
+                <span class="d">Horario del paseo:</span><span class="v">${rangoHorario(W.hora, W.duracion_min)}</span>
                 <span class="d">Inicio de la membresía:</span><span class="v">${W.fecha_inicio}</span>
               </div>
             </div>
@@ -1122,7 +1148,10 @@
             modalidad: W.modalidad,
             duracion_min: W.duracion_min,
             dias_preferidos: W.dias.join(','),
-            franja_horaria: W.franja,
+            // El backend deriva la etiqueta franja_horaria de hora + duración;
+            // se envía igual por compatibilidad con la migración pendiente
+            hora_paseo: W.hora,
+            franja_horaria: rangoHorario(W.hora, W.duracion_min),
             fecha_inicio: W.fecha_inicio,
             comportamiento: W.comportamiento,
             observaciones: W.observaciones,

@@ -46,9 +46,10 @@ $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
 // renovación el fin ya NO es siempre inicio+30 días. El inicio del periodo
 // vigente se deriva del fin (fin - 30 días) para contar los paseos usados
 // SOLO del periodo actual, no de periodos anteriores ya renovados.
+$exprHoraPaseo = pedidosTienenHoraExacta($conn) ? 'p.hora_paseo' : 'NULL AS hora_paseo';
 $stmt = $conn->prepare(
     "SELECT p.id_pedido, p.id_mascota, p.modalidad, p.duracion_min, p.dias_preferidos,
-            p.franja_horaria, p.fecha_inicio, p.comportamiento, p.observaciones,
+            p.franja_horaria, $exprHoraPaseo, p.fecha_inicio, p.comportamiento, p.observaciones,
             p.direccion, p.barrio, p.referencia, p.instrucciones,
             p.lat, p.lng, p.ubicacion_validada, p.total, p.estado, p.fecha_creacion,
             p.cantidad_paseos,
@@ -544,6 +545,7 @@ responder(true, [
             'duracion_min'    => (int)$pedido['duracion_min'],
             'dias_preferidos' => $pedido['dias_preferidos'] ?? '',
             'franja_horaria'  => $pedido['franja_horaria'] ?? '',
+            'hora_paseo'      => !empty($pedido['hora_paseo']) ? substr($pedido['hora_paseo'], 0, 5) : null,
             'fecha_inicio'    => $pedido['fecha_inicio'],
             'comportamiento'  => $pedido['comportamiento'] ?? '',
             'observaciones'   => $pedido['observaciones'] ?? '',

@@ -22,10 +22,11 @@ $hoy = date('Y-m-d');
 $idRuta = obtenerRutaActivaHoy($conn, $idPaseador, $hoy);
 if (!$idRuta) responder(true, ['fecha' => $hoy, 'paseos' => []]);
 
+$exprHora = pedidosTienenHoraExacta($conn) ? 'pp.hora_paseo' : 'NULL AS hora_paseo';
 $stmt = $conn->prepare(
     "SELECT rp.id_pedido, rp.tipo, rp.id_usuario_cliente, rp.id_mascota,
             rp.hora_estimada, rp.hora_recogida, rp.hora_entrega, rp.hora_cancelacion, rp.motivo_cancelacion,
-            pp.modalidad, pp.franja_horaria, pp.duracion_min, pp.comportamiento,
+            pp.modalidad, pp.franja_horaria, $exprHora, pp.duracion_min, pp.comportamiento,
             pp.direccion, pp.barrio, pp.lat, pp.lng,
             u.nombre AS cliente, iu.telefono,
             mu.nombre_mascota, mu.avatar_mascota
@@ -60,7 +61,10 @@ while ($row = $res->fetch_assoc()) {
             'lng'            => (float)$row['lng'],
             'modalidad'      => $row['modalidad'],
             'franja'         => $row['franja_horaria'],
-            'hora_inicio'    => horaInicioDeFranja($row['franja_horaria']),
+            // Hora contratada exacta (fase 15); pedidos viejos caen al
+            // inicio de su franja de texto
+            'hora_inicio'    => $row['hora_paseo'] ? substr($row['hora_paseo'], 0, 5)
+                                                   : horaInicioDeFranja($row['franja_horaria']),
             'duracion_min'   => (int)$row['duracion_min'],
             'comportamiento' => $row['comportamiento'],
             '_horaRecogida'    => null,

@@ -87,9 +87,10 @@ $pedidoBase   = null;
 
 if ($idPedidoBase > 0) {
     $ahoraColombia = "CONVERT_TZ(NOW(), '+00:00', '-05:00')";
+    $exprHora = pedidosTienenHoraExacta($conn) ? 'p.hora_paseo' : 'NULL AS hora_paseo';
     $stmt = $conn->prepare(
         "SELECT p.id_pedido, p.cantidad_paseos, p.modalidad, p.duracion_min, p.dias_preferidos,
-                p.franja_horaria, p.comportamiento,
+                p.franja_horaria, $exprHora, p.comportamiento,
                 p.direccion, p.barrio, p.referencia, p.instrucciones, p.lat, p.lng
          FROM pedidos_paseo p
          JOIN membresias m ON m.id_usuario = p.id_usuario AND m.id_mascota = p.id_mascota
@@ -127,6 +128,7 @@ if ($idPedidoBase > 0) {
     $data['duracion_min']      = (int)$pedidoBase['duracion_min'];
     $data['dias_preferidos']   = $pedidoBase['dias_preferidos'];
     $data['franja_horaria']    = $pedidoBase['franja_horaria'];
+    $data['hora_paseo']        = $pedidoBase['hora_paseo'] ? substr($pedidoBase['hora_paseo'], 0, 5) : null;
     $data['comportamiento']    = $pedidoBase['comportamiento'];
     $data['fecha_inicio']      = date('Y-m-d');
     $ubicacion = [
@@ -237,7 +239,27 @@ $total     = $precio['total'];
 $modalidad     = in_array($data['modalidad'] ?? '', ['individual', 'grupal']) ? $data['modalidad'] : 'grupal';
 $duracion      = in_array(intval($data['duracion_min'] ?? 60), [30, 45, 60]) ? intval($data['duracion_min']) : 60;
 $dias          = substr(trim($data['dias_preferidos'] ?? ''), 0, 60);
-$franja        = substr(trim($data['franja_horaria'] ?? ''), 0, 40);
+
+// Hora exacta del paseo (fase 15): HH:MM entre 6:00 a.m. y 4:30 p.m., en
+// pasos de 15 min. La etiqueta franja_horaria se DERIVA de hora + duración
+// (lo que mande el cliente en franja_horaria se ignora); si el navegador
+// aún tiene el wizard viejo cacheado y solo manda la franja, se toma su
+// hora de inicio para no rechazar la compra.
+$horaPaseo = trim($data['hora_paseo'] ?? '');
+if (!preg_match('/^([01]?\d|2[0-3]):[0-5]\d$/', $horaPaseo)) {
+    $horaPaseo = horaInicioDeFranja($data['franja_horaria'] ?? '') ?: '';
+}
+if ($horaPaseo !== '') {
+    list($hh, $mm) = array_map('intval', explode(':', $horaPaseo));
+    $totalMin = (int)(round(($hh * 60 + $mm) / 15) * 15); // encajar al cuarto de hora
+    if ($totalMin < 6 * 60 || $totalMin > 16 * 60 + 30) {
+        responder(false, [], 'La hora del paseo debe estar entre las 6:00 a.m. y las 4:30 p.m.');
+    }
+    $horaPaseo = sprintf('%02d:%02d', intdiv($totalMin, 60), $totalMin % 60);
+}
+$franja = $horaPaseo !== ''
+    ? etiquetaHorario($horaPaseo, $duracion)
+    : substr(trim($data['franja_horaria'] ?? ''), 0, 40);
 $comportamiento= substr(trim($data['comportamiento'] ?? ''), 0, 30);
 $observaciones = substr(trim($data['observaciones'] ?? ''), 0, 1000);
 $barrio        = substr(trim($ubicacion['barrio'] ?? ''), 0, 100);
@@ -254,29 +276,37 @@ try {
     // en el modo exprés (dirección heredada de un pedido ya validado); en la
     // compra normal queda en 0 hasta que el admin apruebe el pin.
     $ubicacionValidada = $pedidoBase ? 1 : 0;
+    // La columna hora_paseo solo existe tras la migración fase 15; si aún
+    // no corre, el pedido se guarda igual (solo con la etiqueta de texto).
+    $conHoraExacta = pedidosTienenHoraExacta($conn) && $horaPaseo !== '';
+    $colHora  = $conHoraExacta ? 'hora_paseo, ' : '';
+    $markHora = $conHoraExacta ? '?, ' : '';
     $stmt = $conn->prepare(
         "INSERT INTO pedidos_paseo
             (id_usuario, id_mascota, cantidad_paseos, modalidad, duracion_min, dias_preferidos,
-             franja_horaria, fecha_inicio, comportamiento, observaciones,
+             franja_horaria, {$colHora}fecha_inicio, comportamiento, observaciones,
              direccion, barrio, referencia, instrucciones, lat, lng, ubicacion_validada,
              subtotal, descuento, total, metodo_pago, estado)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, $ubicacionValidada, ?, ?, ?, ?, 'pendiente_pago')"
+         VALUES (?, ?, ?, ?, ?, ?, ?, {$markHora}?, ?, ?, ?, ?, ?, ?, ?, ?, $ubicacionValidada, ?, ?, ?, ?, 'pendiente_pago')"
     );
     $tiposPedido = 'iii'   // id_usuario, id_mascota, cantidad_paseos
                  . 's'     // modalidad
                  . 'i'     // duracion_min
-                 . 'sssss' // dias, franja, fecha_inicio, comportamiento, observaciones
+                 . 'ss'    // dias, franja
+                 . ($conHoraExacta ? 's' : '') // hora_paseo
+                 . 'sss'   // fecha_inicio, comportamiento, observaciones
                  . 'ssss'  // direccion, barrio, referencia, instrucciones
                  . 'dd'    // lat, lng
                  . 'ddd'   // subtotal, descuento, total
                  . 's';    // metodo_pago
-    $stmt->bind_param(
-        $tiposPedido,
-        $idUsuario, $idMascota, $cantidadPaseos, $modalidad, $duracion, $dias,
-        $franja, $fechaInicio, $comportamiento, $observaciones,
+    $params = [$idUsuario, $idMascota, $cantidadPaseos, $modalidad, $duracion, $dias, $franja];
+    if ($conHoraExacta) $params[] = $horaPaseo;
+    array_push($params,
+        $fechaInicio, $comportamiento, $observaciones,
         $direccion, $barrio, $referencia, $instrucciones, $lat, $lng,
         $subtotal, $descuento, $total, $metodo
     );
+    $stmt->bind_param($tiposPedido, ...$params);
     $stmt->execute();
     $idPedido = $conn->insert_id;
     $stmt->close();
