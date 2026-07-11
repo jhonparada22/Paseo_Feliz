@@ -72,6 +72,26 @@ $stmt->bind_param("iidddd", $idPaseador, $idRuta, $lat, $lng, $velocidad, $preci
 $stmt->execute();
 $stmt->close();
 
+// 2b. Posiciones atrasadas (buffer offline del móvil): se guardan en el
+// historial para que el recorrido no quede con huecos. No disparan
+// avisos de proximidad (son del pasado).
+$buffer = is_array($data['buffer'] ?? null) ? array_slice($data['buffer'], 0, 200) : [];
+if ($buffer) {
+    $stmtB = $conn->prepare(
+        "INSERT INTO historial_gps (id_paseador, id_ruta, lat, lng, velocidad, precision_m) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+    foreach ($buffer as $b) {
+        $bLat = floatval($b['lat'] ?? 0);
+        $bLng = floatval($b['lng'] ?? 0);
+        if (!$bLat || !$bLng) continue;
+        $bVel = floatval($b['velocidad'] ?? 0);
+        $bPre = floatval($b['precision'] ?? 0);
+        $stmtB->bind_param("iidddd", $idPaseador, $idRuta, $bLat, $bLng, $bVel, $bPre);
+        $stmtB->execute();
+    }
+    $stmtB->close();
+}
+
 $eventos = [];
 
 // 3. Avisos de proximidad (solo si hay ruta activa). Se evalúa la parada

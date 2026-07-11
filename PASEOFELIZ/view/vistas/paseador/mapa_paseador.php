@@ -6,6 +6,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Paseo Feliz – Mapa Paseador</title>
+    <!-- PWA: instalable en el celular del paseador (menos throttling que una pestaña) -->
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#3E72A6">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('../../sw.js').catch(function () {});
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="../../css/paseador/mapa_paseador.css?v=<?php echo @filemtime(__DIR__ . '/../../css/paseador/mapa_paseador.css'); ?>">
@@ -271,6 +279,45 @@
                 </button>
                 <button class="mcx-btn confirmar" id="mcxBtnConfirmar" onclick="confirmarCancelacion()" disabled>
                     <i class="fas fa-ban"></i> Cancelar paseo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input oculto para subir foto del paseo (botón cámara de cada mascota) -->
+    <input type="file" id="inputFotoPaseo" accept="image/*" capture="environment"
+           style="display:none" onchange="enviarFotoPaseo(this)">
+
+    <!-- ══ MODAL: REPORTAR INCIDENCIA (sin cancelar el paseo) ══ -->
+    <div class="modal-cancelar-overlay" id="modalIncidencia">
+        <div class="modal-cancelar">
+            <div class="mcx-head" style="color:#b45309">
+                <i class="fas fa-triangle-exclamation"></i>
+                Reportar problema con <span id="micMascota">—</span>
+            </div>
+            <div class="mcx-sub">
+                El paseo NO se cancela: se avisa al cliente y al administrador
+                para resolverlo. Si el problema impide el paseo, usa "Cancelado".
+            </div>
+
+            <div class="mcx-motivos" id="micMotivos">
+                <label class="mcx-motivo"><input type="radio" name="motivoInc" value="sin_respuesta"><span>🔔 Llegué y nadie atiende</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoInc" value="mascota_no_lista"><span>🐕 La mascota no está lista</span></label>
+                <label class="mcx-motivo"><input type="radio" name="motivoInc" value="otro"><span>✏️ Otro problema</span></label>
+            </div>
+
+            <input type="text" class="mcx-otro" id="micNota" maxlength="120"
+                   placeholder="Detalle (opcional)...">
+
+            <div class="mcx-actions">
+                <button class="mcx-btn volver" onclick="cerrarModalIncidencia()">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+                <button class="mcx-btn chat" onclick="abrirChatIncidencia()">
+                    <i class="fas fa-comment-alt"></i> Chat cliente
+                </button>
+                <button class="mcx-btn confirmar" id="micBtnConfirmar" onclick="confirmarIncidencia()" style="background:#f59e0b">
+                    <i class="fas fa-bullhorn"></i> Reportar
                 </button>
             </div>
         </div>

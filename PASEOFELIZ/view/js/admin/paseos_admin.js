@@ -91,7 +91,8 @@ function renderTorre(data) {
     if (!cont) return;
     const ps  = data.paseadores_hoy || [];
     const ne  = data.no_ejecutados || [];
-    if (!ps.length && !ne.length) { cont.style.display = 'none'; return; }
+    const inc = data.incidencias || [];
+    if (!ps.length && !ne.length && !inc.length) { cont.style.display = 'none'; return; }
 
     const filas = ps.map(p => {
         const estado = p.alerta_no_inicio
@@ -113,6 +114,21 @@ function renderTorre(data) {
         </div>`;
     }).join('');
 
+    const incHtml = inc.length ? `
+        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0">
+            <div style="font-size:.72rem;font-weight:800;color:#b91c1c;margin-bottom:4px">
+                <i class="fas fa-bullhorn"></i> Incidencias reportadas HOY
+            </div>
+            ${inc.map(x => `
+            <div style="display:flex;gap:8px;align-items:center;font-size:.74rem;padding:3px 0;cursor:pointer" onclick="seleccionar(${x.id_pedido})">
+                <span style="color:#94a3b8;min-width:38px">${x.hora}</span>
+                <strong>${x.mascota}</strong>
+                <span style="color:#64748b">(${x.cliente})</span>
+                <span style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:999px;padding:1px 8px;font-size:.68rem">${x.detalle || 'incidencia'}</span>
+                <span style="margin-left:auto;color:#94a3b8">${x.paseador}</span>
+            </div>`).join('')}
+        </div>` : '';
+
     const neHtml = ne.length ? `
         <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0">
             <div style="font-size:.72rem;font-weight:800;color:#b45309;margin-bottom:4px">
@@ -132,6 +148,7 @@ function renderTorre(data) {
                 <span style="font-size:.7rem;color:#94a3b8">se actualiza cada minuto</span>
             </div>
             ${filas || '<div style="font-size:.78rem;color:#94a3b8;padding:6px 0">Ningún paseador tiene paseos programados hoy.</div>'}
+            ${incHtml}
             ${neHtml}
         </div>`;
 }

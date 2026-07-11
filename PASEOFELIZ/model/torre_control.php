@@ -107,10 +107,37 @@ try {
         ];
     }
 
+    // ── 3. Incidencias reportadas HOY (problemas sin cancelación) ─────
+    $res = $conn->query(
+        "SELECT ev.detalle, ev.creado_en, pp.id_pedido,
+                mu.nombre_mascota, uc.nombre AS cliente, up.nombre AS paseador
+         FROM eventos_paseo ev
+         JOIN paseos_programados pp ON pp.id_paseo = ev.id_paseo
+         LEFT JOIN mascota_usuario mu ON mu.id_mascota = pp.id_mascota
+         LEFT JOIN usuarios uc ON uc.id = pp.id_usuario_cliente
+         LEFT JOIN paseadores pa ON pa.id_paseador = pp.id_paseador
+         LEFT JOIN usuarios up ON up.id = pa.id_usuario
+         WHERE ev.tipo = 'incidencia' AND DATE(ev.creado_en) = '$hoy'
+         ORDER BY ev.creado_en DESC
+         LIMIT 15"
+    );
+    $incidencias = [];
+    while ($row = $res->fetch_assoc()) {
+        $incidencias[] = [
+            'id_pedido' => (int)$row['id_pedido'],
+            'hora'      => substr($row['creado_en'], 11, 5),
+            'detalle'   => $row['detalle'],
+            'mascota'   => $row['nombre_mascota'] ?: '—',
+            'cliente'   => $row['cliente'] ?: '—',
+            'paseador'  => $row['paseador'] ?: '—',
+        ];
+    }
+
     responder(true, [
         'fecha'          => $hoy,
         'paseadores_hoy' => $paseadores,
         'no_ejecutados'  => $noEjecutados,
+        'incidencias'    => $incidencias,
     ]);
 } catch (mysqli_sql_exception $e) {
     if (ppTablaFaltante($e)) {

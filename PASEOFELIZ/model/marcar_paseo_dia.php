@@ -199,6 +199,44 @@ if ($accion === 'recogido') {
 
     responder(true, ['estado' => 'pendiente'], 'Paseo devuelto a pendiente.');
 
+} elseif ($accion === 'incidencia') {
+    // Reporta un problema SIN cancelar el paseo: "llegué y nadie atiende",
+    // "la mascota no está lista", etc. Antes las únicas opciones eran
+    // mentir ("recogido") o cancelar definitivamente. Queda en el log de
+    // eventos (visible para el admin en la torre de control) y notifica
+    // al cliente para que reaccione.
+    $subtipo = $data['subtipo'] ?? 'otro';
+    if (!in_array($subtipo, ['sin_respuesta', 'mascota_no_lista', 'otro'])) $subtipo = 'otro';
+    $nota = trim(substr($data['nota'] ?? '', 0, 120));
+
+    $textos = [
+        'sin_respuesta'    => "El paseador está en tu dirección para recoger a $mascota y no obtiene respuesta. ¡Atiende la puerta o escríbele por el chat!",
+        'mascota_no_lista' => "El paseador llegó pero $mascota aún no está lista para salir. Ayúdalo a alistarse o escríbele por el chat.",
+        'otro'             => "El paseador reporta un inconveniente con el paseo de $mascota" . ($nota !== '' ? ": $nota" : '.') . " Puedes escribirle por el chat.",
+    ];
+
+    // Evento en el log del paseo programado (el estado NO cambia)
+    try {
+        $stmt = $conn->prepare(
+            "SELECT id_paseo FROM paseos_programados WHERE id_pedido = ? AND fecha = ?"
+        );
+        $stmt->bind_param("is", $idPedido, $hoy);
+        $stmt->execute();
+        $pp = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($pp) {
+            ppEvento($conn, (int)$pp['id_paseo'], 'incidencia', 'paseador',
+                $subtipo . ($nota !== '' ? " — $nota" : ''));
+        }
+    } catch (mysqli_sql_exception $e) {
+        if (!ppTablaFaltante($e)) throw $e;
+    }
+
+    crearNotificacionInterna($conn, $idCliente, $idRuta, 'sistema', $textos[$subtipo]);
+
+    responder(true, ['subtipo' => $subtipo],
+        'Incidencia reportada. El cliente fue notificado y el administrador la verá en su panel.');
+
 } elseif ($accion === 'cancelar') {
     $motivo = trim(substr($data['motivo'] ?? '', 0, 120));
     if ($motivo === '') {

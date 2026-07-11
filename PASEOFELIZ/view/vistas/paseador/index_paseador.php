@@ -7,6 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paseador - Paseo Feliz</title>
     <link rel="icon" href="../../assets/images/logo.png" type="image/png">
+    <!-- PWA: instalable en el celular del paseador -->
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#3E72A6">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('../../sw.js').catch(function () {});
+        }
+    </script>
 
     <!-- Estilos globales -->
     <link rel="stylesheet" href="../../css/principal_css/global.css">

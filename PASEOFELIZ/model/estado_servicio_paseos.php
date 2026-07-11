@@ -311,6 +311,26 @@ if ($ruta) {
         if ($c) $calificacion = ['estrellas' => (int)$c['estrellas'], 'comentario' => $c['comentario']];
     }
 
+    // Fotos del paseo de hoy subidas por el paseador (fase 13)
+    $evidencias = [];
+    try {
+        $stmt = $conn->prepare(
+            "SELECT ev.url, ev.tipo, ev.nota, ev.creado_en
+             FROM evidencias_paseo ev
+             JOIN paseos_programados pp ON pp.id_paseo = ev.id_paseo
+             WHERE ev.id_pedido = ? AND pp.fecha = ?
+             ORDER BY ev.creado_en ASC
+             LIMIT 12"
+        );
+        $stmt->bind_param("is", $idPedido, $hoy);
+        $stmt->execute();
+        $resEv = $stmt->get_result();
+        while ($ev = $resEv->fetch_assoc()) $evidencias[] = $ev;
+        $stmt->close();
+    } catch (mysqli_sql_exception $e) {
+        if (!ppTablaFaltante($e)) throw $e; // sin migrar: sin fotos
+    }
+
     $rutaHoy = [
         'id_ruta'               => $idRuta,
         'id_paseador'           => (int)$ruta['id_paseador'],
@@ -322,6 +342,7 @@ if ($ruta) {
         'recogida'              => $recogida,
         'entrega'               => $entrega,
         'calificacion'          => $calificacion,
+        'evidencias'            => $evidencias,
     ];
 }
 

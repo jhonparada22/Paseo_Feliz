@@ -495,6 +495,24 @@
         const chip = finalizado
             ? '<span class="dz-chip dz-chip-verde"><i class="ph ph-check-circle"></i> Finalizado</span>'
             : '<span class="dz-chip dz-chip-verde"><span class="dz-dot-vivo"></span> En curso</span>';
+
+        // Fotos del paseo subidas por el paseador (evidencias, fase 13)
+        const evs = (S.ruta_hoy && S.ruta_hoy.evidencias) || [];
+        const fotosHtml = evs.length
+            ? '<div style="margin-top:12px">' +
+                  '<div style="font-weight:700;font-size:.78rem;margin-bottom:6px"><i class="ph ph-camera"></i> Fotos del paseo</div>' +
+                  '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+                  evs.map(function (ev) {
+                      const url = avatarUrl(ev.url, '');
+                      return '<a href="' + esc(url) + '" target="_blank" rel="noopener">' +
+                                 '<img src="' + esc(url) + '" alt="Foto del paseo" ' +
+                                 'style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0" ' +
+                                 'onerror="this.parentElement.style.display=\'none\'">' +
+                             '</a>';
+                  }).join('') +
+                  '</div></div>'
+            : '';
+
         return '<div class="dz-card">' +
                     '<div class="dz-card-head"><h3 class="dz-h3">Estado del paseo</h3>' + chip + '</div>' +
                     '<div class="dz-tl-vertical">' +
@@ -511,6 +529,7 @@
                                '</div>';
                     }).join('') +
                     '</div>' +
+                    fotosHtml +
                '</div>';
     }
 

@@ -386,11 +386,21 @@ function stopGPS() {
 // El servidor ya NO completa paradas por proximidad: solo avisa que el
 // paseador está en el punto para que CONFIRME manualmente la recogida o
 // entrega (la confirmación es la que escribe los timestamps de negocio).
+//
+// Resiliencia móvil: si no hay señal, las posiciones se guardan en un
+// buffer local y se reenvían en lote con el siguiente envío exitoso —
+// el recorrido no queda con huecos en el historial.
+let gpsBufferOffline = [];
+
 function enviarGPS(lat, lng, velocidad, precision) {
+    const payload = { lat, lng, velocidad, precision, simulado: gpsEsSimulado };
+    if (gpsBufferOffline.length) {
+        payload.buffer = gpsBufferOffline.splice(0, 200);
+    }
     fetch(API + 'actualizar_gps.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng, velocidad, precision, simulado: gpsEsSimulado }),
+        body: JSON.stringify(payload),
     })
     .then(r => r.json())
     .then(data => {
@@ -424,7 +434,13 @@ function enviarGPS(lat, lng, velocidad, precision) {
             });
         }
     })
-    .catch(() => { /* sin conexión, continuar sin errores */ });
+    .catch(() => {
+        // Sin conexión: guardar la posición para reenviarla en lote después
+        if (!gpsEsSimulado) {
+            gpsBufferOffline.push({ lat, lng, velocidad, precision, ts: Date.now() });
+            if (gpsBufferOffline.length > 200) gpsBufferOffline.shift(); // límite de memoria
+        }
+    });
 }
 
 function updatePosition(lat, lng) {
@@ -603,23 +619,57 @@ function chipEstadoPaseo(p) {
 
 function botonesPaseo(p) {
     const chat = `<button class="pi-btn chat" title="Chat con ${p.cliente}" onclick="abrirChatCliente(${p.id_cliente})"><i class="fas fa-comment-alt"></i></button>`;
+    const foto = `<button class="pi-btn chat" title="Subir foto del paseo" onclick="pedirFotoPaseo(${p.id_pedido})"><i class="fas fa-camera"></i></button>`;
     if (p.estado === 'cancelado') {
         return `<button class="pi-btn deshacer" title="Deshacer cancelación" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>${chat}`;
     }
     if (p.estado === 'entregado') {
-        return chat;
+        return `${foto}${chat}`;
     }
     if (p.estado === 'recogido') {
         return `
             <button class="pi-btn entregar" onclick="marcarEntregado(${p.id_pedido})">Entregado</button>
             <button class="pi-btn deshacer" title="Deshacer recogida" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>
             <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
-            ${chat}`;
+            ${foto}${chat}`;
     }
     return `
         <button class="pi-btn recoger" onclick="marcarRecogido(${p.id_pedido})">Recogido</button>
         <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
+        <button class="pi-btn deshacer" title="Reportar problema (sin cancelar)" onclick="abrirModalIncidencia(${p.id_pedido})"><i class="fas fa-triangle-exclamation"></i></button>
         ${chat}`;
+}
+
+// ── Evidencias: subir foto del paseo (la ve el cliente en su panel) ──
+let fotoTarget = null; // id_pedido al que pertenece la foto
+
+function pedirFotoPaseo(idPedido) {
+    fotoTarget = idPedido;
+    document.getElementById('inputFotoPaseo').click();
+}
+
+function enviarFotoPaseo(input) {
+    const file = input.files && input.files[0];
+    input.value = ''; // permitir volver a elegir el mismo archivo
+    if (!file || !fotoTarget) return;
+
+    const p = PASEOS_HOY.find(x => x.id_pedido === fotoTarget);
+    const tipo = p && p.estado === 'entregado' ? 'entrega' : 'paseo';
+
+    const fd = new FormData();
+    fd.append('id_pedido', fotoTarget);
+    fd.append('tipo', tipo);
+    fd.append('foto', file);
+    showNotif('📷 Subiendo foto...', 'info');
+
+    fetch(API + 'subir_evidencia_paseo.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) { showNotif(data.message || 'No se pudo subir la foto', 'warning'); return; }
+            showNotif('📷 ' + data.message, 'success');
+        })
+        .catch(() => showNotif('Sin conexión: la foto no se subió. Intenta de nuevo.', 'warning'))
+        .finally(() => { fotoTarget = null; });
 }
 
 function renderPaseosHoy() {
@@ -814,6 +864,53 @@ function confirmarCancelacion() {
     .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
 }
 
+// ── Modal de incidencia (reportar problema SIN cancelar) ────────
+let incidenciaTarget = null;
+
+function abrirModalIncidencia(idPedido) {
+    const p = PASEOS_HOY.find(x => x.id_pedido === idPedido);
+    if (!p) return;
+    incidenciaTarget = p;
+    document.getElementById('micMascota').textContent = `${p.mascota} (${p.cliente})`;
+    document.querySelectorAll('input[name="motivoInc"]').forEach(r => (r.checked = false));
+    document.getElementById('micNota').value = '';
+    document.getElementById('modalIncidencia').classList.add('open');
+}
+
+function cerrarModalIncidencia() {
+    document.getElementById('modalIncidencia').classList.remove('open');
+    incidenciaTarget = null;
+}
+
+function abrirChatIncidencia() {
+    if (incidenciaTarget) abrirChatCliente(incidenciaTarget.id_cliente);
+}
+
+function confirmarIncidencia() {
+    if (!incidenciaTarget) return;
+    const sel = document.querySelector('input[name="motivoInc"]:checked');
+    if (!sel) { showNotif('Selecciona el tipo de problema', 'warning'); return; }
+    const nota = document.getElementById('micNota').value.trim();
+
+    fetch(API + 'marcar_paseo_dia.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            accion: 'incidencia',
+            id_pedido: incidenciaTarget.id_pedido,
+            subtipo: sel.value,
+            nota,
+        }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { showNotif(data.message || 'No se pudo reportar', 'warning'); return; }
+        cerrarModalIncidencia();
+        showNotif('📣 ' + data.message, 'info');
+    })
+    .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
+}
+
 function abrirChatCliente(idCliente) {
     if (!idCliente) return;
     window.location.href = 'Chat_paseador.php?chat_con=' + idCliente;
@@ -880,4 +977,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // (en móvil el layout pasa a columna y Leaflet necesita recalcular su área)
 window.addEventListener('resize', () => {
     if (typeof map !== 'undefined' && map) map.invalidateSize();
+});
+
+// ── Segundo plano (móvil): al cambiar de app, el navegador suspende
+// watchPosition y los intervalos — el seguimiento queda congelado sin
+// que el paseador lo note. Al VOLVER, se re-sincroniza todo el estado
+// con el servidor y se le avisa del hueco.
+let ultimaVezVisible = Date.now();
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        ultimaVezVisible = Date.now();
+        return;
+    }
+    const segundosFuera = Math.round((Date.now() - ultimaVezVisible) / 1000);
+    // Re-sincronizar siempre que estuvo fuera más de 30 s
+    if (segundosFuera > 30) {
+        cargarPaseosHoy();
+        cargarRutaDeHoy();
+        if (typeof map !== 'undefined' && map) map.invalidateSize();
+        if (paseoActivo) {
+            showNotif(`⏸ El seguimiento se pausó ${Math.round(segundosFuera / 60) || 1} min en segundo plano. Re-sincronizado.`, 'warning');
+        }
+    }
 });
