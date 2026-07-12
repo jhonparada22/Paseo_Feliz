@@ -18,6 +18,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once '../model/conexion.php';
+include_once 'ActivityService.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -31,7 +32,7 @@ if (!in_array($accion, ['aprobar', 'corregir'])) responder(false, [], 'Acción n
 
 // El pedido debe estar pendiente de validación
 $stmt = $conn->prepare(
-    "SELECT p.id_pedido, p.id_usuario, p.estado, mu.nombre_mascota
+    "SELECT p.id_pedido, p.id_usuario, p.id_mascota, p.estado, mu.nombre_mascota
      FROM pedidos_paseo p
      LEFT JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
      WHERE p.id_pedido = ?"
@@ -70,6 +71,14 @@ $stmt->close();
 $mascota = $pedido['nombre_mascota'] ?: 'tu mascota';
 crearNotificacionInterna($conn, (int)$pedido['id_usuario'], null,
     'sistema', "La dirección de recogida de $mascota fue verificada. Estamos asignando tu paseador.");
+
+ActivityService::registrar($conn, [
+    'servicio' => 'paseos', 'tipo' => 'direccion_validada',
+    'titulo' => "Dirección validada — $mascota",
+    'descripcion' => $accion === 'corregir' ? 'El admin corrigió el pin y aprobó la dirección.' : 'La dirección del cliente fue validada correctamente.',
+    'id_cliente' => (int)$pedido['id_usuario'], 'id_mascota' => (int)$pedido['id_mascota'],
+    'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+]);
 
 responder(true, ['id_pedido' => $idPedido, 'estado' => 'listo_para_asignar'],
     $accion === 'corregir'

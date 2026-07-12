@@ -30,6 +30,7 @@ include_once 'helpers.php';
 include_once '../model/conexion.php';
 include_once '../model/modelotelegram.php';
 include_once 'precios_helper.php';
+include_once 'ActivityService.php';
 
 // Errores SQL como excepciones -> los captura el try/catch y responden JSON limpio
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -321,6 +322,14 @@ try {
         $u->execute();
         $u->close();
         $conn->commit();
+        ActivityService::registrar($conn, [
+            'servicio' => 'paseos', 'tipo' => 'pago_rechazado',
+            'titulo' => 'Pago rechazado — $' . number_format($total, 0, '.', ','),
+            'descripcion' => $resultado['mensaje'],
+            'id_cliente' => $idUsuario, 'cliente_nombre' => $usuarioRow['nombre'] ?? null,
+            'id_mascota' => $idMascota, 'mascota_nombre' => $mascotaRow['nombre_mascota'],
+            'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+        ]);
         responder(false, ['id_pedido' => $idPedido], 'El pago fue rechazado: ' . $resultado['mensaje']);
     }
 
@@ -430,6 +439,27 @@ try {
     }
 
     $conn->commit();
+
+    // Feed del admin: compra + pago aprobado (best-effort, fuera de la
+    // transacción para no arriesgar la operación de negocio)
+    $nombreCli = $usuarioRow['nombre'] ?? null;
+    $nombreMas = $mascotaRow['nombre_mascota'];
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'compra',
+        'titulo' => "Nuevo servicio de paseos — $nombreMas",
+        'descripcion' => "$cantidadPaseos paseos/mes · $modalidad",
+        'id_cliente' => $idUsuario, 'cliente_nombre' => $nombreCli,
+        'id_mascota' => $idMascota, 'mascota_nombre' => $nombreMas,
+        'id_pedido' => $idPedido, 'id_referencia' => $idPedido, 'direccion' => $direccion,
+    ]);
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'pago_aprobado',
+        'titulo' => 'Pago recibido — $' . number_format($total, 0, '.', ','),
+        'descripcion' => 'Método: ' . $metodo,
+        'id_cliente' => $idUsuario, 'cliente_nombre' => $nombreCli,
+        'id_mascota' => $idMascota, 'mascota_nombre' => $nombreMas,
+        'id_pedido' => $idPedido, 'id_referencia' => $idPago,
+    ]);
 
     $telegram = new ModeloTelegram();
     $telegram->enviarMensajePagos(

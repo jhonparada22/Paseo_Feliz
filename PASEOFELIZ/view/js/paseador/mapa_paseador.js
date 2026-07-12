@@ -630,12 +630,12 @@ function botonesPaseo(p) {
         return `
             <button class="pi-btn entregar" onclick="marcarEntregado(${p.id_pedido})">Entregado</button>
             <button class="pi-btn deshacer" title="Deshacer recogida" onclick="deshacerEstado(${p.id_pedido})"><i class="fas fa-rotate-left"></i></button>
-            <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
+            <button class="pi-btn cancelar" title="Solicitar cancelación al administrador" onclick="abrirModalCancelar(${p.id_pedido})">Solicitar cancelación</button>
             ${foto}${chat}`;
     }
     return `
         <button class="pi-btn recoger" onclick="marcarRecogido(${p.id_pedido})">Recogido</button>
-        <button class="pi-btn cancelar" onclick="abrirModalCancelar(${p.id_pedido})">Cancelado</button>
+        <button class="pi-btn cancelar" title="Solicitar cancelación al administrador" onclick="abrirModalCancelar(${p.id_pedido})">Solicitar cancelación</button>
         <button class="pi-btn deshacer" title="Reportar problema (sin cancelar)" onclick="abrirModalIncidencia(${p.id_pedido})"><i class="fas fa-triangle-exclamation"></i></button>
         ${chat}`;
 }
@@ -854,12 +854,13 @@ function confirmarCancelacion() {
     })
     .then(r => r.json())
     .then(data => {
-        if (!data.success) { showNotif(data.message || 'No se pudo cancelar', 'warning'); return; }
-        seleccionGrupal.delete(cancelTarget.id_pedido);
+        if (!data.success) { showNotif(data.message || 'No se pudo enviar la solicitud', 'warning'); return; }
         cerrarModalCancelar();
-        showNotif('✖ Paseo cancelado. El cliente fue notificado.', 'info');
+        // El paseo NO se cancela aquí: queda pendiente de la aprobación del
+        // admin y sigue su curso. Se refresca para reflejar el estado.
+        showNotif('📨 Solicitud enviada. El paseo continúa hasta que el administrador la apruebe.', 'info');
         cargarPaseosHoy();
-        cargarRutaDeHoy();  // sus paradas pasan a omitidas
+        cargarRutaDeHoy();
     })
     .catch(() => showNotif('Sin conexión. Intenta de nuevo.', 'warning'));
 }

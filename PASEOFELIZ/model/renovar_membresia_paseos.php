@@ -24,6 +24,7 @@ include_once 'helpers.php';
 include_once '../model/conexion.php';
 include_once '../model/modelotelegram.php';
 include_once 'precios_helper.php';
+include_once 'ActivityService.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 date_default_timezone_set('America/Bogota');
@@ -128,6 +129,15 @@ $telegram->enviarMensajePagos(
     "📅 <b>Nueva vigencia hasta:</b> " . date('d/m/Y', strtotime($fechaFin)) . "\n" .
     "🕒 <b>Fecha pago:</b> " . date('d/m/Y H:i')
 );
+
+ActivityService::registrar($conn, [
+    'servicio' => 'paseos', 'tipo' => 'membresia_renovada',
+    'titulo' => 'Membresía renovada — ' . $pedido['nombre_mascota'],
+    'descripcion' => 'Nueva vigencia hasta el ' . date('d/m/Y', strtotime($fechaFin)) . '.',
+    'id_cliente' => $idUsuario, 'cliente_nombre' => $pedido['nombre_usuario'],
+    'id_mascota' => $idMascota, 'mascota_nombre' => $pedido['nombre_mascota'],
+    'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+]);
 
 responder(true, [
     'total'      => $total,

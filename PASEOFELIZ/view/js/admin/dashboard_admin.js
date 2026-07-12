@@ -4,9 +4,11 @@
 // obtener_pedidos_paseos.php y obtener_paseadores.php (ya existentes,
 // reutilizados tal cual) para no duplicar consultas.
 // ══════════════════════════════════════════════════════════════
+// La tabla "Paseos Recientes" y la lista "Reportes Recientes" fueron
+// reemplazadas por el Centro de Actividad (activity_center.js). Este archivo
+// solo alimenta las stat cards, el donut, el calendario y la mini gráfica.
 const PATHS = {
     dashboard:  '../../../model/obtener_dashboard_admin.php',
-    pedidos:    '../../../model/obtener_pedidos_paseos.php?estado=todos',
     paseadores: '../../../model/obtener_paseadores.php',
 };
 
@@ -34,9 +36,8 @@ let calMes = new Date(); // mes que se está viendo en el calendario
 // ══════════════════════════════════════════════════════════════
 async function cargarDashboard() {
     try {
-        const [rDash, rPedidos, rPaseadores] = await Promise.all([
+        const [rDash, rPaseadores] = await Promise.all([
             fetch(PATHS.dashboard).then(r => r.json()),
-            fetch(PATHS.pedidos).then(r => r.json()),
             fetch(PATHS.paseadores).then(r => r.json()),
         ]);
 
@@ -47,8 +48,6 @@ async function cargarDashboard() {
         renderLineChart(rDash.chart_linea);
         renderDonutChart(rDash.chart_donut);
         renderCalendario(rDash.calendario);
-        renderReportes(rDash.reportes_recientes);
-        renderTablaPaseos(rPedidos.success ? rPedidos.pedidos : []);
         renderWidgetEstado(rDash.stats.pedidos_sin_asignar);
     } catch (e) {
         console.error('Error cargando dashboard admin:', e);

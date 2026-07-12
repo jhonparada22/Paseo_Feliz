@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
+    <link rel="stylesheet" href="../../css/admin/activity_center.css">
     
 </head>
 
@@ -114,21 +115,50 @@
                     </div>
                 </div>
 
-                <!-- Mid Row -->
-                <div class="mid-row">
+                <!-- Activity Center (Fase 17) -->
+                <div class="ac-layout">
 
-                    <!-- Línea -->
-                    <div class="card">
-                        <div class="card-head">
-                            <span class="c-title">Resumen de Paseos</span>
-                            <select class="chart-select">
-                                <option>Últimos 7 días</option>
-                                <option>Últimos 30 días</option>
-                                <option>Este mes</option>
+                    <!-- Timeline (columna izquierda) -->
+                    <div class="card ac-card">
+                        <div class="ac-head">
+                            <span class="c-title"><i class="fas fa-satellite-dish" style="color:var(--primary-blue);margin-right:6px"></i>Centro de Actividad</span>
+                            <span class="ac-live"><span class="dot"></span> En vivo</span>
+                        </div>
+                        <div class="ac-tabs">
+                            <button class="ac-tab active" data-serv="paseos"><i class="fas fa-paw"></i> Paseos <span class="ac-count">0</span></button>
+                            <button class="ac-tab" data-serv="adiestramiento"><i class="fas fa-graduation-cap"></i> Adiestramiento <span class="ac-count">0</span></button>
+                            <button class="ac-tab" data-serv="hospedaje"><i class="fas fa-house"></i> Hospedaje <span class="ac-count">0</span></button>
+                        </div>
+                        <div class="ac-toolbar">
+                            <div class="ac-search">
+                                <i class="fas fa-magnifying-glass"></i>
+                                <input id="ac-buscar" type="text" placeholder="Buscar cliente, mascota, paseador, #pedido...">
+                            </div>
+                            <select class="ac-filtro" id="ac-filtro">
+                                <option value="todos">Todos</option>
+                                <option value="hoy">Hoy</option>
+                                <option value="24h">Últimas 24 h</option>
+                                <option value="7d">Últimos 7 días</option>
+                                <option value="pendientes">Pendientes</option>
+                                <option value="urgentes">Urgentes</option>
+                                <option value="cancelados">Cancelados</option>
+                                <option value="completados">Completados</option>
                             </select>
                         </div>
-                        <div class="chart-wrap">
-                            <canvas id="lineChart"></canvas>
+                        <div class="ac-timeline" id="ac-timeline"></div>
+                        <button class="ac-mas" id="ac-mas" style="display:none">Cargar más</button>
+                    </div>
+
+                    <!-- Columna derecha -->
+                    <div class="ac-right">
+
+                    <!-- Necesitan atención -->
+                    <div class="card ac-atencion">
+                        <div class="card-head">
+                            <span class="c-title"><i class="fas fa-triangle-exclamation" style="color:#f97316;margin-right:6px"></i>Necesitan atención <span class="ac-at-badge" id="ac-at-badge" style="display:none">0</span></span>
+                        </div>
+                        <div class="card-body" id="ac-at-list">
+                            <div class="ac-at-vacio">Cargando…</div>
                         </div>
                     </div>
 
@@ -191,88 +221,36 @@
                             </div>
                         </div>
 
+                        <!-- Tendencia de paseos (reubicada) -->
                         <div class="card">
                             <div class="card-head">
-                                <span class="c-title">Reportes Recientes</span>
+                                <span class="c-title">Tendencia de paseos</span>
+                                <select class="chart-select">
+                                    <option>Últimos 7 días</option>
+                                    <option>Últimos 30 días</option>
+                                    <option>Este mes</option>
+                                </select>
                             </div>
-                            <div class="card-body" style="padding-top:4px;padding-bottom:4px">
-                                <a href="paseos_admin.php" class="report-item" data-tipo="paseo" style="text-decoration:none;color:inherit">
-                                    <div class="r-icon ri-green"><i class="fas fa-route"></i></div>
-                                    <div class="r-info">
-                                        <div class="r-name">Paseos completados</div>
-                                        <div class="r-date" id="r-date-paseo">–</div>
-                                    </div>
-                                    <i class="fas fa-chevron-right"
-                                        style="font-size:.68rem;color:var(--text-light)"></i>
-                                </a>
-                                <a href="pagos_admin.php" class="report-item" data-tipo="ingreso" style="text-decoration:none;color:inherit">
-                                    <div class="r-icon ri-blue"><i class="fas fa-dollar-sign"></i></div>
-                                    <div class="r-info">
-                                        <div class="r-name">Ingresos semanales</div>
-                                        <div class="r-date" id="r-date-ingreso">–</div>
-                                    </div>
-                                    <i class="fas fa-chevron-right"
-                                        style="font-size:.68rem;color:var(--text-light)"></i>
-                                </a>
-                                <a href="usuarios_admin.php" class="report-item" data-tipo="usuario" style="text-decoration:none;color:inherit">
-                                    <div class="r-icon ri-red"><i class="fas fa-user-plus"></i></div>
-                                    <div class="r-info">
-                                        <div class="r-name">Usuarios nuevos</div>
-                                        <div class="r-date" id="r-date-usuario">–</div>
-                                    </div>
-                                    <i class="fas fa-chevron-right"
-                                        style="font-size:.68rem;color:var(--text-light)"></i>
-                                </a>
-                                <a href="paseadores_admin.php" class="report-item" data-tipo="paseador" style="text-decoration:none;color:inherit">
-                                    <div class="r-icon ri-orange"><i class="fas fa-person-walking"></i></div>
-                                    <div class="r-info">
-                                        <div class="r-name">Paseadores activos</div>
-                                        <div class="r-date" id="r-date-paseador">–</div>
-                                    </div>
-                                    <i class="fas fa-chevron-right"
-                                        style="font-size:.68rem;color:var(--text-light)"></i>
-                                </a>
+                            <div class="chart-wrap" style="height:150px">
+                                <canvas id="lineChart"></canvas>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </div><!-- /columna calendario + tendencia -->
 
-                <!-- Bottom Row -->
-                <div class="bottom-row">
+                    </div><!-- /ac-right -->
+                </div><!-- /ac-layout -->
 
-                    <!-- Tabla paseos recientes -->
-                    <div class="card">
-                        <div class="card-head">
-                            <span class="c-title">Paseos Recientes</span>
-                            <a href="paseos_admin.php" class="ver-todos">Ver todos</a>
-                        </div>
-                        <div class="table-scroll">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Usuario</th>
-                                        <th>Mascota</th>
-                                        <th>Paseador</th>
-                                        <th>Fecha</th>
-                                        <th>Estado</th>
-                                        <th>Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBody"></tbody>
-                            </table>
+                <!-- Modal: resolver solicitud de cancelación -->
+                <div class="ac-modal-ov" id="ac-modal">
+                    <div class="ac-modal">
+                        <h3 id="acm-titulo">Resolver cancelación</h3>
+                        <div class="sub" id="acm-sub"></div>
+                        <textarea id="acm-nota" placeholder="Nota para el paseador (opcional)"></textarea>
+                        <div class="ac-modal-acts">
+                            <button class="acm-cancel" id="acm-cancelar">Volver</button>
+                            <button class="acm-ok" id="acm-confirmar">Confirmar</button>
                         </div>
                     </div>
-
-                    <!-- Widget estado -->
-                    <div class="status-widget">
-                        <div class="sw-title">¡Todo en orden! 🐾</div>
-                        <div class="sw-sub">Tu plataforma está funcionando correctamente.</div>
-                        <button class="sw-btn">Ver estadísticas completas</button>
-                        <img class="dog-img" src="https://images.dog.ceo/breeds/retriever-golden/n02099601_3004.jpg"
-                            alt="perro feliz" onerror="this.style.display='none'" />
-                    </div>
-
                 </div>
 
             </main>
@@ -282,6 +260,7 @@
     <!-- ══ SCRIPTS ════════════════════════════════════════════════ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="../../js/admin/dashboard_admin.js?v=1"></script>
+    <script src="../../js/admin/activity_center.js?v=1"></script>
 
 </body>
 

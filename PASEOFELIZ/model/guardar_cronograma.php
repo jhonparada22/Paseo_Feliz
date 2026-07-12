@@ -16,6 +16,7 @@ header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once 'helpers_paseos_programados.php';
 include_once 'helpers_logistica.php';
+include_once 'ActivityService.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -147,6 +148,29 @@ if ($accion === 'reemplazar_dia') {
         sincronizarInstanciasConCronograma($conn);
         materializarPaseosProgramados($conn, true);
         $nombres = implode(', ', array_map(function ($d) use ($DIAS_NOMBRE) { return $DIAS_NOMBRE[$d]; }, $dias));
+
+        // Feed del admin
+        $iq = $conn->prepare(
+            "SELECT p.id_usuario, p.id_mascota, mu.nombre_mascota, up.nombre AS paseador
+             FROM pedidos_paseo p
+             LEFT JOIN mascota_usuario mu ON mu.id_mascota = p.id_mascota
+             LEFT JOIN paseadores pa ON pa.id_paseador = ?
+             LEFT JOIN usuarios up ON up.id = pa.id_usuario
+             WHERE p.id_pedido = ?"
+        );
+        $iq->bind_param("ii", $idPaseador, $idPedido);
+        $iq->execute();
+        $info = $iq->get_result()->fetch_assoc();
+        $iq->close();
+        ActivityService::registrar($conn, [
+            'servicio' => 'paseos', 'tipo' => 'paseador_asignado',
+            'titulo' => 'Paseador asignado — ' . ($info['nombre_mascota'] ?? 'mascota'),
+            'descripcion' => 'Paseador: ' . ($info['paseador'] ?? '—') . ' · Días: ' . $nombres,
+            'id_cliente' => (int)($info['id_usuario'] ?? 0), 'id_paseador' => $idPaseador,
+            'id_mascota' => (int)($info['id_mascota'] ?? 0),
+            'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+        ]);
+
         responder(true, [], "Pedido asignado al cronograma ($nombres).");
     } catch (Exception $e) {
         $conn->rollback();

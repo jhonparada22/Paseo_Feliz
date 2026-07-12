@@ -252,11 +252,11 @@
         <div class="modal-cancelar">
             <div class="mcx-head">
                 <i class="fas fa-triangle-exclamation"></i>
-                Cancelar paseo de <span id="mcxMascota">—</span>
+                Solicitar cancelación de <span id="mcxMascota">—</span>
             </div>
             <div class="mcx-sub">
-                Solo cancela por circunstancias que impidan el paseo.
-                El cliente recibirá una notificación con el motivo.
+                El paseo NO se cancela de inmediato: el administrador revisa tu
+                solicitud y la aprueba o la rechaza. Mientras tanto continúa el paseo.
             </div>
 
             <div class="mcx-motivos" id="mcxMotivos">
@@ -278,7 +278,7 @@
                     <i class="fas fa-comment-alt"></i> Chat cliente
                 </button>
                 <button class="mcx-btn confirmar" id="mcxBtnConfirmar" onclick="confirmarCancelacion()" disabled>
-                    <i class="fas fa-ban"></i> Cancelar paseo
+                    <i class="fas fa-paper-plane"></i> Enviar solicitud
                 </button>
             </div>
         </div>

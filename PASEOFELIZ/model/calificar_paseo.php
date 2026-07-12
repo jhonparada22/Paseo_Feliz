@@ -17,6 +17,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once '../model/conexion.php';
+include_once 'ActivityService.php';
 
 define('DIAS_VENTANA_CALIFICACION', 7);
 
@@ -75,6 +76,14 @@ $stmt = $conn->prepare("UPDATE paseadores SET puntuacion = ? WHERE id_paseador =
 $stmt->bind_param("di", $prom, $idPaseador);
 $stmt->execute();
 $stmt->close();
+
+ActivityService::registrar($conn, [
+    'servicio' => 'paseos', 'tipo' => 'calificacion',
+    'titulo' => 'Cliente calificó el paseo: ' . str_repeat('★', $estrellas) . str_repeat('☆', 5 - $estrellas),
+    'descripcion' => $comentario !== '' ? $comentario : null,
+    'id_cliente' => $idUsuario, 'id_paseador' => $idPaseador,
+    'id_pedido' => $idPedido, 'id_ruta' => $idRuta, 'id_referencia' => $idPedido,
+]);
 
 responder(true, ['puntuacion_paseador' => round($prom, 1)], '¡Gracias por tu calificación!');
 ?>

@@ -34,6 +34,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once 'helpers_paseos_programados.php';
+include_once 'ActivityService.php';
 include_once '../model/conexion.php';
 
 $idPaseador = obtenerIdPaseadorSesion($conn);
@@ -93,6 +94,25 @@ if ($accion === 'entregar_grupal') {
         transicionPaseoProgramado($conn, $idP, $hoy, 'completado', [
             'actor' => 'paseador', 'detalle' => 'Entrega grupal confirmada',
         ]);
+        // Feed: un evento de finalización por mascota (nombres se
+        // denormalizan solos a partir del pedido)
+        $mp = $conn->prepare(
+            "SELECT rp.id_usuario_cliente, rp.id_mascota, mu.nombre_mascota
+             FROM ruta_paradas rp LEFT JOIN mascota_usuario mu ON mu.id_mascota = rp.id_mascota
+             WHERE rp.id_ruta = ? AND rp.id_pedido = ? LIMIT 1"
+        );
+        $mp->bind_param("ii", $idRuta, $idP);
+        $mp->execute();
+        $rowM = $mp->get_result()->fetch_assoc();
+        $mp->close();
+        ActivityService::registrar($conn, [
+            'servicio' => 'paseos', 'tipo' => 'entregado',
+            'titulo' => 'Paseo finalizado: ' . ($rowM['nombre_mascota'] ?? 'mascota'),
+            'descripcion' => 'Entrega grupal confirmada.',
+            'id_cliente' => (int)($rowM['id_usuario_cliente'] ?? 0),
+            'id_paseador' => $idPaseador, 'id_mascota' => (int)($rowM['id_mascota'] ?? 0),
+            'id_pedido' => $idP, 'id_ruta' => $idRuta,
+        ]);
     }
 
     responder(true, ['marcados' => $marcados], "Grupo entregado: $marcados perro(s).");
@@ -120,6 +140,7 @@ $stmt->close();
 if (!$pedido) responder(false, [], 'Ese paseo no está en tu ruta de hoy.');
 
 $idCliente = (int)$pedido['id_usuario_cliente'];
+$idMascota = (int)$pedido['id_mascota'];
 $mascota   = $pedido['nombre_mascota'] ?: 'tu mascota';
 
 if ($accion === 'recogido') {
@@ -143,6 +164,13 @@ if ($accion === 'recogido') {
 
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'llegada_parada', "El paseador recogió a $mascota. ¡El paseo está por comenzar!");
+
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'recogido',
+        'titulo' => "Mascota recogida: $mascota", 'descripcion' => 'El paseo está por comenzar.',
+        'id_cliente' => $idCliente, 'id_paseador' => $idPaseador, 'id_mascota' => $idMascota,
+        'id_pedido' => $idPedido, 'id_ruta' => $idRuta,
+    ]);
 
     responder(true, ['estado' => 'recogido'], "$mascota marcado como recogido.");
 
@@ -173,6 +201,13 @@ if ($accion === 'recogido') {
 
     crearNotificacionInterna($conn, $idCliente, $idRuta,
         'sistema', "$mascota fue entregado. ¡Gracias por confiar en Paseo Feliz!");
+
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'entregado',
+        'titulo' => "Paseo finalizado: $mascota", 'descripcion' => 'La mascota fue entregada.',
+        'id_cliente' => $idCliente, 'id_paseador' => $idPaseador, 'id_mascota' => $idMascota,
+        'id_pedido' => $idPedido, 'id_ruta' => $idRuta,
+    ]);
 
     responder(true, ['estado' => 'entregado'], "$mascota marcado como entregado.");
 
@@ -234,37 +269,111 @@ if ($accion === 'recogido') {
 
     crearNotificacionInterna($conn, $idCliente, $idRuta, 'sistema', $textos[$subtipo]);
 
+    $etiquetaInc = ['sin_respuesta' => 'Cliente no responde',
+                    'mascota_no_lista' => 'Mascota no lista', 'otro' => 'Inconveniente'];
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'incidencia',
+        'titulo' => "Incidencia — $mascota",
+        'descripcion' => ($etiquetaInc[$subtipo] ?? 'Incidencia') . ($nota !== '' ? ": $nota" : ''),
+        'id_cliente' => $idCliente, 'id_paseador' => $idPaseador, 'id_mascota' => $idMascota,
+        'id_pedido' => $idPedido, 'id_ruta' => $idRuta,
+    ]);
+
     responder(true, ['subtipo' => $subtipo],
         'Incidencia reportada. El cliente fue notificado y el administrador la verá en su panel.');
 
 } elseif ($accion === 'cancelar') {
+    // El paseador ya NO cancela por su cuenta: crea una SOLICITUD que el
+    // admin debe aprobar (recién ahí se cancela de verdad) o rechazar (el
+    // paseo continúa). Mientras tanto el paseo sigue su curso normal.
     $motivo = trim(substr($data['motivo'] ?? '', 0, 120));
     if ($motivo === '') {
         responder(false, [], 'Debes indicar el motivo de la cancelación.');
     }
 
-    // Cancela ambas paradas del pedido (recogida y entrega), solo si aún no se entregó
+    // El paseo no debe estar ya entregado ni cancelado
     $stmt = $conn->prepare(
-        "UPDATE ruta_paradas
-         SET hora_cancelacion = NOW(), motivo_cancelacion = ?, id_estado = 4
+        "SELECT COUNT(*) AS cancelables FROM ruta_paradas
          WHERE id_ruta = ? AND id_pedido = ? AND tipo IN ('recogida','entrega')
            AND hora_entrega IS NULL AND hora_cancelacion IS NULL"
     );
-    $stmt->bind_param("sii", $motivo, $idRuta, $idPedido);
+    $stmt->bind_param("ii", $idRuta, $idPedido);
     $stmt->execute();
-    $afectadas = $stmt->affected_rows;
+    $cancelables = (int)$stmt->get_result()->fetch_assoc()['cancelables'];
     $stmt->close();
+    if (!$cancelables) {
+        responder(false, [], 'No se puede solicitar la cancelación: el paseo ya fue entregado o cancelado.');
+    }
 
-    if (!$afectadas) responder(false, [], 'No se puede cancelar: el paseo ya fue entregado o ya estaba cancelado.');
+    // Datos de la instancia (para el registro; puede no existir aún)
+    $idPaseo = 0; $estadoPaseo = null;
+    try {
+        $stmt = $conn->prepare(
+            "SELECT id_paseo, estado FROM paseos_programados WHERE id_pedido = ? AND fecha = ?"
+        );
+        $stmt->bind_param("is", $idPedido, $hoy);
+        $stmt->execute();
+        if ($ppRow = $stmt->get_result()->fetch_assoc()) {
+            $idPaseo = (int)$ppRow['id_paseo'];
+            $estadoPaseo = $ppRow['estado'];
+        }
+        $stmt->close();
+    } catch (mysqli_sql_exception $e) {
+        if (!ppTablaFaltante($e)) throw $e;
+    }
 
-    transicionPaseoProgramado($conn, $idPedido, $hoy, 'cancelado', [
-        'actor' => 'paseador', 'motivo' => $motivo, 'cancelado_por' => 'paseador',
+    // No duplicar: una sola solicitud pendiente por pedido/día
+    try {
+        $stmt = $conn->prepare(
+            "SELECT id_solicitud FROM solicitudes_cancelacion
+             WHERE id_pedido = ? AND estado = 'pendiente' AND DATE(creado_en) = ? LIMIT 1"
+        );
+        $stmt->bind_param("is", $idPedido, $hoy);
+        $stmt->execute();
+        $yaHay = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($yaHay) {
+            responder(true, ['estado' => 'solicitud_pendiente'],
+                'Ya enviaste una solicitud de cancelación para este paseo. El administrador la está revisando.');
+        }
+
+        $stmt = $conn->prepare(
+            "INSERT INTO solicitudes_cancelacion
+                (id_paseo, id_pedido, id_ruta, id_paseador, id_cliente, id_mascota,
+                 motivo, estado_paseo_al_solicitar, estado)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')"
+        );
+        $stmt->bind_param("iiiiiiss", $idPaseo, $idPedido, $idRuta, $idPaseador,
+            $idCliente, $idMascota, $motivo, $estadoPaseo);
+        $stmt->execute();
+        $idSolicitud = $conn->insert_id;
+        $stmt->close();
+    } catch (mysqli_sql_exception $e) {
+        // Si la tabla aún no existe (migración pendiente) no bloqueamos al
+        // paseador: se comporta como antes pero sin cancelar nada.
+        if (ppTablaFaltante($e)) {
+            responder(false, [], 'El módulo de aprobación de cancelaciones aún no está disponible. Contacta al administrador.');
+        }
+        throw $e;
+    }
+
+    // Feed del admin: requiere su atención (resuelto = 0)
+    ActivityService::registrar($conn, [
+        'servicio'      => 'paseos',
+        'tipo'          => 'cancelacion_solicitada',
+        'titulo'        => "Cancelación solicitada — $mascota",
+        'descripcion'   => "Motivo: $motivo",
+        'id_cliente'    => $idCliente,
+        'id_paseador'   => $idPaseador,
+        'id_mascota'    => $idMascota,
+        'id_pedido'     => $idPedido,
+        'id_ruta'       => $idRuta,
+        'id_referencia' => $idSolicitud,
+        'resuelto'      => 0,
     ]);
 
-    crearNotificacionInterna($conn, $idCliente, $idRuta,
-        'sistema', "El paseo de hoy de $mascota fue cancelado. Motivo: $motivo. El paseador puede darte más detalles por el chat.");
-
-    responder(true, ['estado' => 'cancelado', 'motivo' => $motivo], 'Paseo cancelado y cliente notificado.');
+    responder(true, ['estado' => 'solicitud_pendiente', 'id_solicitud' => $idSolicitud],
+        'Solicitud enviada. El paseo continúa hasta que el administrador la apruebe.');
 
 } else {
     responder(false, [], 'Acción no soportada.');

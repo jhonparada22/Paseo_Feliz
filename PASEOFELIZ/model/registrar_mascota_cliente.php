@@ -15,6 +15,7 @@
  */
 include_once 'helpers.php';
 include_once '../model/conexion.php';
+include_once 'ActivityService.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -63,6 +64,14 @@ $stmt->bind_param("ississs", $idUsuario, $nombre, $raza, $edad, $avatarMascota, 
 $stmt->execute();
 $idMascota = $conn->insert_id;
 $stmt->close();
+
+ActivityService::registrar($conn, [
+    'servicio' => 'sistema', 'tipo' => 'mascota_registrada',
+    'titulo' => 'Nueva mascota registrada: ' . $nombre,
+    'descripcion' => $raza ? ('Raza: ' . $raza) : null,
+    'id_cliente' => $idUsuario, 'id_mascota' => $idMascota, 'mascota_nombre' => $nombre,
+    'id_referencia' => $idMascota,
+]);
 
 // Misma forma y normalización de avatar que model/obtener_mascotas.php,
 // para que el wizard la consuma sin adaptaciones

@@ -17,6 +17,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once 'helpers_paseos_programados.php';
+include_once 'ActivityService.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -91,6 +92,14 @@ try {
 }
 
 ppEvento($conn, $idPaseo, 'evidencia', 'paseador', "Foto de $tipo subida");
+
+ActivityService::registrar($conn, [
+    'servicio' => 'paseos', 'tipo' => 'evidencia',
+    'titulo' => "Foto del paseo de $mascota",
+    'descripcion' => 'El paseador envió una foto (' . $tipo . ').',
+    'id_cliente' => $idCliente ?: null, 'id_paseador' => $idPaseador,
+    'id_pedido' => $idPedido, 'id_referencia' => $idEvidencia,
+]);
 
 if ($idCliente) {
     crearNotificacionInterna($conn, $idCliente, null,

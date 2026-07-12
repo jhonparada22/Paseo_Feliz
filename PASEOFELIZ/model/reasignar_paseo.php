@@ -28,6 +28,7 @@ header("Access-Control-Allow-Methods: POST");
 include_once 'helpers.php';
 include_once 'helpers_paseos_programados.php';
 include_once 'helpers_logistica.php';
+include_once 'ActivityService.php';
 include_once '../model/conexion.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -205,6 +206,13 @@ try {
         $msgHoy = $resultadoHoy === 'ya_ejecutado'
             ? ' El paseo de hoy ya estaba en ejecución y no se movió.'
             : '';
+        ActivityService::registrar($conn, [
+            'servicio' => 'paseos', 'tipo' => 'reprogramado',
+            'titulo' => "Paseo reasignado — $mascota",
+            'descripcion' => "Nuevo paseador: $nombreDestino (cronograma completo).",
+            'id_cliente' => (int)$pedido['id_usuario'], 'id_paseador' => $idDestino,
+            'id_mascota' => (int)$pedido['id_mascota'], 'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+        ]);
         responder(true, ['alcance' => 'permanente', 'hoy' => $resultadoHoy],
             "Cronograma de $mascota reasignado a $nombreDestino.$msgHoy");
     }
@@ -221,6 +229,14 @@ try {
 
     crearNotificacionInterna($conn, (int)$pedido['id_usuario'], null,
         'sistema', "El paseo de hoy de $mascota será atendido por $nombreDestino.");
+
+    ActivityService::registrar($conn, [
+        'servicio' => 'paseos', 'tipo' => 'reprogramado',
+        'titulo' => "Paseo de hoy reasignado — $mascota",
+        'descripcion' => "Nuevo paseador de hoy: $nombreDestino.",
+        'id_cliente' => (int)$pedido['id_usuario'], 'id_paseador' => $idDestino,
+        'id_mascota' => (int)$pedido['id_mascota'], 'id_pedido' => $idPedido, 'id_referencia' => $idPedido,
+    ]);
 
     responder(true, ['alcance' => 'hoy', 'resultado' => $resultado],
         $resultado === 'movido_en_ruta'

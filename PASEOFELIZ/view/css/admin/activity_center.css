@@ -1,0 +1,187 @@
+/* ══════════════════════════════════════════════════════════════
+   ACTIVITY_CENTER.CSS — Centro de Actividad del dashboard admin (Fase 17)
+   Timeline en tiempo real (poll 30s). Reutiliza las tarjetas .card y las
+   variables de color del panel. Responsive: en móvil las filas pasan a
+   cards, las pestañas hacen scroll horizontal y los filtros colapsan.
+   ══════════════════════════════════════════════════════════════ */
+
+.ac-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+}
+.ac-right { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Cabecera con pestañas ── */
+.ac-card { display: flex; flex-direction: column; min-height: 420px; }
+.ac-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.ac-head .c-title { display: flex; align-items: center; gap: 8px; }
+.ac-live {
+    font-size: .62rem; font-weight: 800; letter-spacing: .04em; color: #16a34a;
+    background: #dcfce7; padding: 3px 8px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase;
+}
+.ac-live .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
+    animation: acPulse 1.6s infinite;
+}
+@keyframes acPulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
+
+.ac-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.ac-tabs::-webkit-scrollbar { display: none; }
+.ac-tab {
+    flex: none; border: 1px solid #e2e8f0; background: #fff; color: #475569;
+    padding: 8px 14px; border-radius: 10px; font-size: .8rem; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+    transition: all .15s;
+}
+.ac-tab:hover { background: #f1f5f9; }
+.ac-tab.active { background: var(--primary-blue, #3E72A6); color: #fff; border-color: var(--primary-blue, #3E72A6); }
+.ac-tab .ac-count {
+    font-size: .68rem; font-weight: 800; background: rgba(0,0,0,.08);
+    padding: 1px 7px; border-radius: 20px; min-width: 18px; text-align: center;
+}
+.ac-tab.active .ac-count { background: rgba(255,255,255,.25); }
+
+/* ── Barra de filtros + buscador ── */
+.ac-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.ac-search {
+    flex: 1 1 200px; display: flex; align-items: center; gap: 8px;
+    border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 12px; background: #f8fafc;
+}
+.ac-search input { border: 0; outline: 0; background: transparent; width: 100%; font-size: .82rem; }
+.ac-search i { color: #94a3b8; font-size: .8rem; }
+.ac-filtro {
+    border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 12px;
+    font-size: .8rem; font-weight: 600; color: #475569; background: #fff; cursor: pointer;
+}
+
+/* ── Timeline ── */
+.ac-timeline { position: relative; padding-left: 6px; overflow: hidden; }
+.ac-item {
+    display: grid; grid-template-columns: 40px 1fr auto; gap: 12px;
+    padding: 12px 4px; border-top: 1px solid #f1f5f9; position: relative;
+}
+.ac-item:first-child { border-top: 0; }
+.ac-item.ac-nuevo { animation: acEntra .5s ease; }
+@keyframes acEntra {
+    from { background: #eff6ff; transform: translateY(-6px); opacity: 0; }
+    to   { background: transparent; transform: none; opacity: 1; }
+}
+.ac-ic {
+    width: 38px; height: 38px; border-radius: 11px; display: flex;
+    align-items: center; justify-content: center; color: #fff; font-size: .95rem;
+    flex: none;
+}
+.ac-body { min-width: 0; }
+.ac-title { font-size: .84rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+.ac-desc { font-size: .76rem; color: #64748b; margin-bottom: 5px; word-break: break-word; }
+.ac-meta { font-size: .72rem; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.ac-meta b { color: #475569; font-weight: 600; }
+.ac-right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.ac-hora { font-size: .7rem; color: #94a3b8; white-space: nowrap; }
+
+/* ── Chips ── */
+.ac-chip {
+    font-size: .64rem; font-weight: 800; padding: 3px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: .02em; white-space: nowrap;
+}
+.ac-chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.st-nuevo       { background: #dbeafe; color: #1d4ed8; }
+.st-en_proceso  { background: #e0f2fe; color: #0369a1; }
+.st-pendiente   { background: #fef9c3; color: #a16207; }
+.st-completado  { background: #dcfce7; color: #15803d; }
+.st-cancelado   { background: #fee2e2; color: #b91c1c; }
+.st-urgente     { background: #ffedd5; color: #c2410c; }
+.st-incidencia  { background: #fae8ff; color: #a21caf; }
+.pr-alta  { background: #fee2e2; color: #b91c1c; }
+.pr-media { background: #fef3c7; color: #b45309; }
+.pr-baja  { background: #f1f5f9; color: #64748b; }
+
+/* ── Acciones rápidas ── */
+.ac-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.ac-btn {
+    border: 1px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer;
+    font-size: .72rem; font-weight: 700; padding: 5px 10px; border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 5px; transition: all .15s;
+}
+.ac-btn:hover { background: #f1f5f9; }
+.ac-btn.ok  { border-color: #86efac; color: #15803d; }
+.ac-btn.ok:hover  { background: #dcfce7; }
+.ac-btn.no  { border-color: #fca5a5; color: #b91c1c; }
+.ac-btn.no:hover  { background: #fee2e2; }
+
+.ac-mas {
+    width: 100%; margin-top: 12px; padding: 10px; border: 1px dashed #cbd5e1;
+    background: #f8fafc; color: #475569; border-radius: 10px; font-weight: 700;
+    font-size: .8rem; cursor: pointer;
+}
+.ac-mas:hover { background: #f1f5f9; }
+.ac-vacio { text-align: center; color: #94a3b8; padding: 40px 12px; font-size: .85rem; }
+
+/* ── Panel "Necesitan atención" ── */
+.ac-atencion .card-head { margin-bottom: 8px; }
+.ac-at-badge {
+    background: #f97316; color: #fff; font-size: .68rem; font-weight: 800;
+    padding: 1px 8px; border-radius: 20px;
+}
+.ac-at-item {
+    display: flex; gap: 10px; align-items: center; padding: 9px 0;
+    border-top: 1px solid #f1f5f9; cursor: pointer;
+}
+.ac-at-item:first-child { border-top: 0; }
+.ac-at-item i { color: #f97316; }
+.ac-at-item .t { font-size: .78rem; font-weight: 700; color: #0f172a; }
+.ac-at-item .s { font-size: .7rem; color: #94a3b8; }
+.ac-at-vacio { font-size: .78rem; color: #94a3b8; padding: 10px 0; }
+
+/* ── Toast de nuevos eventos ── */
+.ac-toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 30px;
+    font-size: .82rem; font-weight: 700; box-shadow: 0 10px 30px rgba(2,6,23,.3);
+    opacity: 0; pointer-events: none; transition: all .3s; z-index: 9999;
+}
+.ac-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Modal de resolución de cancelación ── */
+.ac-modal-ov {
+    position: fixed; inset: 0; background: rgba(15,23,42,.55); z-index: 9998;
+    display: none; align-items: center; justify-content: center; padding: 16px;
+}
+.ac-modal-ov.open { display: flex; }
+.ac-modal {
+    background: #fff; border-radius: 16px; max-width: 420px; width: 100%;
+    padding: 22px; box-shadow: 0 24px 60px rgba(2,6,23,.35);
+}
+.ac-modal h3 { font-size: 1.05rem; color: #0f172a; margin-bottom: 4px; }
+.ac-modal .sub { font-size: .82rem; color: #64748b; margin-bottom: 14px; }
+.ac-modal textarea {
+    width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px;
+    font-size: .82rem; resize: vertical; min-height: 60px; margin-bottom: 14px;
+}
+.ac-modal-acts { display: flex; gap: 8px; justify-content: flex-end; }
+.ac-modal-acts button {
+    border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 800;
+    font-size: .82rem; cursor: pointer;
+}
+.acm-cancel { background: #f1f5f9; color: #475569; }
+.acm-ok { background: #22c55e; color: #fff; }
+.acm-no { background: #ef4444; color: #fff; }
+
+/* ── Responsive ── */
+@media (max-width: 980px) {
+    .ac-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+    .ac-item { grid-template-columns: 34px 1fr; }
+    .ac-right-col { grid-column: 1 / -1; flex-direction: row; align-items: center;
+                    justify-content: space-between; margin-top: 4px; }
+    .ac-chips { justify-content: flex-start; }
+    .ac-toolbar { flex-direction: column; }
+}
