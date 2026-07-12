@@ -107,8 +107,8 @@
 .ac-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .ac-btn {
     border: 1px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer;
-    font-size: .72rem; font-weight: 700; padding: 5px 10px; border-radius: 8px;
-    display: inline-flex; align-items: center; gap: 5px; transition: all .15s;
+    font-size: .72rem; font-weight: 700; padding: 7px 12px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all .15s;
 }
 .ac-btn:hover { background: #f1f5f9; }
 .ac-btn.ok  { border-color: #86efac; color: #15803d; }
@@ -184,4 +184,10 @@
                     justify-content: space-between; margin-top: 4px; }
     .ac-chips { justify-content: flex-start; }
     .ac-toolbar { flex-direction: column; }
+    /* Objetivos táctiles cómodos para el dedo (≥44px) */
+    .ac-btn   { min-height: 44px; padding: 8px 14px; }
+    .ac-tab   { min-height: 44px; }
+    .ac-filtro, .ac-search { min-height: 44px; }
+    /* El toast no debe quedar tapado por la barra inferior de 58px */
+    .ac-toast { bottom: 74px; }
 }

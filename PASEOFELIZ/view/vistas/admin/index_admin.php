@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/admin/admin.css">
     <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
-    <link rel="stylesheet" href="../../css/admin/activity_center.css">
+    <link rel="stylesheet" href="../../css/admin/activity_center.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/activity_center.css'); ?>">
     
 </head>
 
@@ -259,8 +259,8 @@
 
     <!-- ══ SCRIPTS ════════════════════════════════════════════════ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <script src="../../js/admin/dashboard_admin.js?v=1"></script>
-    <script src="../../js/admin/activity_center.js?v=1"></script>
+    <script src="../../js/admin/dashboard_admin.js?v=<?php echo @filemtime(__DIR__ . '/../../js/admin/dashboard_admin.js'); ?>"></script>
+    <script src="../../js/admin/activity_center.js?v=<?php echo @filemtime(__DIR__ . '/../../js/admin/activity_center.js'); ?>"></script>
 
 </body>
 
