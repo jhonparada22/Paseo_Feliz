@@ -65,6 +65,9 @@
             <div class="ac-right-col">
                 <span class="ac-hora">${horaRelativa(it.creado_en)}</span>
                 <div class="ac-chips">${chips}</div>
+                ${(it.tipo === 'cancelacion_solicitada' && it.resuelto === 0)
+                    ? ''
+                    : `<button class="ac-visto" data-visto="${it.id}" title="Ocultar este reporte"><i class="fas fa-check"></i> Visto</button>`}
             </div>
         </div>`;
     }
@@ -263,6 +266,28 @@
         if (it) alert('Motivo de la solicitud:\n\n' + (it.descripcion || '—'));
     }
 
+    // Marcar un reporte como visto → se oculta del feed (no se borra)
+    function marcarVisto(id) {
+        fetch(API + 'marcar_actividad_visto.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        })
+            .then(r => r.json())
+            .then(d => {
+                if (!d.success) return;
+                S.items = S.items.filter(x => x.id !== id);
+                const el = document.querySelector(`.ac-item[data-id="${id}"]`);
+                if (el) {
+                    el.style.transition = 'opacity .2s, transform .2s';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateX(24px)';
+                    setTimeout(() => { el.remove(); if (!S.items.length) pintar(); }, 200);
+                }
+                cargarAtencion();
+            })
+            .catch(() => {});
+    }
+
     // ── Eventos de UI ─────────────────────────────────────────────
     function initEventos() {
         // Pestañas
@@ -286,6 +311,8 @@
 
         // Delegación de acciones en el timeline
         $('#ac-timeline').addEventListener('click', e => {
+            const v = e.target.closest('.ac-visto');
+            if (v) { marcarVisto(parseInt(v.dataset.visto, 10)); return; }
             const b = e.target.closest('.ac-btn[data-acc]');
             if (!b) return;
             const id = parseInt(b.dataset.id, 10);

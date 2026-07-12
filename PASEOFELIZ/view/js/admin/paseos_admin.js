@@ -179,7 +179,7 @@ function renderAlertas() {
 function pedidosFiltrados() {
     const q = document.getElementById('searchInput').value.toLowerCase();
     return PEDIDOS.filter(p => {
-        const texto = `${p.mascota} ${p.cliente} ${p.barrio} ${p.plan} ${p.asignacion ? p.asignacion.paseador : ''}`.toLowerCase();
+        const texto = `${p.mascota} ${p.cliente} ${p.barrio} ${p.asignacion ? p.asignacion.paseador : ''}`.toLowerCase();
         const matchQ = !q || texto.includes(q);
         let matchF = true;
         if (filtroActual === 'validar')    matchF = p.estado === 'en_validacion';
@@ -213,7 +213,7 @@ function renderCards() {
             </div>
             <div class="pc-body">
                 <div class="pc-name">${p.mascota}</div>
-                <div class="pc-sub">Pedido #${p.id_pedido} · ${p.plan}</div>
+                <div class="pc-sub">Pedido #${p.id_pedido} · ${p.paseos_mes} paseos/mes</div>
                 <div class="pc-tags">
                     <span class="pc-tag ${st.cls}">${st.lbl}</span>
                     <span class="pc-tag modalidad">${p.modalidad === 'grupal' ? 'Grupal' : 'Individual'}</span>
@@ -332,7 +332,7 @@ function renderDetalle(id) {
 
         <div class="dp-section">
             <div class="dp-label">Plan contratado</div>
-            <div class="dp-row"><i class="fas fa-receipt"></i> ${p.plan} · <strong>${cop(p.total)}</strong></div>
+            <div class="dp-row"><i class="fas fa-receipt"></i> ${p.paseos_mes} paseos al mes · <strong>${cop(p.total)}</strong></div>
             <div class="dp-row"><i class="fas fa-clock"></i> ${p.duracion_min} min · ${p.modalidad === 'grupal' ? 'Grupal' : 'Individual'}</div>
             <div class="dp-row"><i class="fas fa-calendar"></i> ${diasPreferidosTxt(p.dias_preferidos)} · ${p.franja_horaria || '—'}</div>
             <div class="dp-row"><i class="fas fa-play"></i> Inicia: ${p.fecha_inicio}</div>

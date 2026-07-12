@@ -85,6 +85,12 @@
 .ac-meta b { color: #475569; font-weight: 600; }
 .ac-right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .ac-hora { font-size: .7rem; color: #94a3b8; white-space: nowrap; }
+.ac-visto {
+    border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer;
+    font-size: .68rem; font-weight: 700; padding: 4px 9px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 4px; transition: all .15s; white-space: nowrap;
+}
+.ac-visto:hover { background: #dcfce7; border-color: #86efac; color: #15803d; }
 
 /* ── Chips ── */
 .ac-chip {

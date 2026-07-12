@@ -108,6 +108,26 @@ class ActivityService
     }
 
     /**
+     * true si actividad_sistema ya tiene la columna `visto` (migración
+     * fase 17b). Cacheado por petición; permite desplegar el código antes
+     * de correr la migración sin romper el feed.
+     */
+    private static $tieneVisto = null;
+    private static function tieneVisto($conn)
+    {
+        if (self::$tieneVisto === null) {
+            try {
+                $r = $conn->query("SHOW COLUMNS FROM actividad_sistema LIKE 'visto'");
+                self::$tieneVisto = $r && $r->num_rows > 0;
+                if ($r) $r->close();
+            } catch (mysqli_sql_exception $e) {
+                self::$tieneVisto = false;
+            }
+        }
+        return self::$tieneVisto;
+    }
+
+    /**
      * Registra un evento en el feed. NUNCA lanza (best-effort).
      * $a admite: servicio, tipo (obligatorio), estado, prioridad, titulo
      * (obligatorio), descripcion, id_cliente, cliente_nombre, id_paseador,
@@ -225,6 +245,8 @@ class ActivityService
         // Tipos ocultos en el feed (se registran/backfillean pero no se
         // muestran): calificación del cliente y fotos del paseo.
         $where[] = "tipo NOT IN ('calificacion', 'evidencia')";
+        // Reportes que el admin marcó como vistos (fase 17b)
+        if (self::tieneVisto($conn)) $where[] = 'visto = 0';
 
         if (!empty($o['servicio']) && $o['servicio'] !== 'todos') {
             $where[] = 'servicio = ?';
@@ -295,11 +317,12 @@ class ActivityService
         $out = ['paseos' => 0, 'adiestramiento' => 0, 'hospedaje' => 0,
                 'necesitan_atencion' => 0, 'max_id' => 0];
         try {
+            $vistoCond = self::tieneVisto($conn) ? ' AND visto = 0' : '';
             $res = $conn->query(
                 "SELECT servicio, COUNT(*) AS n,
                         SUM(resuelto = 0) AS pend, MAX(id_actividad) AS mx
                  FROM actividad_sistema
-                 WHERE tipo NOT IN ('calificacion', 'evidencia')
+                 WHERE tipo NOT IN ('calificacion', 'evidencia')$vistoCond
                  GROUP BY servicio"
             );
             $maxId = 0; $atencion = 0;
