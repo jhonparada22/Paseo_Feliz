@@ -197,6 +197,11 @@
             }
 
             renderPaso(1);
+
+            // Usuario nuevo sin mascotas: abrir de una vez el formulario de
+            // registro para que registre y siga con el pago sin salir del
+            // wizard (antes había que ir a Usuario → tu perfil y volver).
+            if (!EXPRESS && !datos.mascotas.length) abrirFormRegistrarMascota();
         } catch (e) {
             $('#wz-cuerpo').innerHTML =
                 '<div style="text-align:center;padding:60px;color:#b91c1c">No se pudieron cargar tus datos. Verifica tu conexión e inténtalo de nuevo.</div>';

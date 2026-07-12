@@ -490,7 +490,13 @@ function actualizarBotonesBooking(svcKey) {
     if (!membresias.tieneMascotas) {
         avail.innerHTML = `<span class="avail-dot avail-off"></span> No tienes mascotas registradas`;
         btnP.innerHTML  = `<i class="ph ph-paw-print"></i> Registrar una mascota`;
-        btnP.onclick    = () => { window.location.href = 'usuario.php'; };
+        // Paseos permite registrar la mascota DENTRO del wizard (se abre con
+        // el formulario listo) y seguir directo al pago, sin pasar por
+        // Usuario → tu perfil. Los otros servicios aún no tienen registro
+        // inline, así que conservan la ruta al perfil.
+        btnP.onclick = (svcKey === 'paseos' && tieneWizard)
+            ? () => abrirWizardServicio()
+            : () => { window.location.href = 'usuario.php'; };
         btnS.style.display = 'none';
 
         requestAnimationFrame(() => {
@@ -567,6 +573,62 @@ function renderMascotasMembresia(svcKey) {
     if (cont) cont.innerHTML = '';
 }
 
+// — Tutorial de bienvenida para usuarios nuevos (sin mascotas) —
+// Se muestra UNA sola vez por navegador (localStorage). El CTA abre el
+// wizard de Paseos, que al no haber mascotas muestra de una vez el
+// formulario de registro: el usuario registra a su peludito y sigue
+// directo al pago, todo en el mismo flujo.
+function mostrarTutorialBienvenida() {
+    if (membresias.tieneMascotas) return;
+    if (localStorage.getItem('pf_tutorial_visto')) return;
+    if (document.getElementById('pf-tuto-overlay')) return;
+
+    if (!document.getElementById('pf-tuto-css')) {
+        const css = document.createElement('style');
+        css.id = 'pf-tuto-css';
+        css.textContent = `
+        #pf-tuto-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;animation:pfTutoIn .25s ease}
+        @keyframes pfTutoIn{from{opacity:0}to{opacity:1}}
+        .pf-tuto-card{background:#fff;border-radius:20px;max-width:430px;width:100%;padding:28px 26px 22px;box-shadow:0 24px 60px rgba(2,6,23,.35);text-align:center;animation:pfTutoUp .3s ease}
+        @keyframes pfTutoUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .pf-tuto-emoji{font-size:2.4rem;line-height:1}
+        .pf-tuto-card h2{margin:8px 0 2px;font-size:1.25rem;color:#0f172a}
+        .pf-tuto-sub{margin:0 0 16px;font-size:.85rem;color:#64748b}
+        .pf-tuto-paso{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:9px 10px;border-radius:12px;background:#f8fafc;margin-bottom:8px}
+        .pf-tuto-paso .n{flex:none;width:26px;height:26px;border-radius:50%;background:#2563eb;color:#fff;font-weight:800;font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:2px}
+        .pf-tuto-paso strong{font-size:.84rem;color:#0f172a}
+        .pf-tuto-paso small{font-size:.74rem;color:#64748b}
+        #pf-tuto-cta{width:100%;margin-top:10px;padding:13px;border:0;border-radius:12px;background:#22c55e;color:#fff;font-weight:800;font-size:.92rem;cursor:pointer}
+        #pf-tuto-cta:hover{background:#16a34a}
+        #pf-tuto-despues{width:100%;margin-top:8px;padding:9px;border:0;background:none;color:#94a3b8;font-size:.78rem;cursor:pointer;text-decoration:underline}
+        `;
+        document.head.appendChild(css);
+    }
+
+    const ov = document.createElement('div');
+    ov.id = 'pf-tuto-overlay';
+    ov.innerHTML = `
+      <div class="pf-tuto-card">
+        <div class="pf-tuto-emoji">🐾</div>
+        <h2>¡Bienvenido a Paseo Feliz!</h2>
+        <p class="pf-tuto-sub">Tu peludito sale a pasear en 3 pasos:</p>
+        <div class="pf-tuto-paso"><span class="n">1</span><div><strong>Registra a tu mascota</strong><br><small>Nombre y foto — toma menos de un minuto y lo haces aquí mismo.</small></div></div>
+        <div class="pf-tuto-paso"><span class="n">2</span><div><strong>Elige su plan de paseos</strong><br><small>Cuántos paseos al mes, qué días y a qué hora exacta quieres que salga.</small></div></div>
+        <div class="pf-tuto-paso"><span class="n">3</span><div><strong>Síguelo en vivo</strong><br><small>GPS en tiempo real, fotos del paseo y aviso de recogida y entrega.</small></div></div>
+        <button id="pf-tuto-cta">🐶 Registrar mi mascota ahora</button>
+        <button id="pf-tuto-despues">Explorar primero</button>
+      </div>`;
+    document.body.appendChild(ov);
+
+    const cerrar = () => { localStorage.setItem('pf_tutorial_visto', '1'); ov.remove(); };
+    ov.querySelector('#pf-tuto-despues').addEventListener('click', cerrar);
+    ov.querySelector('#pf-tuto-cta').addEventListener('click', () => {
+        cerrar();
+        if (typeof abrirWizardPaseos === 'function') abrirWizardPaseos();
+        else window.location.href = 'usuario.php';
+    });
+}
+
 // — Llamar al endpoint PHP y guardar estado —
 async function cargarMembresias() {
     // inicio.php está en view/pagina_principal/ → controller está en ../../controller/
@@ -610,6 +672,9 @@ async function cargarMembresias() {
 
     // SIEMPRE renderizar, con o sin datos de membresía
     renderService('paseos');
+
+    // Usuario nuevo sin mascotas: tutorial de bienvenida (una sola vez)
+    mostrarTutorialBienvenida();
 }
 
 // ── INIT ──
