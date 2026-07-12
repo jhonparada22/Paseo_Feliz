@@ -85,9 +85,6 @@
                         <button class="ph-btn" title="Alertas" onclick="showNotif('Sin alertas nuevas','info')">
                             <i class="fas fa-bell"></i>
                         </button>
-                        <button class="ph-btn" title="Salir" onclick="window.location.href='../../../controller/logout.php'">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
                         <button class="ph-btn" title="Plegar / expandir panel" id="btnPlegarHeader" onclick="togglePanelHeader()">
                             <i class="fas fa-chevron-up" id="iconPlegar"></i>
                         </button>
