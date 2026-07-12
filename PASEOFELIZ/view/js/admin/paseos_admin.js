@@ -13,6 +13,7 @@ let filtroActual = 'todos';
 // selectedId). Ver activity_center.js (acción "ver_paseo").
 let selectedId = parseInt(new URLSearchParams(location.search).get('pedido'), 10) || null;
 let deepLinkPending = !!selectedId;   // desplaza el detalle a la vista una vez
+const seleccion = new Set();          // ids marcados para eliminar (multi-select)
 
 const DIAS_CORTO = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom' };
 const cop = n => '$' + Math.round(n).toLocaleString('es-CO');
@@ -201,9 +202,12 @@ function renderCards() {
     lista.forEach(p => {
         const st = estadoPedido(p);
         const div = document.createElement('div');
-        div.className = 'paseo-card' + (selectedId === p.id_pedido ? ' selected' : '') + (!p.asignacion && st.cls === 'b-programado' ? ' sin-paseador' : '');
+        div.className = 'paseo-card' + (selectedId === p.id_pedido ? ' selected' : '') + (!p.asignacion && st.cls === 'b-programado' ? ' sin-paseador' : '') + (seleccion.has(p.id_pedido) ? ' sel-check' : '');
         div.innerHTML = `
             <div class="pc-header">
+                <label class="pc-check" title="Seleccionar para eliminar">
+                    <input type="checkbox" data-sel="${p.id_pedido}" ${seleccion.has(p.id_pedido) ? 'checked' : ''}>
+                </label>
                 <span class="pc-emoji">🐾</span>
                 <span class="pc-dot" style="background:${st.dot}"></span>
             </div>
@@ -220,8 +224,76 @@ function renderCards() {
                 <div class="pc-owner"><i class="fas fa-user"></i> ${p.cliente} · <strong>${cop(p.total)}</strong></div>
             </div>`;
         div.addEventListener('click', () => seleccionar(p.id_pedido));
+        // El checkbox no debe abrir el detalle: solo marca/desmarca
+        const chk = div.querySelector('.pc-check');
+        chk.addEventListener('click', e => e.stopPropagation());
+        chk.querySelector('input').addEventListener('change', e => toggleSeleccion(p.id_pedido, e.target.checked));
         grid.appendChild(div);
     });
+    renderBulkBar();
+}
+
+// ── Selección múltiple + eliminación ───────────────────────────
+function toggleSeleccion(id, checked) {
+    if (checked) seleccion.add(id); else seleccion.delete(id);
+    const card = document.querySelector(`.paseo-card [data-sel="${id}"]`)?.closest('.paseo-card');
+    if (card) card.classList.toggle('sel-check', checked);
+    renderBulkBar();
+}
+
+function limpiarSeleccion() {
+    seleccion.clear();
+    document.querySelectorAll('.pc-check input:checked').forEach(i => (i.checked = false));
+    document.querySelectorAll('.paseo-card.sel-check').forEach(c => c.classList.remove('sel-check'));
+    renderBulkBar();
+}
+
+function renderBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    if (!bar) return;
+    const n = seleccion.size;
+    document.getElementById('bulkCount').textContent =
+        n + (n === 1 ? ' pedido seleccionado' : ' pedidos seleccionados');
+    bar.classList.toggle('show', n > 0);
+}
+
+function abrirModalEliminar() {
+    if (!seleccion.size) return;
+    const ids = [...seleccion];
+    const nombres = ids.map(id => (PEDIDOS.find(p => p.id_pedido === id)?.mascota) || ('#' + id));
+    document.getElementById('delModalCount').textContent = ids.length;
+    document.getElementById('delModalList').textContent = nombres.join(', ');
+    document.getElementById('deleteModal').classList.add('open');
+}
+function cerrarModalEliminar() { document.getElementById('deleteModal').classList.remove('open'); }
+
+async function confirmarEliminar() {
+    const ids = [...seleccion];
+    if (!ids.length) return;
+    const btn = document.getElementById('confirmDelete');
+    btn.disabled = true;
+    try {
+        const r = await fetch(API + 'eliminar_pedidos_paseos.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids }),
+        });
+        const d = await r.json();
+        if (!d.success) { showToast(d.message || 'No se pudo eliminar', 'error'); return; }
+        // Si el detalle abierto quedó eliminado, se limpia
+        if (selectedId && ids.includes(selectedId)) {
+            selectedId = null;
+            document.getElementById('dpContent').style.display = 'none';
+            document.getElementById('dpEmpty').style.display = '';
+        }
+        seleccion.clear();
+        cerrarModalEliminar();
+        showToast(d.message, 'success');
+        await cargarPedidos();
+    } catch (e) {
+        showToast('Error de conexión al eliminar', 'error');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // ── Detalle ────────────────────────────────────────────────────
@@ -494,6 +566,16 @@ document.getElementById('reassignModal').addEventListener('click', e => {
     if (e.target === document.getElementById('reassignModal')) document.getElementById('reassignModal').classList.remove('open');
 });
 document.getElementById('confirmReassign').addEventListener('click', confirmarReasignacion);
+
+// ── Eliminación múltiple ───────────────────────────────────────
+document.getElementById('bulkClear').addEventListener('click', limpiarSeleccion);
+document.getElementById('bulkDelete').addEventListener('click', abrirModalEliminar);
+document.getElementById('closeDelete').addEventListener('click', cerrarModalEliminar);
+document.getElementById('cancelDelete').addEventListener('click', cerrarModalEliminar);
+document.getElementById('deleteModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('deleteModal')) cerrarModalEliminar();
+});
+document.getElementById('confirmDelete').addEventListener('click', confirmarEliminar);
 
 // ── Sidebar hamburguesa ────────────────────────────────────────
 const btnMenu = document.getElementById('btn-menu');

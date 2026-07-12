@@ -7,7 +7,7 @@
   <title>Paseo Feliz – Gestión de Paseos</title>
   <link rel="icon" href="../../assets/images/logo.png" type="image/png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <link rel="stylesheet" href="../../css/admin/paseos_admin.css" />
+  <link rel="stylesheet" href="../../css/admin/paseos_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/paseos_admin.css'); ?>" />
   <!-- Sidebar unificado admin (rojo) — después del css de la página -->
   <link rel="stylesheet" href="../../css/admin/sidebar_admin.css" />
 </head>
@@ -180,7 +180,39 @@
   </div>
 </div>
 
+<!-- Modal eliminar pedidos -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="m-title">Eliminar pedidos</div><div class="m-sub">Esta acción no se puede deshacer.</div></div>
+      <button class="btn-close-modal" id="closeDelete"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.86rem;color:var(--muted);line-height:1.5">
+        Vas a eliminar <strong id="delModalCount">0</strong> pedido(s) de forma permanente:
+      </p>
+      <p style="font-size:.84rem;font-weight:700;color:var(--text);margin-top:6px" id="delModalList"></p>
+      <p style="font-size:.75rem;color:#b91c1c;margin-top:10px;line-height:1.5">
+        <i class="fas fa-triangle-exclamation"></i> Se borran el pedido, su cronograma, sus paseos programados y su historial de actividad. El pago queda registrado pero desligado.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelDelete">Cancelar</button>
+      <button class="btn-confirm" id="confirmDelete" style="background:#ef4444"><i class="fas fa-trash"></i> Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Barra flotante de selección múltiple -->
+<div class="bulk-bar" id="bulkBar">
+  <span id="bulkCount">0 pedidos seleccionados</span>
+  <div class="bulk-actions">
+    <button class="bulk-clear" id="bulkClear">Limpiar</button>
+    <button class="bulk-del" id="bulkDelete"><i class="fas fa-trash"></i> Eliminar</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-<script src="../../js/admin/paseos_admin.js?v=3"></script>
+<script src="../../js/admin/paseos_admin.js?v=<?php echo @filemtime(__DIR__ . '/../../js/admin/paseos_admin.js'); ?>"></script>
 </body>
 </html>
