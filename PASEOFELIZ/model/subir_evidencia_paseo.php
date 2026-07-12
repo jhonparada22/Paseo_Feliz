@@ -93,14 +93,6 @@ try {
 
 ppEvento($conn, $idPaseo, 'evidencia', 'paseador', "Foto de $tipo subida");
 
-ActivityService::registrar($conn, [
-    'servicio' => 'paseos', 'tipo' => 'evidencia',
-    'titulo' => "Foto del paseo de $mascota",
-    'descripcion' => 'El paseador envió una foto (' . $tipo . ').',
-    'id_cliente' => $idCliente ?: null, 'id_paseador' => $idPaseador,
-    'id_pedido' => $idPedido, 'id_referencia' => $idEvidencia,
-]);
-
 if ($idCliente) {
     crearNotificacionInterna($conn, $idCliente, null,
         'sistema', "📷 Tu paseador subió una foto del paseo de $mascota. Puedes verla en tu panel.");

@@ -77,6 +77,7 @@
                 case 'ver_motivo':  b.push(btn(it.id, 'ver_motivo', 'fa-eye', 'Ver motivo')); break;
                 case 'aprobar':     b.push(btn(it.id, 'aprobar', 'fa-check', 'Aprobar', 'ok')); break;
                 case 'rechazar':    b.push(btn(it.id, 'rechazar', 'fa-xmark', 'Rechazar', 'no')); break;
+                case 'ver_paseo':   b.push(link('paseos_admin.php?pedido=' + (it.id_pedido || ''), 'fa-eye', 'Ver paseo')); break;
                 case 'ver_cliente': b.push(link('usuarios_admin.php', 'fa-user', 'Ver cliente')); break;
                 case 'ver_mapa':    b.push(link('mapa_admin.php', 'fa-map-location-dot', 'Ver mapa')); break;
                 case 'abrir_chat':  b.push(link('Chat_admin.php', 'fa-comment-alt', 'Chat')); break;

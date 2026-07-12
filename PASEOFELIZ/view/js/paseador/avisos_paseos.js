@@ -85,6 +85,34 @@
             .catch(() => { /* sin conexión: se reintenta en el próximo ciclo */ });
     }
 
+    // ── Notificaciones del sistema (p. ej. rechazo de una cancelación) ──
+    // El paseador no tenía forma de ver las notificaciones que le llegan a
+    // la tabla `notificaciones`; aquí se muestran las NUEVAS como toast +
+    // notificación del navegador. Baseline en localStorage para no volcar
+    // el historial la primera vez.
+    function revisarNotificaciones() {
+        fetch(API_AVISOS + 'obtener_notificaciones.php')
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success || !data.notificaciones || !data.notificaciones.length) return;
+                const maxId = Math.max(...data.notificaciones.map(n => n.id));
+                const visto = parseInt(localStorage.getItem('pf_notif_ultimo') || '0', 10);
+                if (!visto) {                          // primera vez: fijar base, sin avisar
+                    localStorage.setItem('pf_notif_ultimo', String(maxId));
+                    return;
+                }
+                data.notificaciones
+                    .filter(n => n.id > visto)
+                    .sort((a, b) => a.id - b.id)       // de la más antigua a la más nueva
+                    .slice(-3)                         // tope por si hay varias
+                    .forEach(n => notificar('🔔 Paseo Feliz', n.mensaje));
+                localStorage.setItem('pf_notif_ultimo', String(maxId));
+            })
+            .catch(() => { /* sin conexión: se reintenta en el próximo ciclo */ });
+    }
+
     revisarPaseos();
+    revisarNotificaciones();
     setInterval(revisarPaseos, 60000);
+    setInterval(revisarNotificaciones, 60000);
 })();

@@ -77,13 +77,5 @@ $stmt->bind_param("di", $prom, $idPaseador);
 $stmt->execute();
 $stmt->close();
 
-ActivityService::registrar($conn, [
-    'servicio' => 'paseos', 'tipo' => 'calificacion',
-    'titulo' => 'Cliente calificó el paseo: ' . str_repeat('★', $estrellas) . str_repeat('☆', 5 - $estrellas),
-    'descripcion' => $comentario !== '' ? $comentario : null,
-    'id_cliente' => $idUsuario, 'id_paseador' => $idPaseador,
-    'id_pedido' => $idPedido, 'id_ruta' => $idRuta, 'id_referencia' => $idPedido,
-]);
-
 responder(true, ['puntuacion_paseador' => round($prom, 1)], '¡Gracias por tu calificación!');
 ?>

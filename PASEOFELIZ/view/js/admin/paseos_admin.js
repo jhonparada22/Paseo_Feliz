@@ -8,7 +8,11 @@ const API = '../../../model/';
 let PEDIDOS = [];
 let PASEADORES = [];
 let filtroActual = 'todos';
-let selectedId = null;
+// Deep-link desde el Centro de Actividad: paseos_admin.php?pedido=19 abre
+// ese pedido ya seleccionado (cargarPedidos llama renderDetalle si hay
+// selectedId). Ver activity_center.js (acción "ver_paseo").
+let selectedId = parseInt(new URLSearchParams(location.search).get('pedido'), 10) || null;
+let deepLinkPending = !!selectedId;   // desplaza el detalle a la vista una vez
 
 const DIAS_CORTO = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom' };
 const cop = n => '$' + Math.round(n).toLocaleString('es-CO');
@@ -234,6 +238,10 @@ function renderDetalle(id) {
     document.getElementById('dpEmpty').style.display = 'none';
     const dp = document.getElementById('dpContent');
     dp.style.display = 'block';
+    if (deepLinkPending) {
+        deepLinkPending = false;
+        setTimeout(() => dp.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    }
     dp.innerHTML = `
         <div class="dp-head">
             <span class="dp-emoji">🐕</span>

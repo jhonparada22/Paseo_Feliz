@@ -222,6 +222,10 @@ class ActivityService
         $params = [];
         $tipos  = '';
 
+        // Tipos ocultos en el feed (se registran/backfillean pero no se
+        // muestran): calificación del cliente y fotos del paseo.
+        $where[] = "tipo NOT IN ('calificacion', 'evidencia')";
+
         if (!empty($o['servicio']) && $o['servicio'] !== 'todos') {
             $where[] = 'servicio = ?';
             $params[] = $o['servicio']; $tipos .= 's';
@@ -294,7 +298,9 @@ class ActivityService
             $res = $conn->query(
                 "SELECT servicio, COUNT(*) AS n,
                         SUM(resuelto = 0) AS pend, MAX(id_actividad) AS mx
-                 FROM actividad_sistema GROUP BY servicio"
+                 FROM actividad_sistema
+                 WHERE tipo NOT IN ('calificacion', 'evidencia')
+                 GROUP BY servicio"
             );
             $maxId = 0; $atencion = 0;
             while ($row = $res->fetch_assoc()) {
@@ -349,10 +355,14 @@ class ActivityService
         if (in_array($tipo, ['pago_aprobado', 'pago_rechazado'], true)) {
             return ['ver_comprobante'];
         }
+        // Compra: acceso directo al pedido en el módulo de Paseos
+        if ($tipo === 'compra' && $r['id_pedido']) {
+            return ['ver_paseo'];
+        }
         // Eventos ligados a un paseo con cliente: acciones operativas
         if ($r['id_pedido'] && in_array($tipo, [
-            'compra','paseador_asignado','recogido','en_ruta','entregado',
-            'incidencia','evidencia','reprogramado','en_camino','llegada',
+            'paseador_asignado','recogido','en_ruta','entregado',
+            'incidencia','reprogramado','en_camino','llegada',
             'direccion_validada','cancelacion_aprobada'
         ], true)) {
             return ['ver_cliente', 'ver_mapa', 'abrir_chat'];
