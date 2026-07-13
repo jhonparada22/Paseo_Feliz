@@ -1,0 +1,410 @@
+/* ================================================================
+   adopcion.css — Paseo Feliz (Admin)
+   Usado por: adopcion_admin.php, adopcion_info_admin.php,
+              adopcion_agregar_admin.php
+   Ruta: css/admin/adopcion.css
+   ================================================================ */
+
+/* ── LAYOUT GENERAL ── */
+.adopt-main,
+.info-main,
+.form-main {
+    flex: 1;
+    padding: 28px;
+    background: #F5F7FA;
+    overflow-y: auto;
+}
+
+/* ── CABECERAS DE PÁGINA ── */
+.adopt-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.adopt-page-header h1 { font-size: 1.4rem; font-weight: 800; color: #2c3e50; }
+.adopt-page-header p  { font-size: .82rem; color: #777; margin-top: 3px; }
+
+.info-header,
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+.info-header a,
+.form-header a { color: #777; font-size: 1.2rem; transition: color .2s; text-decoration: none; }
+.info-header a:hover,
+.form-header a:hover { color: #2c3e50; }
+.info-header h1,
+.form-header h1 { font-size: 1.3rem; font-weight: 800; color: #2c3e50; }
+
+/* ── BOTÓN AGREGAR ── */
+.btn-agregar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #3E72A6;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: .85rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s;
+}
+.btn-agregar:hover { background: #2c5282; }
+
+/* ── TOAST ÉXITO ── */
+.toast-msg {
+    background: #27ae60;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+}
+
+/* ── GRID DE TARJETAS (adopcion_admin) ── */
+.adopt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 22px;
+}
+
+.adopt-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #E0E0E0;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    cursor: pointer;
+}
+.adopt-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+
+.adopt-card-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+    background: #eee;
+}
+
+.adopt-card-body {
+    padding: 14px 16px;
+}
+.adopt-card-body h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+.adopt-card-body p {
+    font-size: .78rem;
+    color: #777;
+}
+
+/* Botón borrar en tarjeta */
+.btn-borrar-card {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(239,68,68,.9);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .2s;
+    z-index: 10;
+}
+.adopt-card:hover .btn-borrar-card { opacity: 1; }
+
+/* Estado vacío */
+.empty-adopt {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+}
+.empty-adopt i { font-size: 3rem; display: block; margin-bottom: 14px; }
+
+/* ── CARD DETALLE (adopcion_info_admin) ── */
+.info-card,
+.form-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #E0E0E0;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    overflow: hidden;
+    max-width: 900px;
+}
+
+.form-card {
+    padding: 30px;
+    max-width: 750px;
+}
+
+.info-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 0;
+}
+
+.info-img-col {
+    background: #f0f0f0;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+.info-img-col img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.info-data-col {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.info-nombre {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1a3c5a;
+    border-bottom: 2px solid #E0E0E0;
+    padding-bottom: 12px;
+}
+
+.info-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.stat-item {
+    background: #F5F7FA;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid #E0E0E0;
+}
+.stat-item label {
+    display: block;
+    font-size: .68rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 3px;
+}
+.stat-item span {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.info-desc {
+    font-size: .9rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Botón eliminar */
+.admin-actions { display: flex; gap: 12px; margin-top: 10px; }
+.btn-eliminar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 9px;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+}
+.btn-eliminar:hover { background: #dc2626; }
+
+/* ── SECCIÓN REQUISITOS ── */
+.req-section {
+    border-top: 1px solid #E0E0E0;
+    padding: 24px 30px;
+}
+.req-section h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a3c5a;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.req-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.req-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: .85rem;
+    color: #555;
+    line-height: 1.5;
+}
+.req-list li i { color: #3E72A6; margin-top: 2px; flex-shrink: 0; }
+
+/* ── FORMULARIO AGREGAR (adopcion_agregar_admin) ── */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: span 2; }
+.form-group label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px 12px;
+    border: 1.5px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: .9rem;
+    font-family: inherit;
+    color: #2d3748;
+    outline: none;
+    transition: border .2s;
+    background: #fff;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: #3E72A6; }
+.form-group textarea { resize: vertical; min-height: 90px; }
+
+.img-preview-wrap {
+    border: 2px dashed #E0E0E0;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border .2s;
+}
+.img-preview-wrap:hover { border-color: #3E72A6; }
+.img-preview-wrap img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: none;
+}
+.img-preview-wrap .placeholder { color: #aaa; font-size: .85rem; }
+.img-preview-wrap .placeholder i { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+.error-msg {
+    background: #fee2e2;
+    color: #c53030;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-guardar {
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    transition: background .2s, transform .15s;
+}
+.btn-guardar:hover { background: #219a52; transform: translateY(-1px); }
+
+/* ── MODALES ── */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 30px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+}
+.modal-box i { font-size: 2.5rem; color: #ef4444; margin-bottom: 12px; }
+.modal-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+.modal-box p  { font-size: .85rem; color: #666; margin-bottom: 22px; }
+.modal-btns  { display: flex; gap: 10px; justify-content: center; }
+.btn-cancel-modal {
+    padding: 9px 20px; border-radius: 8px; border: 1.5px solid #ddd;
+    font-weight: 700; font-size: .85rem; cursor: pointer; background: #fff;
+}
+.btn-confirm-del {
+    padding: 9px 20px; border-radius: 8px; background: #ef4444;
+    color: #fff; font-weight: 700; font-size: .85rem; border: none;
+    cursor: pointer; text-decoration: none; display: inline-block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+    .info-layout { grid-template-columns: 1fr; }
+    .info-img-col { aspect-ratio: 1 / 1; max-height: 300px; }
+    .info-data-col { padding: 20px; }
+    .req-section { padding: 20px; }
+}
+@media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: span 1; }
+}
+@media (max-width: 600px) {
+    .adopt-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .adopt-main,
+    .info-main,
+    .form-main { padding: 16px; }
+}

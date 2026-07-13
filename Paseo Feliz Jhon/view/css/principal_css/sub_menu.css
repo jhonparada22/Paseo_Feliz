@@ -1,0 +1,97 @@
+/* =========================================================================
+   SUB_MENU.CSS — Estilos compartidos de las páginas del menú hamburguesa
+   (Conócenos / Soporte / Manual / Estado BD) en los 3 roles.
+   El sidebar/layout lo pone cada página con su CSS nativo de rol.
+   ========================================================================= */
+
+.sm-shell { max-width: 860px; margin: 0 auto; padding: 22px 18px; }
+
+.sm-volver {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    color: #334155; text-decoration: none; font-weight: 700; font-size: .9rem;
+    background: #fff; border: 1px solid #e2e8f0; padding: 9px 16px; border-radius: 10px;
+}
+.sm-volver:hover { background: #f8fafc; }
+
+.sm-titulo {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 1.35rem; font-weight: 800; color: #1e293b; margin-bottom: 6px;
+}
+.sm-titulo i { color: #3E72A6; }
+.sm-sub { font-size: .88rem; color: #64748b; margin-bottom: 22px; }
+
+.sm-card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 22px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.sm-card h3 {
+    display: flex; align-items: center; gap: 9px;
+    font-size: .98rem; font-weight: 800; color: #1e293b; margin: 0 0 14px;
+}
+.sm-card h3 i { color: #3E72A6; }
+
+.sm-fila {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid #f1f5f9;
+    font-size: .88rem; color: #334155;
+}
+.sm-fila:last-child { border-bottom: none; }
+.sm-fila i { color: #3E72A6; width: 20px; text-align: center; margin-top: 2px; flex-shrink: 0; }
+.sm-fila a { color: #3E72A6; font-weight: 700; text-decoration: none; }
+.sm-fila a:hover { text-decoration: underline; }
+
+/* Soporte: formulario de reporte */
+.sm-textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    font-size: .9rem; font-family: inherit; resize: vertical; min-height: 130px;
+    color: #1e293b;
+}
+.sm-textarea:focus { outline: none; border-color: #3E72A6; }
+.sm-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: #3E72A6; color: #fff; border: none; padding: 12px 22px;
+    border-radius: 10px; font-size: .9rem; font-weight: 700; cursor: pointer;
+    margin-top: 12px; transition: background .2s;
+}
+.sm-btn:hover { background: #2c5282; }
+.sm-btn:disabled { opacity: .6; cursor: not-allowed; }
+.sm-msg { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .85rem; font-weight: 600; }
+.sm-msg.ok    { display: block; background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.sm-msg.error { display: block; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+
+/* Manual: acordeón de secciones */
+.sm-acordeon { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 10px; background: #fff; }
+.sm-acordeon summary {
+    display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+    font-size: .92rem; font-weight: 800; color: #1e293b; cursor: pointer;
+    list-style: none; user-select: none;
+}
+.sm-acordeon summary::-webkit-details-marker { display: none; }
+.sm-acordeon summary i { color: #3E72A6; width: 20px; text-align: center; }
+.sm-acordeon summary::after { content: '›'; margin-left: auto; font-size: 1.2rem; color: #94a3b8; transition: transform .2s; }
+.sm-acordeon[open] summary::after { transform: rotate(90deg); }
+.sm-acordeon .cuerpo { padding: 0 18px 16px 48px; font-size: .86rem; color: #475569; line-height: 1.65; }
+.sm-acordeon .cuerpo ol, .sm-acordeon .cuerpo ul { padding-left: 18px; margin: 6px 0; }
+.sm-acordeon .cuerpo li { margin-bottom: 5px; }
+.sm-acordeon .cuerpo strong { color: #1e293b; }
+
+/* Estado BD (admin) */
+.sm-estado-ok, .sm-estado-mal {
+    display: flex; align-items: center; gap: 14px; padding: 18px;
+    border-radius: 12px; font-size: .95rem; font-weight: 700; margin-bottom: 14px;
+}
+.sm-estado-ok  { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.sm-estado-mal { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+.sm-estado-ok i, .sm-estado-mal i { font-size: 1.6rem; }
+.sm-problema {
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+    padding: 11px 14px; margin-bottom: 8px; font-size: .84rem; color: #7c2d12;
+}
+.sm-problema strong { color: #9a3412; }
+.sm-metricas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.sm-metrica {
+    flex: 1; min-width: 120px; background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 14px; text-align: center;
+}
+.sm-metrica .v { font-size: 1.25rem; font-weight: 800; color: #1e293b; }
+.sm-metrica .l { font-size: .72rem; color: #64748b; margin-top: 2px; }

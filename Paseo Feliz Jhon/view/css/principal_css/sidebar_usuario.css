@@ -1,0 +1,333 @@
+/* =========================================================================
+   SIDEBAR_USUARIO.CSS — Barra lateral exclusiva para páginas de usuario
+   Carga DESPUÉS de global.css para tener prioridad sobre todos los estilos
+   Ruta sugerida: view/css/principal_css/sidebar_usuario.css
+   ========================================================================= */
+
+/* ── VARIABLES ─────────────────────────────────────────────────────────── */
+:root {
+    --sb-user-blue:   #3E72A6;
+    --sb-user-green:  #25D366;
+    --sb-user-w:      90px;
+    --sb-user-w-sm:   65px;
+    --sb-user-z:      9000;   /* por encima de cualquier contenido */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   APP CONTAINER — evita que el contenido empuje al sidebar
+══════════════════════════════════════════════════════════════════════════ */
+body.usuario-page {
+    overflow: hidden;
+    height: 100vh;
+}
+
+body.usuario-page .app-container,
+#contenedor_general.app-container {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    min-height: unset !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SIDEBAR BASE
+══════════════════════════════════════════════════════════════════════════ */
+#contenedor_general .sidebar {
+    width: var(--sb-user-w) !important;
+    min-width: var(--sb-user-w) !important;
+    background-color: var(--sb-user-blue) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding-top: 14px !important;
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    z-index: var(--sb-user-z) !important;
+    isolation: isolate;
+}
+
+#contenedor_general .sidebar::-webkit-scrollbar { width: 3px; }
+#contenedor_general .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CONTENIDO PRINCIPAL — scroll interno, nunca empuja el sidebar
+══════════════════════════════════════════════════════════════════════════ */
+#contenedor_general .profile-main-content,
+#contenedor_general .edit-main-content,
+#contenedor_general .main-content {
+    flex: 1 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-width: 0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BOTÓN HAMBURGUESA
+══════════════════════════════════════════════════════════════════════════ */
+#contenedor_general .menu-hamburguesa-container {
+    position: relative !important;
+    padding: 8px !important;
+    margin-bottom: 6px !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+#contenedor_general .profile-circle {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    border: 2px solid rgba(255,255,255,.35) !important;
+    background: var(--sb-user-blue) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    transition: background .2s !important;
+    position: relative !important;
+    z-index: calc(var(--sb-user-z) + 1) !important;
+    flex-shrink: 0 !important;
+}
+
+#contenedor_general .profile-circle:hover {
+    background: rgba(255,255,255,.15) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MENÚ DESPLEGABLE — siempre visible por encima de todo
+══════════════════════════════════════════════════════════════════════════ */
+#contenedor_general .menu-desplegable {
+    display: none !important;
+    position: fixed !important;
+    top: 10px !important;
+    left: var(--sb-user-w) !important;
+    width: 210px !important;
+    background: var(--sb-user-blue) !important;
+    border-radius: 0 10px 10px 0 !important;
+    box-shadow: 5px 0 20px rgba(0,0,0,.3) !important;
+    z-index: calc(var(--sb-user-z) + 100) !important;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+#contenedor_general .menu-desplegable.show {
+    display: block !important;
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+}
+
+#contenedor_general .menu-desplegable ul {
+    list-style: none !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+}
+
+#contenedor_general .menu-desplegable ul a {
+    display: block !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+#contenedor_general .menu-desplegable ul li {
+    padding: 13px 18px !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    cursor: pointer !important;
+    font-size: .85rem !important;
+    transition: background .15s !important;
+}
+
+#contenedor_general .menu-desplegable ul li:hover {
+    background: rgba(255,255,255,.12) !important;
+}
+
+#contenedor_general .menu-desplegable ul li i {
+    width: 16px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NAV-LINKS
+══════════════════════════════════════════════════════════════════════════ */
+#contenedor_general .nav-links {
+    list-style: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-evenly !important;
+}
+
+#contenedor_general .nav-links li {
+    width: 100% !important;
+    text-align: center !important;
+    margin-bottom: 0 !important;
+}
+
+#contenedor_general .nav-links li a {
+    text-decoration: none !important;
+    color: rgba(255,255,255,.75) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    font-size: .78rem !important;
+    gap: 4px !important;
+    transition: color .2s !important;
+}
+
+#contenedor_general .nav-links li a i {
+    font-size: 1.35rem !important;
+}
+
+#contenedor_general .nav-links li a:hover {
+    color: #fff !important;
+}
+
+#contenedor_general .nav-links li.active a {
+    background: var(--sb-user-green) !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    width: 80% !important;
+    margin: 0 auto !important;
+}
+
+#contenedor_general .nav-sep {
+    width: 60% !important;
+    height: 1px !important;
+    background: rgba(255,255,255,.15) !important;
+    margin: 0 auto !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 900px)
+══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+    #contenedor_general .sidebar {
+        width: var(--sb-user-w-sm) !important;
+        min-width: var(--sb-user-w-sm) !important;
+    }
+    #contenedor_general .nav-links li a span { display: none !important; }
+    #contenedor_general .nav-links li a i    { font-size: 1.4rem !important; }
+    #contenedor_general .menu-desplegable    { left: var(--sb-user-w-sm) !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Móvil (≤ 540px)
+══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 540px) {
+    body.usuario-page          { overflow: hidden; }
+
+    #contenedor_general.app-container {
+        flex-direction: column !important;
+        height: 100vh !important;
+    }
+
+    #contenedor_general .sidebar {
+        order: 2 !important;
+        width: 100% !important;
+        min-width: unset !important;
+        height: 58px !important;
+        flex-direction: row !important;
+        padding: 0 !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        overflow: visible !important;
+    }
+
+    #contenedor_general .menu-hamburguesa-container {
+        padding: 4px !important;
+        margin-bottom: 0 !important;
+        width: auto !important;
+    }
+
+    #contenedor_general .nav-links {
+        display: flex !important;
+        flex-direction: row !important;
+        width: auto !important;
+    }
+
+    #contenedor_general .nav-links li {
+        margin-bottom: 0 !important;
+        width: auto !important;
+    }
+
+    #contenedor_general .nav-links li a {
+        padding: 5px 8px !important;
+        font-size: .62rem !important;
+    }
+
+    #contenedor_general .nav-links li a span { display: block !important; font-size: .60rem !important; }
+    #contenedor_general .nav-links li a i    { font-size: 1rem !important; }
+
+    #contenedor_general .nav-links li.active a {
+        width: auto !important;
+        padding: 5px 8px !important;
+        border-radius: 8px !important;
+    }
+
+    #contenedor_general .menu-desplegable {
+        top: auto !important;
+        bottom: 58px !important;
+        left: 0 !important;
+        border-radius: 0 10px 0 0 !important;
+        width: 200px !important;
+    }
+
+    #contenedor_general .profile-main-content,
+    #contenedor_general .edit-main-content,
+    #contenedor_general .main-content {
+        order: 1 !important;
+        height: calc(100vh - 58px) !important;
+        padding-bottom: 0 !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — Móvil muy pequeño (≤ 360px)
+══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+    #contenedor_general .nav-links li a  { padding: 4px 5px !important; }
+    #contenedor_general .nav-links li a i { font-size: .9rem !important; }
+    #contenedor_general .nav-links li a span { font-size: .55rem !important; }
+}
+
+/* ── Menú desplegable: todos blancos, solo cerrar sesión negro ── */
+#contenedor_general .menu-desplegable ul li,
+#contenedor_general .menu-desplegable ul li a,
+#contenedor_general .menu-desplegable ul li span,
+#contenedor_general .menu-desplegable ul li i,
+#contenedor_general .menu-desplegable ul a,
+#contenedor_general .menu-desplegable ul a li,
+#contenedor_general .menu-desplegable ul a li i,
+#contenedor_general .menu-desplegable ul a li span {
+    color: #ffffff !important;
+}
+
+#contenedor_general .menu-desplegable .logout-link,
+#contenedor_general .menu-desplegable .logout-link span,
+#contenedor_general .menu-desplegable .logout-link i {
+    color: #000000 !important;
+}

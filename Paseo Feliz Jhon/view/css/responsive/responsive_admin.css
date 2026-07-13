@@ -1,0 +1,322 @@
+/* =========================================================================
+   RESPONSIVE ADMIN — Paseo Feliz
+   Archivo único con los ajustes responsive de las páginas de administrador:
+   Chat_admin, usuario_admin, usuario_info_admin, pagos_admin, adopcion_admin.
+
+   IMPORTANTE: cargar DESPUÉS de admin.css, sidebar_admin.css y del CSS
+   propio de cada página, para que sus reglas puedan sobreescribir bien.
+   Ruta sugerida: view/css/responsive/responsive_admin.css
+   Enlace desde cada página admin: ../../css/responsive/responsive_admin.css
+   ========================================================================= */
+
+
+/* =========================================================================
+   0. FIX GENERAL — el contenido no debe quedar tapado por la barra
+      inferior del sidebar en móvil (≤540px)
+   -------------------------------------------------------------------------
+   sidebar_admin.css ya le da "order:1; padding-bottom:58px" a algunas
+   clases (.main-content, .chat-main, .profile-main-content,
+   .edit-main-content), pero SE LE OLVIDÓ hacer lo mismo con las de
+   Adopción (.adopt-main, .info-main, .form-main) — por eso en esas
+   páginas el contenido puede quedar debajo de la barra inferior fija.
+   Esta regla genérica cubre CUALQUIER contenedor de contenido (todo lo
+   que no sea el sidebar, hijo directo de .app-container), así no hace
+   falta acordarse de repetir esto cada vez que se agregue una página
+   admin nueva.
+   ========================================================================= */
+@media (max-width: 540px) {
+    .app-container {
+        flex-direction: column;
+    }
+
+    .app-container > *:not(.sidebar) {
+        order: 1;
+        padding-bottom: 58px;
+    }
+
+    .app-container > .sidebar {
+        order: 2;
+        /* Forzamos esto con !important porque en algunas páginas admin
+           el sidebar se quedaba con el alto completo de la pantalla
+           (heredado de la versión de escritorio) en vez de achicarse a
+           la barra inferior de 58px — los íconos ya se acomodaban en
+           fila, pero el contenedor seguía alto. */
+        height: 58px !important;
+        min-height: 58px !important;
+        max-height: 58px !important;
+        width: 100% !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        overflow: visible !important;
+        z-index: 9999 !important;
+    }
+}
+
+
+/* =========================================================================
+   1. CHAT (Chat_admin.php / Chat.css)
+   -------------------------------------------------------------------------
+   Mismo problema y mismo arreglo que ya se hizo para el chat del cliente
+   en responsive_principal.css: la caja de texto quedaba cortada fuera de
+   la pantalla, y se veían la lista de conversaciones y el rectángulo
+   vacío del chat al mismo tiempo. Se replica el mismo fix aquí porque
+   Chat_admin.php usa las mismas clases (.conversations-panel,
+   .chat-window) y el mismo Chat.js.
+   ========================================================================= */
+.chat-main {
+    min-height: 0;
+}
+.conversations-panel {
+    height: 100%;
+}
+.chat-window {
+    height: 100%;
+}
+
+@media (max-width: 680px) {
+    .conversations-panel {
+        width: 100%;
+    }
+
+    .chat-window {
+        display: none !important;
+    }
+    .conversations-panel.hidden {
+        display: none !important;
+    }
+    .conversations-panel.hidden + .chat-window {
+        display: flex !important;
+        width: 100% !important;
+    }
+
+    .conversations-panel.hidden + .chat-window #chat-header,
+    .conversations-panel.hidden + .chat-window #messages-area,
+    .conversations-panel.hidden + .chat-window #input-area {
+        display: flex !important;
+    }
+
+    .chat-header-back {
+        display: block !important;
+    }
+}
+
+@media (max-width: 540px) {
+    /* Igual que en el cliente: se ancla directo a la pantalla en vez de
+       depender de que los contenedores padre hereden bien su altura,
+       dejando espacio para la barra inferior del admin (58px).
+       Todo con !important porque este archivo se carga último y no
+       podemos arriesgarnos a que algún CSS de la página (admin.css,
+       Chat.css) con más especificidad se quede con la prioridad. */
+    .chat-main {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 58px !important;
+        height: auto !important;
+        z-index: 10 !important;   /* bien por debajo del sidebar (z-index 200) */
+        padding-bottom: 0 !important; /* el fix genérico del punto 0 no aplica aquí */
+        order: 1 !important;
+    }
+
+    /* Red de seguridad: el sidebar SIEMPRE por encima de todo el chat,
+       sin importar qué z-index traiga de admin.css/sidebar_admin.css */
+    .app-container > .sidebar {
+        z-index: 9999 !important;
+    }
+}
+
+
+/* =========================================================================
+   2. USUARIO — Perfil admin (usuario_admin.php)
+   -------------------------------------------------------------------------
+   usuario_admin.php usa el MISMO usuario.css que el perfil del cliente
+   (../../css/principal_css/usuario.css), así que necesita exactamente
+   los mismos ajustes de .profile-grid / banner / avatar que ya
+   resolvimos en responsive_principal.css para que no quede todo
+   comprimido en celular.
+   ========================================================================= */
+@media (max-width: 780px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+        padding: 18px 16px;
+        gap: 18px;
+    }
+
+    .boceto-banner-container {
+        max-height: 220px;
+    }
+
+    .boceto-avatar-user {
+        width: 84px;
+        height: 84px;
+        left: 18px;
+        bottom: -24px;
+    }
+
+    .boceto-nombre-linea {
+        left: 116px;
+        bottom: 14px;
+        font-size: 16px;
+        max-width: calc(100% - 170px);
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    .boceto-btn-lapiz {
+        width: 36px;
+        height: 36px;
+        right: 14px;
+        top: 12px;
+        font-size: 14px;
+    }
+
+    .profile-subheader {
+        height: 34px;
+    }
+}
+
+@media (max-width: 480px) {
+    .boceto-banner-container {
+        max-height: 170px;
+    }
+
+    .boceto-avatar-user {
+        width: 68px;
+        height: 68px;
+        left: 14px;
+        bottom: -18px;
+        border-width: 3px;
+    }
+
+    .boceto-nombre-linea {
+        left: 92px;
+        font-size: 13.5px;
+        bottom: 10px;
+        max-width: calc(100% - 130px);
+    }
+
+    .columna-card {
+        padding: 16px 14px;
+    }
+}
+
+
+/* =========================================================================
+   3. USUARIO INFO — Editar perfil admin (usuario_info_admin.php)
+   -------------------------------------------------------------------------
+   Mismo caso: usuario_info_admin.php comparte el usuario_info.css del
+   cliente, así que necesita el mismo ajuste de .edit-grid-container que
+   ya resolvimos del lado cliente.
+   ========================================================================= */
+@media (max-width: 780px) {
+    .edit-main-content {
+        padding: 18px 14px;
+    }
+
+    .edit-grid-container {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .edit-column {
+        padding: 18px;
+    }
+
+    .edit-column-right {
+        border-top: 3px solid #27ae60;
+    }
+
+    .btn-submit-container {
+        grid-column: 1;
+    }
+
+    .preview-row {
+        flex-wrap: wrap;
+    }
+
+    .preview-row input[type="file"] {
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .mascota-action-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .edit-header-title h2 {
+        font-size: 17px;
+    }
+}
+
+
+/* =========================================================================
+   4. PAGOS ADMIN (pagos_admin.php)
+   -------------------------------------------------------------------------
+   Ajustes para que las tarjetas de estadísticas, la barra de búsqueda y
+   las filas de usuarios/pagos no queden apretadas o cortadas en celular.
+   ========================================================================= */
+@media (max-width: 900px) {
+    .mini-stats,
+    .mini-stats-5 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .page-header > div[style*="display:flex"] {
+        width: 100%;
+    }
+
+    .btn-nuevo-pago {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-row {
+        flex-wrap: wrap;
+    }
+
+    .mem-filter-bar {
+        flex-wrap: wrap;
+    }
+
+    /* Filas de pagos/usuarios: de horizontal a apiladas, para que no se
+       corten los datos ni los botones */
+    .pago-item,
+    .umem-row {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .umem-servicios {
+        width: 100%;
+        order: 3;
+    }
+
+    .modal-pago {
+        max-width: 100% !important;
+        width: 100%;
+        margin: 0 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mini-stats,
+    .mini-stats-5 {
+        grid-template-columns: 1fr !important;
+    }
+}

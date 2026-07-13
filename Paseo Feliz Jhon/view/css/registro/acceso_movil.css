@@ -1,0 +1,379 @@
+/* ============================================================
+   ACCESO_MOVIL.CSS — PASEO FELIZ
+   Aplica solo en pantallas ≤ 768px
+   ============================================================ */
+
+@media screen and (max-width: 768px) {
+
+  * { box-sizing: border-box; }
+
+  /* ── 1. BODY ─────────────────────────────────────────── */
+  body {
+    margin: 0;
+    padding: 70px 0 24px;
+    min-height: 100vh;
+    background: linear-gradient(145deg, #023b48 0%, #0a6e8a 55%, #1a9e7f 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Ocultar lo de escritorio */
+  #background-image,
+  body::before,
+  .container-welcome {
+    display: none !important;
+  }
+
+  /* ── 2. BOTÓN VOLVER ─────────────────────────────────── */
+  .back-button {
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    z-index: 300 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: rgba(255,255,255,0.18) !important;
+    color: #ffffff !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .back-button:hover {
+    background: rgba(255,255,255,0.28) !important;
+    color: #fff !important;
+    transform: none !important;
+  }
+
+  .back-button ion-icon {
+    font-size: 1rem !important;
+    margin-right: 0 !important;
+  }
+
+  /* ── 3. MARCA encima de la tarjeta ──────────────────── */
+  body::after {
+    content: "🐾 Paseo Feliz";
+    display: block;
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+
+  /* ── 4. TARJETA CONTENEDOR ───────────────────────────── */
+  .container {
+    width: 92% !important;
+    max-width: 400px !important;
+    height: auto !important;
+    min-height: unset !important;
+    border-radius: 22px !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* ── 5. FILA DE TABS ─────────────────────────────────── */
+  #btn-sign-in-mobile,
+  #btn-sign-up-mobile {
+    position: static !important;
+    transform: none !important;
+    width: 50% !important;
+    max-width: none !important;
+    height: 54px !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 3px solid transparent !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    transition: background 0.3s, color 0.3s, border-color 0.3s !important;
+    flex-shrink: 0 !important;
+    /* Ambos en la misma fila flex */
+    align-self: auto !important;
+  }
+
+  /* Fila de tabs: los dos botones juntos arriba */
+  /* Se logra con un pseudo-wrapper usando flex en .container */
+  /* Los btns van ANTES de los form-login/register en el DOM,
+     así que con flex-direction: column y order los controlamos */
+
+  #btn-sign-in-mobile {
+    order: 1 !important;
+    /* activo por defecto (estamos en login) */
+    background: #023b48 !important;
+    color: #ffffff !important;
+    border-bottom-color: #1a9e7f !important;
+  }
+
+  #btn-sign-up-mobile {
+    order: 2 !important;
+    /* inactivo por defecto */
+    background: #f2f6f7 !important;
+    color: #6a8e96 !important;
+    border-bottom-color: #dde8eb !important;
+  }
+
+  /* Para que queden en fila horizontal los dos tabs,
+     necesitamos un truco: los sacamos del flujo normal
+     y los posicionamos en la parte superior como fila */
+  #btn-sign-in-mobile,
+  #btn-sign-up-mobile {
+    position: absolute !important;
+    top: 0 !important;
+    height: 54px !important;
+    width: 50% !important;
+  }
+
+  #btn-sign-in-mobile {
+    left: 0 !important;
+  }
+
+  #btn-sign-up-mobile {
+    left: 50% !important;
+  }
+
+  /* Cuando registro activo */
+  .container.active-register #btn-sign-in-mobile {
+    background: #f2f6f7 !important;
+    color: #6a8e96 !important;
+    border-bottom-color: #dde8eb !important;
+  }
+
+  .container.active-register #btn-sign-up-mobile {
+    background: #023b48 !important;
+    color: #ffffff !important;
+    border-bottom-color: #1a9e7f !important;
+  }
+
+  /* ── 6. FORMULARIOS — deslizamiento ──────────────────── */
+  /* Espacio para los tabs fijos arriba */
+  #form-login,
+  #form-register {
+    width: 100% !important;
+    height: auto !important;
+    position: absolute !important;
+    top: 54px !important;        /* justo debajo de los tabs */
+    left: 0 !important;
+    opacity: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 26px 22px 30px !important;
+    background: #fff !important;
+    transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: transform;
+  }
+
+  /* Login: visible (centrado) */
+  #form-login {
+    transform: translateX(0) !important;
+    z-index: 2 !important;
+  }
+
+  /* Registro: escondido a la derecha */
+  #form-register {
+    transform: translateX(100%) !important;
+    z-index: 1 !important;
+  }
+
+  /* Al activar registro */
+  .container.active-register #form-login {
+    transform: translateX(-100%) !important;
+    z-index: 1 !important;
+  }
+
+  .container.active-register #form-register {
+    transform: translateX(0) !important;
+    z-index: 2 !important;
+  }
+
+  /* Altura mínima del container para que no colapse
+     (login: ~380px, registro: ~460px) */
+  .container {
+    min-height: 440px !important;
+    padding-top: 54px !important;   /* espacio para los tabs absolutos */
+  }
+
+  .container.active-register {
+    min-height: 580px !important;
+  }
+
+  /* ── 7. ELEMENTOS INTERNOS ───────────────────────────── */
+  .sign-in h2,
+  .sign-up h2 {
+    font-size: 1.45rem !important;
+    color: #023b48 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    margin-bottom: 4px !important;
+  }
+
+  .sign-in > span,
+  .sign-up > span {
+    font-size: 0.8rem !important;
+    color: #85a5ae !important;
+    text-align: center !important;
+    display: block !important;
+    margin-bottom: 18px !important;
+  }
+
+  /* ── 8. INPUTS ───────────────────────────────────────── */
+  .container-input {
+    width: 100% !important;
+    height: 48px !important;
+    background-color: #f4f8f9 !important;
+    border-radius: 12px !important;
+    border: 1.5px solid #dde8ec !important;
+    margin-bottom: 0 !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .container-input:focus-within {
+    border-color: #0a6e8a !important;
+    background-color: #eaf3f6 !important;
+  }
+
+  .container-input ion-icon:first-child {
+    color: #5a8a96 !important;
+    font-size: 1.1rem !important;
+    flex-shrink: 0;
+  }
+
+  .container-input input,
+  .container-input select {
+    font-size: 0.9rem !important;
+    color: #1a3540 !important;
+    background: transparent !important;
+    width: 100% !important;
+  }
+
+  .container-input input::placeholder {
+    color: #a8c0c7 !important;
+  }
+
+  /* ── 9. ERRORES ──────────────────────────────────────── */
+  .error-msg {
+    width: 100% !important;
+    font-size: 0.73rem !important;
+    padding-left: 6px !important;
+    margin-bottom: 8px !important;
+    min-height: 16px !important;
+  }
+
+  /* ── 10. LINK OLVIDÉ CONTRASEÑA ─────────────────────── */
+  .sign-in a {
+    font-size: 0.8rem !important;
+    color: #0a6e8a !important;
+    margin: 6px 0 14px !important;
+    align-self: flex-end !important;
+    text-decoration: none !important;
+  }
+
+  /* ── 11. BOTÓN SUBMIT ────────────────────────────────── */
+  .sign-in .button,
+  .sign-up .button {
+    width: 100% !important;
+    height: 50px !important;
+    border-radius: 14px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    margin-top: 12px !important;
+    background: linear-gradient(135deg, #023b48 0%, #0a6e8a 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 6px 20px rgba(2,59,72,0.28) !important;
+    cursor: pointer !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
+  }
+
+  .sign-in .button:hover,
+  .sign-up .button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 26px rgba(2,59,72,0.38) !important;
+  }
+
+  /* ── 12. OJO / SELECT / FLECHA ───────────────────────── */
+  .toggle-password {
+    right: 12px !important;
+    font-size: 1.1rem !important;
+    color: #5a8a96 !important;
+  }
+
+  .container-input select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    cursor: pointer !important;
+  }
+
+  .select-arrow {
+    right: 12px !important;
+    font-size: 1rem !important;
+    color: #5a8a96 !important;
+    pointer-events: none !important;
+  }
+
+  /* ── 13. MODALES ─────────────────────────────────────── */
+  #notification-overlay,
+  #password-reset-overlay {
+    padding: 16px !important;
+  }
+
+  .notification-box {
+    width: 100% !important;
+    max-width: 340px !important;
+    padding: 24px 20px !important;
+    border-radius: 18px !important;
+  }
+
+  .notification-box h3 {
+    font-size: 1rem !important;
+    color: #023b48 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .notification-box p {
+    font-size: 0.88rem !important;
+  }
+
+  #password-reset-overlay .container-input {
+    width: 100% !important;
+    margin: 0 0 8px 0 !important;
+  }
+
+  #password-reset-overlay .button {
+    width: 100% !important;
+  }
+
+}
+
+/* ── ESCRITORIO: ocultar botones móviles ─────────────────── */
+@media screen and (min-width: 769px) {
+  #btn-sign-up-mobile,
+  #btn-sign-in-mobile {
+    display: none !important;
+  }
+}

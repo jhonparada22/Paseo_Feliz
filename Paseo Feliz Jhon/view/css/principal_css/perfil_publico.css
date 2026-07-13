@@ -1,0 +1,49 @@
+/* =========================================================================
+   PERFIL_PUBLICO.CSS — Estilos del contenido del perfil público
+   Compartido por perfil.php (cliente), perfil_paseador.php y perfil_admin.php.
+   Solo estiliza el CONTENIDO (.pp-*): el sidebar/layout lo pone cada página
+   con su CSS nativo de rol.
+   ========================================================================= */
+
+.pp-shell { max-width: 1000px; margin: 0 auto; padding: 18px; }
+
+.pp-volver {
+    display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    color: #334155; text-decoration: none; font-weight: 700; font-size: .9rem;
+    background: #fff; border: 1px solid #e2e8f0; padding: 9px 16px; border-radius: 10px;
+}
+.pp-volver:hover { background: #f8fafc; }
+
+.pp-rol-tag {
+    display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: .72rem;
+    font-weight: 800; text-transform: uppercase; letter-spacing: .04em; margin-top: 6px;
+}
+.pp-rol-cliente  { background: #dbeafe; color: #1d4ed8; }
+.pp-rol-paseador { background: #dcfce7; color: #15803d; }
+.pp-rol-admin    { background: #fee2e2; color: #b91c1c; }
+
+.pp-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.pp-stat {
+    flex: 1; min-width: 130px; background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 14px; text-align: center;
+}
+.pp-stat .v { font-size: 1.3rem; font-weight: 800; color: #1e293b; }
+.pp-stat .l { font-size: .72rem; color: #64748b; margin-top: 2px; }
+.pp-estrellas { color: #f59e0b; font-size: .95rem; letter-spacing: 1px; }
+
+.pp-resena {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+}
+.pp-resena .cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.pp-resena .nom { font-weight: 700; font-size: .82rem; color: #1e293b; }
+.pp-resena .txt { font-size: .82rem; color: #475569; }
+.pp-resena .fec { font-size: .7rem; color: #94a3b8; }
+
+.pp-denegado {
+    max-width: 460px; margin: 80px auto; background: #fff; border-radius: 16px;
+    padding: 40px 32px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+.pp-denegado i { font-size: 3rem; color: #ef4444; margin-bottom: 14px; display: block; }
+.pp-denegado h2 { font-size: 1.15rem; color: #1e293b; margin-bottom: 8px; }
+.pp-denegado p { font-size: .85rem; color: #64748b; }

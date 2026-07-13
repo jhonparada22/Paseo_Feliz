@@ -1,0 +1,397 @@
+/* ===================================================
+   usuario_info.css — Edición de Perfil (Paseo Feliz)
+   =================================================== */
+
+.edit-main-content {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+    background-color: #f0f4f8;
+}
+
+/* ── Header con flecha ── */
+.edit-header-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    color: #1a202c;
+}
+.edit-header-title h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+.edit-header-title a {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 16px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    text-decoration: none;
+}
+.edit-header-title a:hover {
+    background: #27ae60;
+    color: #fff;
+    border-color: #27ae60;
+    transform: translateX(-2px);
+}
+
+/* ── Grid de dos columnas ── */
+.edit-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* ── Columnas / cards ── */
+.edit-column {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid #e8edf3;
+}
+.edit-column-right {
+    border-top: 3px solid #27ae60;
+}
+
+.edit-column h3 {
+    margin: 0 0 20px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a202c;
+    border-bottom: 2px solid #f0f4f8;
+    padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.edit-column h3 i {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: #e8f5e9;
+    color: #27ae60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+/* ── Grupos de formulario ── */
+.form-group-box {
+    margin-bottom: 16px;
+}
+.form-group-box label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 7px;
+}
+.form-group-box input[type="text"],
+.form-group-box input[type="date"],
+.form-group-box input[type="tel"],
+.form-group-box input[type="number"],
+.form-group-box textarea,
+.form-group-box select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    background-color: #f8fafc;
+    color: #2d3748;
+    box-sizing: border-box;
+    transition: all 0.25s;
+}
+.form-group-box input:focus,
+.form-group-box textarea:focus,
+.form-group-box select:focus {
+    border-color: #27ae60;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(39,174,96,0.12);
+    background: #fff;
+}
+
+/* ── Pestañas Editar / Agregar mascota ── */
+.mascota-action-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.btn-tab {
+    padding: 9px 12px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s;
+}
+.btn-tab.active {
+    background: #e8f5e9;
+    color: #27ae60;
+    border-color: #27ae60;
+}
+.btn-tab:hover:not(.active) {
+    background: #f0f4f8;
+    border-color: #94a3b8;
+}
+
+/* ── Botón guardar ── */
+.btn-submit-container {
+    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+.btn-confirmar-guardar {
+    background: linear-gradient(135deg, #27ae60, #219653);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(39,174,96,0.3);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    transition: all 0.25s;
+}
+.btn-confirmar-guardar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39,174,96,0.4);
+}
+
+/* ── Botón eliminar mascota ── */
+.btn-eliminar-mascota {
+    background: #fff0f0;
+    color: #c53030;
+    border: 2px solid #fed7d7;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s;
+}
+.btn-eliminar-mascota:hover:not(:disabled) {
+    background: #e53e3e;
+    color: #fff;
+    border-color: #e53e3e;
+    transform: translateY(-1px);
+}
+.btn-eliminar-disabled,
+.btn-eliminar-mascota:disabled {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    opacity: 0.7;
+}
+
+/* ── Secciones ocultas ── */
+.hidden-section {
+    display: none;
+}
+
+/* ===== Previsualizaciones de imagen ===== */
+
+/* Fila: círculo + input lado a lado */
+.preview-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.preview-row input[type="file"] {
+    flex: 1;
+    font-size: 12px;
+}
+
+/* Círculo para avatar usuario y mascota */
+.preview-upload-box,
+.preview-circle-box {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px dashed #cbd5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Banner — rectangular */
+.banner-preview-box {
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+    border: 2px dashed #cbd5e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+/* Imagen dentro de círculos: contain para no recortar */
+.preview-upload-box .img-preview,
+.preview-circle-box .img-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    border-radius: 50%;
+}
+
+/* Imagen dentro del banner: cover centrado */
+.banner-preview-box .img-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+.hidden-preview {
+    display: none;
+}
+
+.preview-placeholder {
+    text-align: center;
+    color: #b0bec5;
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* ===== Modal de confirmación eliminar ===== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 28px 24px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: modalPop 0.2s ease;
+}
+@keyframes modalPop {
+    from { transform: scale(0.88); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fff0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+    color: #e53e3e;
+}
+.modal-box h4 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a202c;
+}
+.modal-box p {
+    margin: 0 0 24px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+.modal-pet-name {
+    font-weight: 700;
+    color: #e53e3e;
+}
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.modal-btn-cancel {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.modal-btn-cancel:hover {
+    background: #e2e8f0;
+}
+.modal-btn-delete {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #e53e3e;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.modal-btn-delete:hover {
+    background: #c53030;
+}
+
+/* ===== Hint de resolución recomendada ===== */
+.upload-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+.upload-hint i {
+    color: #27ae60;
+}
+.upload-hint b {
+    color: #4a5568;
+}
