@@ -1,0 +1,152 @@
+<?php include_once '../../controller/control_acceso.php'; ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paseo Feliz - Detalles de Adiestramiento</title>
+    <link rel="icon" href="../assets/images/logo.png" type="image/png">
+    <link rel="stylesheet" href="../css/principal_css/global.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/global.css'); ?>">
+    <link rel="stylesheet" href="../css/principal_css/paseos.css?v=<?php echo @filemtime(__DIR__ . '/../css/principal_css/paseos.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <nav class="sidebar">
+            <div class="menu-hamburguesa-container">
+                <div class="profile-circle" id="btn-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <nav class="menu-desplegable" id="menu-latente">
+                    <ul>
+                        <a href="./sub_menu/conocenos.php">
+                            <li>
+                                <i class="fas fa-camera"></i>
+                                <span>Conocenos</span>
+                            </li>
+                        </a>
+
+                        <a href="./sub_menu/soporte.php"><li><i class="fas fa-headset"></i><span>Soporte</span></li></a>
+
+                        <a href="./sub_menu/manual.php"><li><i class="fas fa-book-open"></i><span>Manual de uso</span></li></a>
+
+                        
+
+                        <li>
+                             <a href="../../controller/logout.php" style="color: #000000;">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </nav>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active">
+                    <a href="inicio.php">
+                        <i class="fas fa-paw"></i>
+                        <span>Servicios</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Chat.php">
+                        <i class="far fa-comment-alt"></i>
+                        <span>Chat</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="mapa.php">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Mapa</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="adopcion.php">
+                        <i class="fas fa-bone"></i>
+                        <span>Adopción</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="usuario.php">
+                        <i class="fas fa-user"></i>
+                        <span>Usuario</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            
+            <header style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                <a href="inicio.php" style="color: #333; font-size: 1.2rem; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </header>
+
+            <div class="content-padding">
+                <section class="service-hero">
+                    <div class="hero-image-container">
+                        <img src="../assets/recursos_pagina_principal/iconcolegio.png" alt="Adiestramiento" class="hero-image">
+                    </div>
+                    
+                    <div class="hero-text-content">
+                        <div class="title-row">
+                            <h1>Adiestramiento canino</h1>
+                            <i class="far fa-heart heart-icon"></i>
+                        </div>
+                        
+                        <ul class="specs-list">
+                            <li><strong>Metodología:</strong> Refuerzo positivo y Clicker training.</li>
+                            <li><strong>Niveles:</strong> Básico, Intermedio y Avanzado.</li>
+                            <li><strong>Sesiones:</strong> Individuales en domicilio o parques.</li>
+                            <li><strong>Duración:</strong> 1 hora por sesión de entrenamiento.</li>
+                        </ul>
+
+                        <button class="btn-reserva">Reserva una sesión</button>
+                    </div>
+                </section>
+
+                <hr class="divider-full">
+
+                <section class="info-details">
+                    <article class="info-block">
+                        <h3>Educación basada en el respeto</h3>
+                        <p>Nuestro programa de adiestramiento se enfoca en fortalecer el vínculo entre tú y tu mascota. Utilizamos métodos no aversivos para corregir conductas y enseñar nuevos trucos de manera divertida y efectiva.</p>
+                    </article>
+
+                    <article class="info-block">
+                        <h3>Solución de problemas de conducta</h3>
+                        <p>Trabajamos en la gestión de la ansiedad por separación, reactividad con otros perros, tirones de correa y obediencia básica (sentarse, quedarse, acudir al llamado).</p>
+                    </article>
+
+                    <article class="info-block">
+                        <h3>Asesoría para cachorros</h3>
+                        <p>¿Tienes un nuevo integrante en casa? Te ayudamos con la socialización temprana, el control de esfínteres y la inhibición de la mordida para que crezca como un perro equilibrado.</p>
+                    </article>
+                </section>
+            </div>
+        </main>
+    </div>
+
+</body>
+<script>
+    const btnMenu = document.getElementById('btn-menu');
+    const menuLatente = document.getElementById('menu-latente');
+
+    btnMenu.addEventListener('click', () => {
+        // Alterna la clase 'show' para mostrar/ocultar
+        menuLatente.classList.toggle('show');
+    });
+
+    // Opcional: Cerrar el menú si haces clic fuera de él
+    window.addEventListener('click', (e) => {
+        if (!btnMenu.contains(e.target) && !menuLatente.contains(e.target)) {
+            menuLatente.classList.remove('show');
+        }
+    });
+</script>
+</html>
