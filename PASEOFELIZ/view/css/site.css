@@ -1,0 +1,599 @@
+/* ============================================================
+   PASEO FELIZ — IDENTIDAD DE SITIO (compartida por TODAS las páginas)
+   Se carga después de style.css y responsive.css en index.html,
+   service.html, pet.html, clinic.html, buy.html y contact.html.
+   Todo aquí vive bajo body.pf-site, que está en las 6 páginas.
+
+   Contiene únicamente lo que es literalmente el mismo marcado en
+   todas ellas: header/nav, botones de header, sección de contacto,
+   footer, botón flotante de WhatsApp, tokens de color/tipografía,
+   y el look base de about/servicios/galería/testimonios que cada
+   página reutiliza con su propio contenido.
+   ============================================================ */
+
+body.pf-site {
+  --pf-ink: #0A2A2F;
+  --pf-ink-soft: #4B6A6E;
+  --pf-teal: #0A4E63;
+  --pf-teal-deep: #062F3B;
+  --pf-sky: #2F8FD1;
+  --pf-sky-soft: #E4F1FB;
+  --pf-leaf: #2FAE57;
+  --pf-leaf-deep: #1F7A3D;
+  --pf-leaf-soft: #E3F7E9;
+  --pf-mist: #F3FAF8;
+  --pf-ember: #F2603B;
+  --pf-white: #FFFFFF;
+  --pf-font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --pf-font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --pf-radius-lg: 26px;
+  --pf-radius-md: 18px;
+  --pf-shadow: 0 24px 48px -22px rgba(6, 34, 43, 0.4);
+  --pf-shadow-sm: 0 12px 26px -14px rgba(6, 34, 43, 0.3);
+  --pf-ease: cubic-bezier(.22, 1, .36, 1);
+
+  font-family: var(--pf-font-body);
+  color: var(--pf-ink);
+  background-color: var(--pf-white);
+}
+
+body.pf-site h1,
+body.pf-site h2,
+body.pf-site h3,
+body.pf-site .custom_heading {
+  font-family: var(--pf-font-display);
+  letter-spacing: -0.01em;
+}
+
+/* ------------------------------------------------------------
+   Utilidades de revelado al hacer scroll
+   ------------------------------------------------------------
+   El estado oculto SOLO se activa si site.js confirma que pudo
+   arrancar (marca html.pf-js). Sin esa clase, .reveal se ve
+   siempre normal — si el script falla, tarda o el usuario tiene
+   JS desactivado, el contenido nunca se queda invisible. site.js
+   además fuerza "is-visible" a los 2.5s como red de seguridad. */
+html.pf-js body.pf-site .reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .7s var(--pf-ease), transform .7s var(--pf-ease);
+  will-change: opacity, transform;
+}
+body.pf-site .reveal.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+body.pf-site .reveal-stagger.is-visible > * {
+  transition-delay: calc(var(--pf-i, 0) * 90ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.pf-js body.pf-site .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ------------------------------------------------------------
+   HEADER / NAV
+   ------------------------------------------------------------ */
+body.pf-site .header_section {
+  background: linear-gradient(180deg, var(--pf-teal) 0%, #0C5A72 100%);
+  transition: box-shadow .35s var(--pf-ease), padding .35s var(--pf-ease);
+}
+body.pf-site .header_section.pf-scrolled {
+  box-shadow: 0 8px 24px -10px rgba(2, 20, 26, 0.45);
+}
+body.pf-site .navbar-brand-logo span {
+  font-family: var(--pf-font-display);
+  font-weight: 700;
+  color: var(--pf-white);
+  letter-spacing: -0.01em;
+}
+body.pf-site .navigation {
+  box-shadow: 0 10px 30px -12px rgba(2, 20, 26, 0.35);
+}
+body.pf-site .navigation ul li a .icon,
+body.pf-site .navigation ul li a .text {
+  font-family: var(--pf-font-body);
+}
+/* El aro del círculo activo y las curvas que lo unen a la barra blanca
+   (los ::before/::after de .indicator en style.css) usan
+   --clr-indicator-border. Ese color DEBE fundirse con el fondo del header:
+   con --pf-sky (celeste) sobre el header teal se veían como "alas" azules
+   sueltas. Con un teal del mismo degradado, el círculo parece un hueco
+   recortado en la barra, como en el diseño original. */
+body.pf-site {
+  --clr-indicator-bg: #38DC66;     /* verde vivo del ítem activo */
+  --clr-indicator-border: #0A5166; /* tono medio del degradado del header */
+}
+body.pf-site .indicator {
+  /* Halo verde alrededor del círculo, en vez de la sombra gris genérica */
+  box-shadow: 0 0 0 2px rgba(56, 220, 102, 0.35), 0 -6px 22px rgba(56, 220, 102, 0.55);
+}
+/* El círculo sobresale 30px por encima de la barra blanca; con los 15px
+   de padding original quedaba cortado por el borde superior de la página.
+   Solo escritorio: en móvil la barra animada no se muestra. */
+@media (min-width: 992px) {
+  body.pf-site .navigation_wrapper {
+    padding-top: 38px;
+  }
+}
+body.pf-site .btn_acceder {
+  font-family: var(--pf-font-body);
+  border-color: var(--pf-white);
+  color: var(--pf-white);
+  background: transparent;
+}
+body.pf-site .btn_acceder::before,
+body.pf-site .btn_acceder::after {
+  background: var(--pf-leaf);
+}
+body.pf-site .btn_acceder:hover i,
+body.pf-site .btn_acceder:hover span {
+  color: var(--pf-white);
+}
+body.pf-site .btn_whatsapp_img img {
+  transition: transform .3s var(--pf-ease);
+}
+body.pf-site .btn_whatsapp_img:hover img {
+  transform: scale(1.06);
+}
+
+/* Páginas interiores (sub_page): el header no lleva slider debajo,
+   así que no necesita quedar "sticky" con fondo transparente raro. */
+body.pf-site.sub_page .hero_area {
+  height: auto;
+}
+body.pf-site.sub_page .hero_area::before {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body.pf-site .header_section { background: var(--pf-teal) !important; }
+}
+
+/* ------------------------------------------------------------
+   ABOUT (base compartida — cada página pone su propio contenido)
+   ------------------------------------------------------------ */
+body.pf-site .about_section {
+  background: var(--pf-mist);
+  background-image: none;
+  padding-top: 80px;
+  padding-bottom: 60px;
+}
+body.pf-site .about_section .custom_heading {
+  font-size: 38px;
+  color: var(--pf-ink);
+}
+body.pf-site .about_section .custom_heading span {
+  color: var(--pf-teal);
+}
+body.pf-site .about_section .detail-box p,
+body.pf-site .training_section .detail-box p {
+  color: var(--pf-ink-soft);
+  font-size: 1.03rem;
+  line-height: 1.7;
+}
+body.pf-site .about_section .detail-box > div > a,
+body.pf-site .training_section .detail-box > div > a {
+  display: inline-block;
+  border-radius: 999px;
+  background: var(--pf-teal);
+  border: 1px solid var(--pf-teal);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 28px;
+  transition: transform .3s var(--pf-ease), background .3s var(--pf-ease);
+}
+body.pf-site .about_section .detail-box > div > a:hover,
+body.pf-site .training_section .detail-box > div > a:hover {
+  background: var(--pf-teal-deep);
+  border-color: var(--pf-teal-deep);
+  color: #fff;
+  transform: translateY(-2px);
+}
+body.pf-site .about_section .img-box img,
+body.pf-site .about_section .img-gallery-box img,
+body.pf-site .training-gallery-grid img {
+  border-radius: var(--pf-radius-md);
+  box-shadow: var(--pf-shadow-sm);
+}
+
+/* ------------------------------------------------------------
+   COLEGIO CANINO (buy.html) — reusa el vocabulario visual de about
+   ------------------------------------------------------------ */
+body.pf-site .training_section {
+  background: var(--pf-mist);
+  padding-top: 80px;
+  padding-bottom: 70px;
+}
+body.pf-site .training_section .custom_heading {
+  font-size: 38px;
+  color: var(--pf-ink);
+}
+body.pf-site .training_section .custom_heading span {
+  color: var(--pf-teal);
+}
+body.pf-site .training-list {
+  list-style: none;
+  padding: 0;
+  margin: 22px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+body.pf-site .training-list li {
+  background: var(--pf-white);
+  border: 1px solid rgba(10, 78, 99, 0.12);
+  border-radius: var(--pf-radius-md);
+  padding: 14px 18px;
+  box-shadow: var(--pf-shadow-sm);
+  color: var(--pf-ink-soft);
+  line-height: 1.55;
+}
+body.pf-site .training-list li strong {
+  color: var(--pf-teal-deep);
+  font-family: var(--pf-font-display);
+}
+
+/* ------------------------------------------------------------
+   SERVICIOS (base compartida — index e service.html)
+   ------------------------------------------------------------ */
+body.pf-site .service_section {
+  background: var(--pf-white);
+  padding-top: 30px;
+  padding-bottom: 70px;
+}
+body.pf-site .service_section .custom_heading {
+  color: var(--pf-ink);
+  font-size: 38px;
+  text-align: center;
+}
+body.pf-site .service_section .custom_heading span {
+  color: var(--pf-teal);
+}
+body.pf-site .service_section .img_box {
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
+  border: none;
+  background: linear-gradient(145deg, var(--pf-teal), var(--pf-sky));
+  box-shadow: var(--pf-shadow-sm);
+  margin: 0 auto;
+}
+body.pf-site .service_section .img_box img {
+  width: 34px !important;
+}
+body.pf-site .service_section .detail_box h6 {
+  font-family: var(--pf-font-display);
+  font-size: 1.1rem;
+  color: var(--pf-ink);
+  margin-bottom: 6px;
+}
+body.pf-site .service_section .detail_box p {
+  color: var(--pf-ink-soft);
+  font-size: 0.94rem;
+}
+/* Tarjetas del grid original de service.html (no usan .pf-service-card) */
+body.pf-site .service_section .row .col-md-4 {
+  background: var(--pf-mist);
+  border-radius: var(--pf-radius-md);
+  padding: 30px 22px;
+  margin-bottom: 24px;
+  transition: transform .3s var(--pf-ease), box-shadow .3s var(--pf-ease), background .3s var(--pf-ease);
+}
+body.pf-site .service_section .row .col-md-4:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--pf-shadow);
+  background: var(--pf-white);
+}
+
+/* ------------------------------------------------------------
+   GALERÍA (base compartida — index.html y pet.html)
+   ------------------------------------------------------------ */
+body.pf-site .gallery-section {
+  background: var(--pf-teal-deep);
+  padding-top: 70px;
+  padding-bottom: 70px;
+}
+body.pf-site .gallery-section .container:first-child {
+  text-align: center;
+}
+body.pf-site .gallery-section h2 {
+  font-family: var(--pf-font-display);
+  font-size: 34px;
+  color: #fff;
+}
+body.pf-site .gallery-section .img_box {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--pf-radius-md);
+  box-shadow: var(--pf-shadow-sm);
+}
+body.pf-site .gallery-section .img_box img {
+  transition: transform .5s var(--pf-ease);
+  display: block;
+}
+body.pf-site .gallery-section .img_box:hover img {
+  transform: scale(1.08);
+}
+body.pf-site .gallery-section .img_box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(6, 30, 38, 0.55) 0%, rgba(6, 30, 38, 0) 45%);
+  opacity: 0;
+  transition: opacity .4s var(--pf-ease);
+}
+body.pf-site .gallery-section .img_box:hover::after {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------
+   TESTIMONIOS — variante carrusel (index.html)
+   ------------------------------------------------------------ */
+body.pf-site .client_section {
+  background: var(--pf-mist);
+  padding-top: 70px;
+}
+body.pf-site .client_section .custom_heading {
+  text-align: center;
+  font-size: 34px;
+}
+body.pf-site .client_section .custom_heading span {
+  color: var(--pf-teal);
+}
+body.pf-site .client_section > .container > p.text-center {
+  color: var(--pf-ink-soft);
+  max-width: 520px;
+  margin: 0 auto 10px;
+}
+body.pf-site .client_container {
+  background: var(--pf-white);
+  border: none !important;
+  border-radius: var(--pf-radius-lg);
+  box-shadow: var(--pf-shadow);
+  padding: 40px !important;
+  position: relative;
+}
+body.pf-site .client_container::before {
+  content: "\201C";
+  position: absolute;
+  top: 6px;
+  left: 28px;
+  font-family: var(--pf-font-display);
+  font-size: 70px;
+  color: var(--pf-leaf-soft);
+  line-height: 1;
+}
+body.pf-site .client_container .img_box {
+  margin-left: 0 !important;
+  width: 96px !important;
+}
+body.pf-site .client_container .img_box img {
+  border-color: var(--pf-leaf) !important;
+}
+body.pf-site .star-rating {
+  color: var(--pf-ember) !important;
+}
+body.pf-site .client_section .carousel-indicators li {
+  background-color: rgba(10, 78, 99, 0.25);
+}
+body.pf-site .client_section .carousel-indicators .active {
+  background-color: var(--pf-leaf);
+}
+@media (max-width: 768px) {
+  body.pf-site .client_container { padding: 26px !important; }
+  body.pf-site .client_container::before { font-size: 50px; top: 0; left: 16px; }
+  body.pf-site .client_container {
+    flex-direction: column !important;
+    text-align: center;
+    gap: 14px;
+  }
+  body.pf-site .client_container .img_box {
+    margin: 0 auto !important;
+  }
+}
+
+/* ------------------------------------------------------------
+   TESTIMONIOS — variante en filas estáticas (pet.html)
+   ------------------------------------------------------------ */
+body.pf-site .client_container_custom {
+  background: var(--pf-white);
+  border: none !important;
+  border-radius: var(--pf-radius-lg);
+  box-shadow: var(--pf-shadow-sm);
+  padding: 30px !important;
+  margin-bottom: 22px;
+}
+body.pf-site .img_box_testimonial img {
+  border: 4px solid var(--pf-leaf);
+  box-shadow: var(--pf-shadow-sm);
+}
+body.pf-site .client_container_custom .detail_box h5 {
+  font-family: var(--pf-font-display);
+  color: var(--pf-teal-deep);
+}
+body.pf-site .client_container_custom .detail_box p {
+  color: var(--pf-ink-soft);
+}
+
+/* ------------------------------------------------------------
+   CONTACTO (contact.html) — redes sociales + mapa
+   ------------------------------------------------------------ */
+body.pf-site .contact_section {
+  background: var(--pf-mist);
+  padding-top: 80px;
+  padding-bottom: 70px;
+}
+body.pf-site .contact_section .custom_heading {
+  font-size: 38px;
+  color: var(--pf-ink);
+}
+body.pf-site .contact_section .custom_heading span {
+  color: var(--pf-teal);
+}
+body.pf-site .contact_section .heading_container p {
+  color: var(--pf-ink-soft);
+}
+body.pf-site .social_container {
+  background: var(--pf-white);
+  border-radius: var(--pf-radius-lg);
+  box-shadow: var(--pf-shadow-sm);
+  padding: 34px;
+}
+body.pf-site .social_box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+body.pf-site .social_button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  color: #fff !important;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: transform .3s var(--pf-ease), filter .3s var(--pf-ease);
+}
+body.pf-site .social_button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+body.pf-site .social_button.facebook { background: #1877F2; }
+body.pf-site .social_button.instagram { background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af, #515bd4); }
+body.pf-site .social_button.tiktok { background: #010101; }
+body.pf-site .social_button.gmail { background: var(--pf-teal); }
+body.pf-site .map_container_small {
+  height: 100%;
+}
+body.pf-site .map_box {
+  width: 100%;
+  min-height: 280px;
+  border-radius: var(--pf-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--pf-shadow-sm);
+  background: var(--pf-sky-soft);
+}
+body.pf-site .address_box {
+  background: var(--pf-white);
+  border-radius: var(--pf-radius-md);
+  box-shadow: var(--pf-shadow-sm);
+  padding: 20px 22px;
+}
+body.pf-site .address_box h5 {
+  font-family: var(--pf-font-display);
+  color: var(--pf-teal-deep);
+}
+body.pf-site .address_box p {
+  color: var(--pf-ink-soft);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------
+   INFO / CONTACTO (franja compartida al final de cada página)
+   ------------------------------------------------------------ */
+body.pf-site .info_section {
+  background: linear-gradient(180deg, var(--pf-teal-deep), #041F27);
+  padding: 64px 0;
+}
+/* Las cajas de icono son puramente CSS background-image; el <img src="">
+   original queda vacío y solo genera un glifo de "imagen rota" (a cualquier ancho). */
+body.pf-site .info_items .item .img-box img {
+  display: none;
+}
+/* responsive.css ya trae, desde 991px hacia abajo, un diseño compacto de
+   3 columnas muy afinado (con !important) para que quepa en móvil sin
+   desbordar. No lo tocamos: la tarjeta con borde/relleno de aquí es solo
+   para escritorio, donde esas reglas de responsive.css no aplican. */
+@media (min-width: 992px) {
+  body.pf-site .info_items {
+    width: 100%;
+    max-width: 760px;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  body.pf-site .info_items .item {
+    width: auto;
+    min-width: 190px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--pf-radius-md);
+    padding: 22px 18px;
+    transition: transform .3s var(--pf-ease), background .3s var(--pf-ease);
+  }
+  body.pf-site .info_items a:hover .item {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  body.pf-site .info_items .item .img-box {
+    background-color: var(--pf-leaf);
+    background-size: 28px;
+  }
+}
+
+/* ------------------------------------------------------------
+   FOOTER
+   ------------------------------------------------------------ */
+body.pf-site .footer_section {
+  background: var(--pf-teal-deep) !important;
+  padding: 18px !important;
+}
+body.pf-site .footer_section p {
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------
+   BOTÓN FLOTANTE WHATSAPP
+   ------------------------------------------------------------ */
+body.pf-site .pf-fab-whatsapp {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1050;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  box-shadow: 0 14px 30px -8px rgba(37, 211, 102, 0.65);
+  transition: transform .3s var(--pf-ease);
+}
+body.pf-site .pf-fab-whatsapp:hover {
+  transform: scale(1.08);
+  color: #fff;
+}
+body.pf-site .pf-fab-whatsapp::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #25D366;
+  animation: pfPulse 2.4s ease-out infinite;
+  z-index: -1;
+}
+@keyframes pfPulse {
+  0% { transform: scale(1); opacity: .55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.pf-site .pf-fab-whatsapp::before { animation: none; }
+}
+@media (max-width: 576px) {
+  body.pf-site .pf-fab-whatsapp { width: 52px; height: 52px; right: 14px; bottom: 14px; font-size: 1.3rem; }
+}
+
+/* ------------------------------------------------------------
+   Cabecera interior genérica (páginas sin slider)
+   ------------------------------------------------------------ */
+body.pf-site.sub_page .hero_area {
+  margin-bottom: 0;
+}

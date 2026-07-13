@@ -3748,9 +3748,13 @@ a:focus {
 
 .navigation ul {
   display: flex;
-  width: auto; 
+  width: auto;
   padding: 0;
   margin: 0;
+  /* (FIX INDICADOR) El círculo se ancla al <ul>, no al .navigation externo
+     (cuyo ancho es variable dentro del header flex). Así su posición es
+     determinista y deja de verse desfasado respecto al ítem activo. */
+  position: relative;
 }
 
 .navigation ul li {
@@ -3769,6 +3773,10 @@ a:focus {
   align-items: center;
   flex-direction: column;
   width:  90%;
+  /* (FIX CENTRADO) El <a> mide 90% del li y arrancaba pegado a la
+     izquierda: su contenido (icono y texto) quedaba 4px a la izquierda
+     del centro del li, donde sí se centra el círculo indicador. */
+  margin: 0 auto;
   height: 110%; /* (CORRECCIÓN DE ALINEACIÓN) Se añadió height: 100% */
   text-align: center;
   font-weight: 500;
@@ -3826,6 +3834,7 @@ a:focus {
 /* EL INDICADOR */
 .indicator {
   position: absolute;
+  left: 5px; /* (FIX INDICADOR) Centro del círculo (5 + 35) = 40px = centro del ítem 1 */
   top: -40%; /* (CAMBIO DE ALINEACIÓN) Ajustado para que el círculo suba */
   width: 70px; /* Tamaño del círculo */
   height: 70px;

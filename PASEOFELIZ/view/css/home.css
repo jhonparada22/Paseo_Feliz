@@ -1,0 +1,359 @@
+/* ============================================================
+   PASEO FELIZ — HOME (solo lo exclusivo de index.html)
+   Todo lo compartido con el resto del sitio (header, footer,
+   botones, contacto, tokens, tipografía, about/servicios/galería
+   base) vive en site.css, que se carga antes que este archivo.
+   Aquí solo queda: el hero con carrusel, la franja de confianza
+   y el "sendero de paseo" — la firma visual exclusiva del index.
+
+   Firma del diseño: "el sendero de paseo" — una línea punteada
+   verde con huellas que conecta Quiénes somos → Paseos →
+   Hospedaje → Colegio, como el recorrido real de un paseo.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   HERO / SLIDER
+   ------------------------------------------------------------ */
+body.pf-home .hero_area {
+  height: auto;
+}
+body.pf-home .hero_area::before {
+  display: none;
+}
+body.pf-home .slider_section {
+  position: relative;
+  isolation: isolate;
+  /* responsive.css (≤1120px) mete padding 50px 0 a .slider_section y
+     style.css le deja un fondo #333 de reserva: juntos se veían como
+     franjas negras arriba y abajo del hero en tablet/móvil (y una franja
+     oscura bajo la tira de confianza en escritorio). */
+  padding: 0;
+  background-color: transparent;
+}
+body.pf-home .slider_section .carousel-item {
+  background-size: cover !important;
+}
+body.pf-home .slider_section .carousel-item::before {
+  background: linear-gradient(115deg, rgba(6, 30, 38, 0.86) 0%, rgba(6, 30, 38, 0.55) 45%, rgba(10, 78, 99, 0.35) 100%);
+}
+
+/* Texto de cada slide: animación de entrada */
+body.pf-home .slider_detail-box h1,
+body.pf-home .slider_detail-box p,
+body.pf-home .slider_detail-box .btn-box {
+  opacity: 0;
+  transform: translateY(22px);
+  animation: pfSlideUp .8s var(--pf-ease) forwards;
+}
+body.pf-home .slider_detail-box h1 { animation-delay: .05s; font-size: 52px; }
+body.pf-home .slider_detail-box p { animation-delay: .2s; }
+body.pf-home .slider_detail-box .btn-box { animation-delay: .35s; }
+
+@keyframes pfSlideUp {
+  to { opacity: 1; transform: none; }
+}
+
+body.pf-home .slider_detail-box h1 span {
+  color: var(--pf-leaf) !important;
+}
+body.pf-home .slider_section .slider_detail-box .btn-1 {
+  background: var(--pf-leaf);
+  border-color: var(--pf-leaf);
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 15px 38px;
+  transition: transform .3s var(--pf-ease), box-shadow .3s var(--pf-ease), background .3s var(--pf-ease);
+  box-shadow: 0 14px 30px -10px rgba(47, 174, 87, 0.6);
+}
+body.pf-home .slider_section .slider_detail-box .btn-1:hover {
+  transform: translateY(-3px);
+  background: var(--pf-leaf-deep);
+  border-color: var(--pf-leaf-deep);
+  color: #fff;
+}
+
+body.pf-home .slider_img-box img {
+  /* Sin border-radius: los PNG del slide son composiciones con varias
+     fotos circulares sobre fondo transparente; recortarlos en elipse
+     (50%) cortaba las fotos de las esquinas. El drop-shadow sigue el
+     contorno real (canal alfa), no el rectángulo. */
+  filter: drop-shadow(0 24px 40px rgba(2, 15, 20, 0.45));
+}
+
+/* Indicadores como huellas */
+body.pf-home #carouselExampleIndicators .carousel-indicators {
+  /* La tira de confianza se monta 46px sobre el hero (margin-top: -46px);
+     a 22px los puntos quedaban tapados por el recuadro blanco. */
+  bottom: 64px;
+  z-index: 6;
+}
+body.pf-home #carouselExampleIndicators .carousel-indicators li {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.45);
+  border: none;
+  margin: 0 5px;
+  transition: transform .3s var(--pf-ease), background-color .3s var(--pf-ease);
+}
+body.pf-home #carouselExampleIndicators .carousel-indicators .active {
+  background-color: var(--pf-leaf);
+  transform: scale(1.35);
+}
+
+/* Tira de confianza flotante, fija sobre el hero */
+body.pf-home .pf-trust-strip {
+  position: relative;
+  z-index: 6;
+  margin-top: -46px;
+  padding: 0 20px 0;
+}
+body.pf-home .pf-trust-strip .pf-trust-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  background: var(--pf-white);
+  border-radius: var(--pf-radius-md);
+  box-shadow: var(--pf-shadow);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 28px;
+  padding: 20px 28px;
+}
+body.pf-home .pf-trust-strip .pf-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pf-teal-deep);
+  white-space: nowrap;
+}
+body.pf-home .pf-trust-strip .pf-chip i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pf-leaf-soft);
+  color: var(--pf-leaf-deep);
+  font-size: 0.85rem;
+}
+
+/* Scroll cue */
+body.pf-home .pf-scroll-cue {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--pf-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  animation: pfBounce 2.2s ease-in-out infinite;
+}
+body.pf-home .pf-scroll-cue:hover {
+  color: var(--pf-white);
+  background: rgba(255, 255, 255, 0.28);
+}
+@keyframes pfBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.pf-home .pf-scroll-cue { animation: none; }
+}
+@media (max-width: 576px) {
+  body.pf-home .pf-scroll-cue { display: none; }
+}
+
+/* ------------------------------------------------------------
+   QUIÉNES SOMOS — extras exclusivos del index (site.css ya puso
+   el fondo/heading/párrafo/botón base de .about_section)
+   ------------------------------------------------------------ */
+body.pf-home .pf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-leaf-deep);
+  background: var(--pf-leaf-soft);
+  padding: 7px 16px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+body.pf-home .pf-value-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0 6px;
+}
+body.pf-home .pf-value-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pf-white);
+  border: 1px solid rgba(10, 78, 99, 0.14);
+  color: var(--pf-teal-deep);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: var(--pf-shadow-sm);
+}
+body.pf-home .pf-value-chips i {
+  color: var(--pf-leaf);
+}
+body.pf-home .about_section .img-box {
+  position: relative;
+}
+body.pf-home .about_section .img-box::before {
+  content: "";
+  position: absolute;
+  inset: 6% 10%;
+  background: radial-gradient(closest-side, rgba(47, 174, 87, 0.18), transparent 72%);
+  z-index: 0;
+  border-radius: 50%;
+}
+body.pf-home .about_section .img-box img {
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------
+   SERVICIOS — recorrido con marcadores de huella (firma del index;
+   site.css ya puso el fondo/heading/icono/texto base de .service_section)
+   ------------------------------------------------------------ */
+body.pf-home .pf-services-intro {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto 20px;
+  color: var(--pf-ink-soft);
+}
+body.pf-home .pf-services-track {
+  max-width: 760px;
+  margin: 46px auto 0;
+  position: relative;
+  padding-left: 74px;
+}
+body.pf-home .pf-services-track::before {
+  content: "";
+  position: absolute;
+  left: 27px;
+  top: 6px;
+  bottom: 6px;
+  border-left: 3px dashed var(--pf-leaf);
+  opacity: .55;
+}
+body.pf-home .pf-service-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+body.pf-home .pf-service-row:last-child {
+  margin-bottom: 0;
+}
+body.pf-home .pf-service-row .pf-paw-marker {
+  position: absolute;
+  left: -74px;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--pf-white);
+  border: 3px solid var(--pf-leaf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--pf-shadow-sm);
+  color: var(--pf-leaf-deep);
+  font-size: 1.1rem;
+}
+body.pf-home .pf-service-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--pf-mist);
+  border-radius: var(--pf-radius-md);
+  padding: 22px 26px;
+  transition: transform .35s var(--pf-ease), box-shadow .35s var(--pf-ease), background .35s var(--pf-ease);
+}
+body.pf-home .pf-service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--pf-shadow);
+  background: var(--pf-white);
+}
+body.pf-home .service_section .detail_box {
+  margin-top: 0;
+}
+body.pf-home .pf-services-cta {
+  text-align: center;
+  margin-top: 44px;
+}
+body.pf-home .service_section a.pf-btn-outline {
+  display: inline-block;
+  background: transparent;
+  border: 2px solid var(--pf-teal);
+  color: var(--pf-teal);
+  border-radius: 999px;
+  padding: 12px 30px;
+  font-weight: 600;
+  transition: all .3s var(--pf-ease);
+}
+body.pf-home .service_section a.pf-btn-outline:hover {
+  background: var(--pf-teal);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------
+   RESPONSIVE (solo lo exclusivo de este archivo)
+   ------------------------------------------------------------ */
+@media (max-width: 991px) {
+  body.pf-home .slider_detail-box h1 { font-size: 38px; }
+  body.pf-home .pf-services-track { padding-left: 64px; }
+  body.pf-home .pf-service-row .pf-paw-marker { left: -64px; width: 48px; height: 48px; }
+  body.pf-home .pf-trust-strip { margin-top: -34px; }
+}
+
+@media (max-width: 768px) {
+  body.pf-home .slider_detail-box h1 { font-size: 30px; }
+  /* Aquí la tira de confianza ya no se monta sobre el hero
+     (margin-top pasa a 18px), los puntos pueden volver abajo. */
+  body.pf-home #carouselExampleIndicators .carousel-indicators { bottom: 16px; }
+  body.pf-home .pf-trust-strip { margin-top: 18px; }
+  body.pf-home .pf-trust-strip .pf-trust-inner {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.pf-home .about_section { padding-top: 56px; }
+  body.pf-home .about_section .custom_heading { font-size: 30px; }
+  body.pf-home .pf-services-track { padding-left: 54px; margin-top: 30px; }
+  body.pf-home .pf-services-track::before { left: 20px; }
+  body.pf-home .pf-service-row { gap: 14px; margin-bottom: 24px; }
+  body.pf-home .pf-service-row .pf-paw-marker { left: -54px; width: 40px; height: 40px; font-size: .9rem; }
+  body.pf-home .pf-service-card { flex-direction: column; align-items: flex-start; padding: 18px; }
+}
+
+@media (max-width: 576px) {
+  body.pf-home .slider_detail-box h1 { font-size: 24px; }
+  body.pf-home .pf-trust-strip .pf-chip { font-size: 0.82rem; }
+}
