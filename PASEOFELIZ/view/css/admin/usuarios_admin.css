@@ -1730,3 +1730,75 @@
                 padding: 14px;
             }
         }
+/* ══════════════════════════════════════════════════════════════
+   Modal "Mascotas de X" en móvil (≤640px): la fila lista(250px)+detalle
+   no cabe en el teléfono y aplastaba el detalle. Se apila en columna:
+   las mascotas quedan arriba como carrusel horizontal y el detalle
+   ocupa todo el ancho debajo.
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .modal-pets {
+        width: calc(100% - 20px);
+        max-width: none;
+        max-height: calc(100dvh - 90px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pet-modal-body {
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Lista de mascotas: carrusel horizontal compacto */
+    .pet-list-panel {
+        width: 100%;
+        max-height: none;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+        padding: 10px 12px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .pet-list-panel::-webkit-scrollbar { display: none; }
+
+    .pet-list-panel .pet-card {
+        flex: none;
+        width: auto;
+        min-width: 150px;
+        padding: 8px 12px;
+        gap: 10px;
+    }
+    .pet-list-panel .pet-avatar { width: 38px; height: 38px; }
+
+    /* Detalle: todo el ancho, con su propio scroll */
+    .pet-detail-panel {
+        max-height: none;
+        flex: 1;
+        min-height: 0;
+        padding: 16px 14px;
+    }
+
+    /* Cabecera del detalle: foto centrada arriba, datos debajo */
+    .pd-header-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+    }
+    .pd-avatar-big { width: 112px; height: 112px; }
+    .pd-badges-col {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+    .pd-quick-meta { justify-content: center; }
+
+    /* Información general en una sola columna legible */
+    .pd-info-grid { grid-template-columns: 1fr; gap: 10px; }
+}
