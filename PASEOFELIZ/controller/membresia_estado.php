@@ -140,6 +140,7 @@ foreach ($idsMascotas as $idM) {
 
 echo json_encode([
     'success'           => true,
+    'id_usuario'        => $id, // para flags por-usuario en el front (tutorial)
     'tiene_mascotas'    => count($idsMascotas) > 0,
     'mascotas'          => $mascotas,
     'paseos'            => $paseosActivo,

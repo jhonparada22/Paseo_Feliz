@@ -580,7 +580,10 @@ function renderMascotasMembresia(svcKey) {
 // directo al pago, todo en el mismo flujo.
 function mostrarTutorialBienvenida() {
     if (membresias.tieneMascotas) return;
-    if (localStorage.getItem('pf_tutorial_visto')) return;
+    // Flag POR USUARIO (antes era por navegador: si un usuario lo cerraba,
+    // ninguna cuenta nueva creada en ese navegador volvía a verlo)
+    const tutoKey = 'pf_tutorial_visto_' + (membresias.idUsuario || 'anon');
+    if (localStorage.getItem(tutoKey)) return;
     if (document.getElementById('pf-tuto-overlay')) return;
 
     if (!document.getElementById('pf-tuto-css')) {
@@ -620,7 +623,7 @@ function mostrarTutorialBienvenida() {
       </div>`;
     document.body.appendChild(ov);
 
-    const cerrar = () => { localStorage.setItem('pf_tutorial_visto', '1'); ov.remove(); };
+    const cerrar = () => { localStorage.setItem(tutoKey, '1'); ov.remove(); };
     ov.querySelector('#pf-tuto-despues').addEventListener('click', cerrar);
     ov.querySelector('#pf-tuto-cta').addEventListener('click', () => {
         cerrar();
@@ -645,6 +648,7 @@ async function cargarMembresias() {
                     membresias.renovar        = d.renovar;
                     membresias.mascotas       = d.mascotas ?? [];
                     membresias.tieneMascotas  = !!d.tiene_mascotas;
+                    membresias.idUsuario      = d.id_usuario ?? null;
                     console.log('✅ Membresías cargadas:', membresias);
                 }
             }

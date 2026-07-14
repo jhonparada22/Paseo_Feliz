@@ -297,10 +297,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../js/js pagina principal/wizard_paseos.js?v=4"></script>
-<script src="../js/js pagina principal/wizard_adiestramiento.js?v=3"></script>
-<script src="../js/js pagina principal/wizard_hospedaje.js?v=3"></script>
-<script src="../js/js pagina principal/dashboard_paseos.js?v=1"></script>
-<script src="../js/js pagina principal/inicio_cliente.js?v=4"></script>
+<script src="../js/js pagina principal/wizard_paseos.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/wizard_paseos.js'); ?>"></script>
+<script src="../js/js pagina principal/wizard_adiestramiento.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/wizard_adiestramiento.js'); ?>"></script>
+<script src="../js/js pagina principal/wizard_hospedaje.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/wizard_hospedaje.js'); ?>"></script>
+<script src="../js/js pagina principal/dashboard_paseos.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/dashboard_paseos.js'); ?>"></script>
+<script src="../js/js pagina principal/inicio_cliente.js?v=<?php echo @filemtime(__DIR__ . '/../js/js pagina principal/inicio_cliente.js'); ?>"></script>
 </body>
 </html>
