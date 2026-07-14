@@ -287,3 +287,26 @@
     .nav-links li a i    { font-size: .9rem; }
     .nav-links li a span { font-size: .55rem; }
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   INDICADORES COMPACTOS EN TELÉFONO (compartido por todas las páginas admin)
+   Las tarjetas de estadísticas (.stat-card del inicio y .mini-stat del
+   resto de apartados) ocupaban demasiada pantalla en el celular: aquí se
+   compactan a 2 por fila con paddings y fuentes reducidos. Este archivo
+   carga DESPUÉS del css de cada página, por eso estas reglas ganan.
+══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    /* Inicio (index_admin) */
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 12px; gap: 10px; }
+    .stat-icon { width: 36px; height: 36px; font-size: .9rem; border-radius: 10px; }
+    .stat-info .s-label { font-size: .64rem; }
+    .stat-info .s-value { font-size: 1.12rem; }
+    .stat-info .s-delta { font-size: .6rem; }
+
+    /* Resto de apartados (usuarios, paseadores, paseos, pagos) */
+    .mini-stats, .mini-stats-5 { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-stat { padding: 10px 12px; gap: 10px; }
+    .mini-stat .ms-icon { width: 34px; height: 34px; font-size: .85rem; border-radius: 10px; }
+    .mini-stat .ms-val { font-size: .98rem; }
+    .mini-stat .ms-lbl { font-size: .62rem; }
+}

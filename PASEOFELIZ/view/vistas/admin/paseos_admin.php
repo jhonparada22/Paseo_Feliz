@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="../../css/admin/paseos_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/paseos_admin.css'); ?>" />
   <!-- Sidebar unificado admin (rojo) — después del css de la página -->
-  <link rel="stylesheet" href="../../css/admin/sidebar_admin.css" />
+  <link rel="stylesheet" href="../../css/admin/sidebar_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/sidebar_admin.css'); ?>" />
 </head>
 <body>
 <div class="app-container">

@@ -771,6 +771,9 @@
             font-size: .75rem;
             color: var(--text-light);
             margin-top: 2px;
+            /* Los correos largos no tienen espacios: sin esto el texto se
+               desborda de su columna y se monta sobre el botón Mascotas */
+            overflow-wrap: anywhere;
         }
 
         .user-meta {
@@ -1801,4 +1804,15 @@
 
     /* Información general en una sola columna legible */
     .pd-info-grid { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Fila de usuario en teléfono (≤640px): el correo ya no se monta
+   sobre el botón Mascotas (overflow-wrap arriba) y la fila se
+   reacomoda: avatar+info+botón arriba, rol y acciones debajo.
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .user-row { gap: 10px 12px; padding: 12px 14px; }
+    .user-info { flex: 1 1 0; }
+    .btn-pets { padding: 10px 12px; font-size: .72rem; }
 }

@@ -404,9 +404,25 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .pago-row   { flex-wrap: wrap; }
-  .pago-fecha { min-width: auto; text-align: left; }
-  .pago-monto { min-width: auto; }
+  /* La fila de pago pasa de flex-wrap (se desordenaba) a un grid fijo:
+     avatar | nombre+correo | monto  en la primera línea, y
+     tipo de membresía | fecha       en la segunda. */
+  .pago-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "av info monto"
+      "av tipo fecha";
+    gap: 4px 12px;
+    align-items: center;
+  }
+  .pago-avatar { grid-area: av; }
+  .pago-info   { grid-area: info; }
+  .pago-email  { overflow-wrap: anywhere; }
+  .pago-monto  { grid-area: monto; min-width: auto; font-size: .92rem; }
+  .pago-tipo   { grid-area: tipo; justify-self: start; font-size: .68rem; padding: 3px 9px; }
+  .pago-fecha  { grid-area: fecha; min-width: auto; text-align: right; font-size: .68rem; }
+
   .umem-row   { flex-wrap: wrap; }
   .sc-search input { width: 160px; }
 }

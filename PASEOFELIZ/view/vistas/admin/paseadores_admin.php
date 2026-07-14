@@ -13,8 +13,11 @@ include_once '../../../controller/control_acceso.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="../../css/admin/admin.css">
-    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css">
-    <link rel="stylesheet" href="../../css/admin/paseadores_admin.css" />
+    <link rel="stylesheet" href="../../css/admin/paseadores_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/paseadores_admin.css'); ?>" />
+    <!-- Sidebar unificado admin (rojo) — SIEMPRE después del css de la página:
+         paseadores_admin.css redefine .sidebar (width 65px en tablet) y si
+         carga después pisa la barra inferior móvil de 58px del sidebar css -->
+    <link rel="stylesheet" href="../../css/admin/sidebar_admin.css?v=<?php echo @filemtime(__DIR__ . '/../../css/admin/sidebar_admin.css'); ?>">
 </head>
 
 <body>
