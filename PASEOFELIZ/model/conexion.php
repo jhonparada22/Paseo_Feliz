@@ -1,8 +1,8 @@
 <?php
-$host = "sql113.byethost17.com";   // MySQL hostname
-$user = "b17_42313426";           // MySQL username
-$pass = "1092941961";      // clave real de VistaPanel
-$db   = "b17_42313426_paseofeliztest"; // El nombre EXACTO de tu base de datos
+$host = "oculto";   // MySQL hostname
+$user = "oculto";           // MySQL username
+$pass = "oculto";      // clave real de VistaPanel
+$db   = "oculto"; // El nombre EXACTO de tu base de datos
 
 $conn = new mysqli($host, $user, $pass, $db);
 
